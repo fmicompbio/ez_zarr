@@ -138,3 +138,8 @@ class FmiZarr:
 
 
 # FractalFmiZarr class ------------------------------------------------------
+class FractalFmiZarr:
+    """Represents a folder containing one or several ome-zarr fileset(s)."""
+
+    def __init__(self, folder_path):
+        self.path = folder_path
