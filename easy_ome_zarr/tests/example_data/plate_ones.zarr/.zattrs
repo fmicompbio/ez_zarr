@@ -1,0 +1,27 @@
+{
+    "plate": {
+        "acquisitions": [
+            {
+                "id": 0,
+                "name": "my-experiment"
+            }
+        ],
+        "columns": [
+            {
+                "name": "03"
+            }
+        ],
+        "rows": [
+            {
+                "name": "B"
+            }
+        ],
+        "wells": [
+            {
+                "columnIndex": 0,
+                "path": "B/03",
+                "rowIndex": 0
+            }
+        ]
+    }
+}
