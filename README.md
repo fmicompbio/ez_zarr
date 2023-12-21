@@ -1,2 +1,2 @@
 # gbioinfo-easy_ome_zarr
-GIve easy, high-level access to ome-zarr fileset
+Give easy, high-level access to ome-zarr filesets.
