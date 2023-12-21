@@ -1,6 +1,7 @@
 # for testing without installing easy_ome_zarr, use the following call
 # from the folder containing `easy_ome_zarr`:
 #     python -m pytest easy_ome_zarr/tests/
+#     python -m pytest --cov easy_ome_zarr/tests/
 
 import pytest
 import zarr
