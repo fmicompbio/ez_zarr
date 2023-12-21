@@ -1,5 +1,5 @@
 # this file is based on https://github.com/fractal-analytics-platform/fractal-tasks-core/blob/main/tests/data/generate_zarr_ones.py
-# to generate test data, run the following from the tests directory
+# to generate test data, run the following from the example_data directory
 #     python generate_example_data.py
 
 import json
@@ -53,8 +53,8 @@ num_Z = [3, 1]        # number planes in Z
 num_Y = [2, 2]        # number of fields of view in Y
 num_X = [2, 2]        # number of fields of view in X
 
-zarrurl = ["example_data/plate_ones.zarr/",
-           "example_data/plate_ones_mip.zarr/"]
+zarrurl = ["plate_ones.zarr/",
+           "plate_ones_mip.zarr/"]
 
 # generate filesets
 for i in range(len(zarrurl)):
