@@ -124,6 +124,9 @@ class FmiZarr:
         # remark: warn if not all well have the table?
         table_paths = [p for p in table_paths if p in self.top]
 
+        if len(table_paths) == 0:
+            return None
+
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             anndata_list = [ad.read_zarr(os.path.join(self.path, p)) for p in table_paths]
