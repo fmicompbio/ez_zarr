@@ -4,7 +4,8 @@
 
 import pytest
 import zarr
-import numpy as np
+import pandas as pd
+import anndata as ad
 from easy_ome_zarr import zarr_wraps
 
 @pytest.fixture
@@ -50,3 +51,13 @@ def test_constructor_2d(plate_2d):
     assert list(plate_2d.level_zyx_scalefactor) == [1., 2., 2.]
     assert plate_2d.label_names == []
     assert plate_2d.table_names == ['FOV_ROI_table']
+
+def test_get_table_2d(plate_2d):
+    empty = plate_2d.get_table('does not exist')
+    df = plate_2d.get_table('FOV_ROI_table')
+    ann = plate_2d.get_table('FOV_ROI_table', as_AnnData = True)
+    assert empty is None
+    assert isinstance(df, pd.DataFrame)
+    assert df.shape == (4, 8)
+    assert isinstance(ann, ad.AnnData)
+    assert ann.shape == (4, 8)
