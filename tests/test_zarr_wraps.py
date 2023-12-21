@@ -1,7 +1,7 @@
-# for testing without installing easy_ome_zarr, use the following call
-# from the folder containing `easy_ome_zarr`:
-#     python -m pytest easy_ome_zarr/tests/
-#     python -m pytest --cov easy_ome_zarr/tests/
+# for testing, run the following from the project folder:
+#     pip install -e .
+#     pytest
+#     pytest --cov
 
 import pytest
 import zarr
@@ -11,11 +11,11 @@ from easy_ome_zarr import zarr_wraps
 
 @pytest.fixture
 def plate_3d():
-    return zarr_wraps.FmiZarr('easy_ome_zarr/tests/example_data/plate_ones.zarr')
+    return zarr_wraps.FmiZarr('tests/example_data/plate_ones.zarr')
 
 @pytest.fixture
 def plate_2d():
-    return zarr_wraps.FmiZarr('easy_ome_zarr/tests/example_data/plate_ones_mip.zarr')
+    return zarr_wraps.FmiZarr('tests/example_data/plate_ones_mip.zarr')
 
 def test_constructor_3d(plate_3d):
     assert isinstance(plate_3d, zarr_wraps.FmiZarr)
