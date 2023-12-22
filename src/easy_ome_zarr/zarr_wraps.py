@@ -69,6 +69,7 @@ class FmiZarr:
         return well_group.attrs['multiscales'][0]
     
     def _load_label_names(self, well = None):
+        """Load label names (available segmentations)."""
         if not well: # pick first well
             well = self.wells[0]['path']
         label_path = os.path.join(well, '0', 'labels')
@@ -78,6 +79,7 @@ class FmiZarr:
             return []
 
     def _load_table_names(self, well = None):
+        """Load table names (can be extracted using .get_table())."""
         if not well: # pick first well
             well = self.wells[0]['path']
         table_path = os.path.join(well, '0', 'tables')
@@ -85,24 +87,15 @@ class FmiZarr:
             return self.top[table_path].attrs['tables']
         else:
             return []
-
     
     def __str__(self):
         nwells = len(self.wells)
-        if nwells > 1:
-            swells = "s"
-        else:
-            swells = ""
         nch = len(self.channels)
-        if nch > 1:
-            sch = "s"
-        else:
-            sch = ""
         chlabs = ', '.join([x['label'] for x in self.channels])
         npl = len(self.multiscales['datasets'])
         segnames = ', '.join(self.label_names)
         tabnames = ', '.join(self.table_names)
-        return f"FmiZarr {self.name} with {nwells} well{swells} and {nch} channel{sch}\n  path: {self.path}\n  n_wells: {nwells}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_zyx_scalefactor: {self.level_zyx_scalefactor}\n  full_resolution_zyx_spacing: {self.level_zyx_spacing[0]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
+        return f"FmiZarr {self.name}\n  path: {self.path}\n  n_wells: {nwells}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_zyx_scalefactor: {self.level_zyx_scalefactor}\n  full_resolution_zyx_spacing: {self.level_zyx_spacing[0]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
     
     def __repr__(self):
         return str(self)
@@ -110,6 +103,10 @@ class FmiZarr:
     def get_path(self):
         """Gets the path of the ome-zarr fileset."""
         return self.path
+
+    def get_wells(self):
+        """Gets info on wells in the ome-zarr fileset."""
+        return self.wells
 
     def get_channels(self):
         """Gets info on channels in the ome-zarr fileset."""
