@@ -17,6 +17,9 @@ jobs:
         platform: [ubuntu-latest]
         python-version: ['3.9', '3.11']
 
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    
     steps:
       - name: Check out repo
         uses: actions/checkout@v3
