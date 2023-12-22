@@ -42,4 +42,4 @@ is with the Friedrich Miescher Insitute for Biomedical Research
 (see [LICENSE](https://github.com/fmi-basel/gbioinfo-easy_ome_zarr/blob/main/LICENSE)).
 
 `easy_ome_zarr` is being developed at the Friedrich Miescher Institute for
-Biomedical Research by @silvbarb and @mbstadler.
+Biomedical Research by [@silvbarb](https://github.com/silvbarb) and [@mbstadler](https://github.com/mbstadler).
