@@ -13,12 +13,12 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-#        platform: [ubuntu-latest, windows-latest, macos-latest]
+      #  platform: [ubuntu-latest, windows-latest, macos-latest]
         platform: [ubuntu-latest]
         python-version: ['3.9', '3.11']
 
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    # env:
+    #   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     
     steps:
       - name: Check out repo
