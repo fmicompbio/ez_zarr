@@ -35,6 +35,7 @@ plate_zattrs = {
 table_zattrs = {
     'tables': ['FOV_ROI_table']
 }
+label_zattrs = {'labels': ['organoids']}
 
 pxl_z = 1.0      # voxel size in z
 pxl_y = 0.1625   # voxel size in y
@@ -55,6 +56,8 @@ num_X = [2, 2]        # number of fields of view in X
 
 zarrurl = ["plate_ones.zarr/",
            "plate_ones_mip.zarr/"]
+
+create_labels = [False, True] # should 'labels' be generated
 
 # generate filesets
 for i in range(len(zarrurl)):
@@ -165,4 +168,17 @@ for i in range(len(zarrurl)):
     write_elem(group_tables, "FOV_ROI_table", FOV_ROI_table)
     with open(f"{zarrurl[i]}{component}tables/.zattrs", "w") as jsonfile:
         json.dump(table_zattrs, jsonfile, indent=4)
+    
+    if create_labels[i]:
+        group_labels = zarr.group(f"{zarrurl[i]}{component}/labels")
+        for ind_level in range(num_levels):
+            scale = 2**ind_level
+            y = da.coarsen(np.min, x, {2: scale, 3: scale}).rechunk(
+                (1, 1, size_y, size_x), balance=True
+            )
+            y.to_zarr(
+                zarrurl[i], component=f"{component}/labels/organoids/{ind_level}", dimension_separator="/"
+            )
+        with open(f"{zarrurl[i]}{component}labels/.zattrs", "w") as jsonfile:
+            json.dump(label_zattrs, jsonfile, indent=4)
 
