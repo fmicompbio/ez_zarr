@@ -127,7 +127,10 @@ class FmiZarr:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             anndata_list = [ad.read_zarr(os.path.join(self.path, p)) for p in table_paths]
-            anndata_combined = ad.concat(anndata_list)
+            # ... retain well information when combining anndata objects
+            for ann, w in zip(anndata_list, include_wells):
+                ann.obs['well'] = w.replace('/', '')
+            anndata_combined = ad.concat(anndata_list, index_unique=None, keys=[w.replace('/', '') for w in include_wells])
 
         if as_AnnData:
             return anndata_combined
