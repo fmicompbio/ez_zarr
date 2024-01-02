@@ -116,6 +116,9 @@ class FmiZarr:
         """Extract table for wells in a ome-zarr fileset."""
         if not include_wells: # include all wells
             include_wells = [x['path'] for x in self.wells]
+        else:
+            # transform wells in readable ('RowColumn') format to path format: 'Row/Column'
+            include_wells = [item[:1] + '/' + item[1:] for item in include_wells] 
 
         table_paths = [os.path.join(w, '0', 'tables', table_name) for w in include_wells]
         # remark: warn if not all well have the table?
