@@ -153,6 +153,8 @@ def test_get_table_2d(plate_2d):
     assert df.shape == (4, 8)
     assert isinstance(ann, ad.AnnData)
     assert ann.shape == (4, 8)
+    df2 = plate_2d.get_table('FOV_ROI_table', include_wells = ['B03'], as_AnnData = False)
+    assert df.equals(df2)
 
 # zarr_wraps.FractalFmiZarr ---------------------------------------------------
 def test_constructor_set(plate_set):
