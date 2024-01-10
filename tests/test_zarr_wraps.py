@@ -9,6 +9,8 @@ import pandas as pd
 import pytest
 import shutil
 import zarr
+import numpy as np
+import dask
 
 from easy_ome_zarr import zarr_wraps
 
@@ -167,6 +169,52 @@ def test_get_table_2d(plate_2d):
     assert ann.shape == (4, 8)
     df2 = plate_2d.get_table('FOV_ROI_table', include_wells = ['B03'], as_AnnData = False)
     assert df.equals(df2)
+
+def test_get_image_rect_3d(plate_3d):
+    img0a = plate_3d.get_image_rect(well = None, pyramid_level = 0,
+                                    upper_left = None,
+                                    lower_right = None,
+                                    width_height = None,
+                                    as_NumPy = False)
+    img0b = plate_3d.get_image_rect(well = 'B03', pyramid_level = 0,
+                                    upper_left = (0, 0),
+                                    lower_right = (319, 269),
+                                    width_height = None,
+                                    as_NumPy = True)
+    assert isinstance(img0a, dask.array.Array)
+    assert isinstance(img0b, np.ndarray)
+    assert img0a.shape == (2, 3, 270, 320)
+    assert (np.array(img0a) == img0b).all()
+    
+    with pytest.raises(Exception) as e_info:
+        plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
+                                upper_left = (10, 11),
+                                lower_right = None, width_height = None)
+
+    img1a = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
+                                    upper_left = (10, 11),
+                                    lower_right = (20, 22),
+                                    width_height = None,
+                                    as_NumPy = True)
+    img1b = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
+                                    upper_left = (10, 11),
+                                    lower_right = None,
+                                    width_height = (10, 11),
+                                    as_NumPy = True)
+    img1c = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
+                                    upper_left = None,
+                                    lower_right = (20, 22),
+                                    width_height = (10, 11),
+                                    as_NumPy = True)
+    assert isinstance(img1a, np.ndarray)
+    assert isinstance(img1b, np.ndarray)
+    assert isinstance(img1c, np.ndarray)
+    assert img1a.shape == (2, 3, 12, 11)
+    assert img1b.shape == img1a.shape
+    assert img1c.shape == img1a.shape
+    assert (img1b == img1a).all()
+    assert (img1c == img1a).all()
+
 
 # zarr_wraps.FractalFmiZarr ---------------------------------------------------
 def test_constructor_set(plate_set):
