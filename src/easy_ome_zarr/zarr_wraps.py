@@ -166,10 +166,11 @@ class FmiZarr:
                        as_NumPy = False):
         """
         Extract a rectangular image region (all z planes if several) from a well by coordinates.
+
         None or at least two of `upper_left`, `lower_right` and `width_height` need to be given.
         If none are given, it will return the full image.
-        Otherwise, `upper_left` contains the lower indices than `lower_right` (origin on the top-left).
-        Each of them is a tuple of (x, y).
+        Otherwise, `upper_left` contains the lower indices than `lower_right`
+        (origin on the top-left, zero-based coordinates), and each of them is a tuple of (x, y).
         """
         # digest arguments
         well = self._digest_well_argument(well)
@@ -190,7 +191,10 @@ class FmiZarr:
                 elif not lower_right:
                     lower_right = tuple(upper_left[i] + width_height[i] for i in range(2))
             assert all([upper_left[i] < lower_right[i] for i in range(len(upper_left))])
-            img = img[:, :, range(upper_left[1], lower_right[1] + 1), range(upper_left[0], lower_right[0] + 1)]
+            # remark: currently, dask does not support slicing with multiple lists
+            #         (https://docs.dask.org/en/latest/array-slicing.html)
+            #         workaround: slice in two steps (first y, then x)
+            img = img[:, :, list(range(upper_left[1], lower_right[1] + 1)), :][:, :, :, list(range(upper_left[0], lower_right[0] + 1))]
         elif num_unknowns != 3:
             raise ValueError("Either none are two of `upper_left`, `lower_rigth` and `width_height` have to be given")
 
