@@ -106,7 +106,7 @@ class FmiZarr:
 
     def _digest_pyramid_level_argument(self, pyramid_level = None):
         """Interpret a `pyramid_level` argument in the context of a given FmiZarr object."""
-        if not pyramid_level: 
+        if pyramid_level == None: 
             # no pyramid level given -> pick lowest resolution one
             pyramid_level = self.level_paths[-1]
         else:

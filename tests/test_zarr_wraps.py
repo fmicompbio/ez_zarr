@@ -171,12 +171,12 @@ def test_get_table_2d(plate_2d: zarr_wraps.FmiZarr):
     assert df.equals(df2)
 
 def test_get_image_rect_3d(plate_3d: zarr_wraps.FmiZarr):
-    img0a = plate_3d.get_image_rect(well = None, pyramid_level = 0,
+    img0a = plate_3d.get_image_rect(well = None, pyramid_level = 2,
                                     upper_left = None,
                                     lower_right = None,
                                     width_height = None,
                                     as_NumPy = False)
-    img0b = plate_3d.get_image_rect(well = 'B03', pyramid_level = 0,
+    img0b = plate_3d.get_image_rect(well = 'B03', pyramid_level = 2,
                                     upper_left = (0, 0),
                                     lower_right = (319, 269),
                                     width_height = None,
