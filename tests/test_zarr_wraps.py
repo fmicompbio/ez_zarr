@@ -215,6 +215,30 @@ def test_get_image_rect_3d(plate_3d: zarr_wraps.FmiZarr):
     assert (img1b == img1a).all()
     assert (img1c == img1a).all()
 
+def test_get_image_random_rects_3d(plate_3d: zarr_wraps.FmiZarr):
+    with pytest.raises(Exception) as e_info:
+        plate_3d.get_image_random_rects(num_x = 2, num_y = 2, num_select = 5)
+                                        
+    coord_1a, img_1a = plate_3d.get_image_random_rects(well = 'B03', pyramid_level = 2,
+                                                       num_select = 3, seed = 1)
+    coord_1b, img_1b = plate_3d.get_image_random_rects(well = 'B03', pyramid_level = 2,
+                                                       num_select = 3, seed = 1)
+    coord_2, img_2 = plate_3d.get_image_random_rects(well = 'B03', pyramid_level = 2,
+                                                     num_select = 3, seed = 2)
+    coord_3, img_3 = plate_3d.get_image_random_rects(well = 'B03', pyramid_level = 2,
+                                                     num_x = 8, num_y = 8,
+                                                     num_select = 3, seed = 3, as_NumPy = True)
+    assert len(coord_1a) == 3
+    assert coord_1a == coord_1b
+    assert len(coord_2) == 3
+    assert coord_1a != coord_2
+    assert all([isinstance(x, dask.array.Array) for x in img_1a])
+    assert all(x.shape == (2, 3, 27, 32) for x in img_1a)
+    assert all(x.shape == (2, 3, 27, 32) for x in img_1b)
+    assert all(x.shape == (2, 3, 27, 32) for x in img_2)
+    assert len(coord_3) == 3
+    assert all([isinstance(x, np.ndarray) for x in img_3])
+    assert all(x.shape == (2, 3, 33, 40) for x in img_3)
 
 # zarr_wraps.FractalFmiZarr ---------------------------------------------------
 def test_constructor_set(plate_set: zarr_wraps.FractalFmiZarr):

@@ -17,6 +17,7 @@ import dask
 import anndata as ad
 # import tifffile
 import warnings
+import random
 
 
 # FmiZarr class -------------------------------------------------------------
@@ -206,6 +207,59 @@ class FmiZarr:
         if as_NumPy:
             img = np.array(img)
         return img
+
+    def get_image_random_rects(self, well = None, pyramid_level = None,
+                               num_x = 10, num_y = 10,
+                               num_select = 9, seed = 42,
+                               as_NumPy = False):
+        """
+        Split a well image into a regular grid and extract a random subset of grid cells (all z planes if several).
+
+        `num_x` and `num_y` define the grid by specifying the number of cell in x and y.
+        `num_select` picks that many from the total number of grid cells and returns them as a list.
+
+        All returned grid cells are guaranteed to be of equal size, but a few pixels in the
+        last row or column may not be included if the image shape is not divisible by `num_x` or `num_y`.
+        """
+        # digest arguments
+        well = self._digest_well_argument(well)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+        assert num_select <= num_x * num_y
+
+        # load image (convention: single field of view per well -> '0')
+        img_path = os.path.join(self.path, well, '0', str(pyramid_level))
+        img = dask.array.from_zarr(img_path)
+        if as_NumPy:
+            img = np.array(img)
+
+        # calculate grid coordinates
+        # (images are always of 4D shape c,z,y,x)
+        ch, z, y, x = img.shape
+        y_step = y // num_y
+        x_step = x // num_x
+
+        grid_coordinates = [] # list of (y_start, y_end, x_start, x_end)
+        for i in range(num_y):
+            for j in range(num_x):
+                y_start = i * y_step
+                y_end = (i + 1) * y_step if i != num_y - 1 else y
+                x_start = j * x_step
+                x_end = (j + 1) * x_step if j != num_x - 1 else x
+
+                grid_coordinates.append((y_start, y_end, x_start, x_end))
+
+        # select and extract grid cells
+        random.seed(seed)
+        selected_coordinates = random.sample(grid_coordinates, num_select)
+        selected_img_cells = []
+        for i in range(num_select):
+            # remark: currently, dask does not support slicing with multiple lists
+            #         (https://docs.dask.org/en/latest/array-slicing.html)
+            #         workaround: slice in two steps (first y, then x)
+            img_cell = img[:, :, list(range(selected_coordinates[i][0], selected_coordinates[i][1])), :][:, :, :, list(range(selected_coordinates[i][2], selected_coordinates[i][3]))]
+            selected_img_cells.append(img_cell)
+
+        return (selected_coordinates, selected_img_cells)
 
 
 
