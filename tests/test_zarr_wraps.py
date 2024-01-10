@@ -38,19 +38,19 @@ def test_invalid_path():
         zarr_wraps.FmiZarr('tests/example_data/plate_ones_mip.zarr/B')
 
 # zarr_wraps.FmiZarr ----------------------------------------------------------
-def test_digest_well_argument(plate_3d):
+def test_digest_well_argument(plate_3d: zarr_wraps.FmiZarr):
     assert plate_3d._digest_well_argument(None) == 'B/03'
     assert plate_3d._digest_well_argument('B03') == 'B/03'
 
-def test_digest_include_wells_argument(plate_3d):
+def test_digest_include_wells_argument(plate_3d: zarr_wraps.FmiZarr):
     assert plate_3d._digest_include_wells_argument(None) == ['B/03']
     assert plate_3d._digest_include_wells_argument(['B03']) == ['B/03']
 
-def test_digest_pyramid_level_argument(plate_3d):
+def test_digest_pyramid_level_argument(plate_3d: zarr_wraps.FmiZarr):
     assert plate_3d._digest_pyramid_level_argument(None) == 2
     assert plate_3d._digest_pyramid_level_argument(1) == 1
 
-def test_constructor_3d(plate_3d):
+def test_constructor_3d(plate_3d: zarr_wraps.FmiZarr):
     assert isinstance(plate_3d, zarr_wraps.FmiZarr)
     assert plate_3d.name == 'plate_ones.zarr'
     assert isinstance(plate_3d.top, zarr.Group)
@@ -68,7 +68,7 @@ def test_constructor_3d(plate_3d):
     assert plate_3d.label_names == []
     assert plate_3d.table_names == ['FOV_ROI_table']
 
-def test_constructor_2d(plate_2d):
+def test_constructor_2d(plate_2d: zarr_wraps.FmiZarr):
     assert isinstance(plate_2d, zarr_wraps.FmiZarr)
     assert plate_2d.name == 'test'
     assert isinstance(plate_2d.top, zarr.Group)
@@ -86,11 +86,11 @@ def test_constructor_2d(plate_2d):
     assert plate_2d.label_names == ['organoids']
     assert plate_2d.table_names == ['FOV_ROI_table']
 
-def test_str(plate_2d, plate_3d):
+def test_str(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
     assert str(plate_2d) == repr(plate_2d)
     assert str(plate_3d) == repr(plate_3d)
 
-def test_missing_channel_attrs(tmpdir):
+def test_missing_channel_attrs(tmpdir: str):
     # copy zarr fileset
     assert tmpdir.check()
     shutil.copytree('tests/example_data', str(tmpdir) + '/example_data')
@@ -106,7 +106,7 @@ def test_missing_channel_attrs(tmpdir):
     with pytest.raises(Exception) as e_info:
         zarr_wraps.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
 
-def test_missing_multiscales_attrs(tmpdir):
+def test_missing_multiscales_attrs(tmpdir: str):
     # copy zarr fileset
     assert tmpdir.check()
     shutil.copytree('tests/example_data', str(tmpdir) + '/example_data')
@@ -122,7 +122,7 @@ def test_missing_multiscales_attrs(tmpdir):
     with pytest.raises(Exception) as e_info:
         zarr_wraps.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
 
-def test_missing_tables(tmpdir):
+def test_missing_tables(tmpdir: str):
     # copy zarr fileset
     assert tmpdir.check()
     shutil.copytree('tests/example_data', str(tmpdir) + '/example_data')
@@ -133,20 +133,20 @@ def test_missing_tables(tmpdir):
     plate = zarr_wraps.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
     assert plate.table_names == []
 
-def test_get_path(plate_2d, plate_3d):
+def test_get_path(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
     assert plate_2d.get_path() == plate_2d.path
     assert plate_2d.get_path() == 'tests/example_data/plate_ones_mip.zarr'
     assert plate_3d.get_path() == plate_3d.path
     assert plate_3d.get_path() == 'tests/example_data/plate_ones.zarr'
 
-def test_get_wells(plate_2d, plate_3d):
+def test_get_wells(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
     wells_expected = [{'columnIndex': 0, 'path': 'B/03', 'rowIndex': 0}]
     assert plate_2d.get_wells() == plate_2d.wells
     assert plate_2d.get_wells() == wells_expected
     assert plate_3d.get_wells() == plate_3d.wells
     assert plate_3d.get_wells() == wells_expected
 
-def test_get_channels(plate_2d, plate_3d):
+def test_get_channels(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
     channels_expected = [{'wavelength_id': 'A01_C01', 'label': 'some-label-1',
                           'window': {'min': '0', 'max': '10', 'start': '0', 'end': '10'},
                           'color': '00FFFF'},
@@ -158,7 +158,7 @@ def test_get_channels(plate_2d, plate_3d):
     assert plate_3d.get_channels() == plate_3d.channels
     assert plate_3d.get_channels() == channels_expected
 
-def test_get_table_2d(plate_2d):
+def test_get_table_2d(plate_2d: zarr_wraps.FmiZarr):
     empty = plate_2d.get_table('does not exist')
     df = plate_2d.get_table('FOV_ROI_table')
     ann = plate_2d.get_table('FOV_ROI_table', as_AnnData = True)
@@ -170,7 +170,7 @@ def test_get_table_2d(plate_2d):
     df2 = plate_2d.get_table('FOV_ROI_table', include_wells = ['B03'], as_AnnData = False)
     assert df.equals(df2)
 
-def test_get_image_rect_3d(plate_3d):
+def test_get_image_rect_3d(plate_3d: zarr_wraps.FmiZarr):
     img0a = plate_3d.get_image_rect(well = None, pyramid_level = 0,
                                     upper_left = None,
                                     lower_right = None,
@@ -217,6 +217,6 @@ def test_get_image_rect_3d(plate_3d):
 
 
 # zarr_wraps.FractalFmiZarr ---------------------------------------------------
-def test_constructor_set(plate_set):
+def test_constructor_set(plate_set: zarr_wraps.FractalFmiZarr):
     assert isinstance(plate_set, zarr_wraps.FractalFmiZarr)
     assert plate_set.path == 'tests/example_data'
