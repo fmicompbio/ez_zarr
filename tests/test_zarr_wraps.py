@@ -36,6 +36,18 @@ def test_invalid_path():
         zarr_wraps.FmiZarr('tests/example_data/plate_ones_mip.zarr/B')
 
 # zarr_wraps.FmiZarr ----------------------------------------------------------
+def test_digest_well_argument(plate_3d):
+    assert plate_3d._digest_well_argument(None) == 'B/03'
+    assert plate_3d._digest_well_argument('B03') == 'B/03'
+
+def test_digest_include_wells_argument(plate_3d):
+    assert plate_3d._digest_include_wells_argument(None) == ['B/03']
+    assert plate_3d._digest_include_wells_argument(['B03']) == ['B/03']
+
+def test_digest_pyramid_level_argument(plate_3d):
+    assert plate_3d._digest_pyramid_level_argument(None) == 2
+    assert plate_3d._digest_pyramid_level_argument(1) == 1
+
 def test_constructor_3d(plate_3d):
     assert isinstance(plate_3d, zarr_wraps.FmiZarr)
     assert plate_3d.name == 'plate_ones.zarr'
