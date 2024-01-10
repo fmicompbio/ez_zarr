@@ -88,7 +88,11 @@ class FmiZarr:
     # utility functions
     def _digest_well_argument(self, well = None):
         """Interpret a single `well` argument in the context of a given FmiZarr object."""
-        return os.path.join(well[:1].upper(), well[1:])
+        if not well:
+            # no well given -> pick first one
+            return self.wells[0]['path']
+        else:
+            return os.path.join(well[:1].upper(), well[1:])
 
     def _digest_include_wells_argument(self, include_wells = None):
         """Interpret an `include_wells` argument in the context of a given FmiZarr object."""
