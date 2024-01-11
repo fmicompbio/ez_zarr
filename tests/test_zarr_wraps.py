@@ -215,19 +215,29 @@ def test_get_image_rect_3d(plate_3d: zarr_wraps.FmiZarr):
     assert (img1b == img1a).all()
     assert (img1c == img1a).all()
 
-def test_get_image_random_rects_3d(plate_3d: zarr_wraps.FmiZarr):
+def test_get_image_sampled_rects_3d(plate_3d: zarr_wraps.FmiZarr):
+    # exceptions
     with pytest.raises(Exception) as e_info:
-        plate_3d.get_image_random_rects(num_x = 2, num_y = 2, num_select = 5)
-                                        
-    coord_1a, img_1a = plate_3d.get_image_random_rects(well = 'B03', pyramid_level = 2,
-                                                       num_select = 3, seed = 1)
-    coord_1b, img_1b = plate_3d.get_image_random_rects(well = 'B03', pyramid_level = 2,
-                                                       num_select = 3, seed = 1)
-    coord_2, img_2 = plate_3d.get_image_random_rects(well = 'B03', pyramid_level = 2,
-                                                     num_select = 3, seed = 2)
-    coord_3, img_3 = plate_3d.get_image_random_rects(well = 'B03', pyramid_level = 2,
-                                                     num_x = 8, num_y = 8,
-                                                     num_select = 3, seed = 3, as_NumPy = True)
+        plate_3d.get_image_sampled_rects(num_x = 2, num_y = 2, num_select = 5)
+    
+    with pytest.raises(Exception) as e_info:
+        plate_3d.get_image_sampled_rects(pyramid_level = 2, sample_method = 'error')
+
+    # sample_method = 'random'                        
+    coord_1a, img_1a = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+                                                        num_select = 3,
+                                                        sample_method = 'random', seed = 1)
+    coord_1b, img_1b = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+                                                        num_select = 3,
+                                                        sample_method = 'random', seed = 1)
+    coord_2, img_2 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+                                                      num_select = 3,
+                                                      sample_method = 'random', seed = 2)
+    coord_3, img_3 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+                                                      num_x = 8, num_y = 8,
+                                                      num_select = 3,
+                                                      sample_method = 'random', seed = 3,
+                                                      as_NumPy = True)
     assert len(coord_1a) == 3
     assert coord_1a == coord_1b
     assert len(coord_2) == 3
@@ -239,6 +249,23 @@ def test_get_image_random_rects_3d(plate_3d: zarr_wraps.FmiZarr):
     assert len(coord_3) == 3
     assert all([isinstance(x, np.ndarray) for x in img_3])
     assert all(x.shape == (2, 3, 33, 40) for x in img_3)
+
+    # sample_method = 'sum'
+    coord_4, img_4 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+                                                      num_select = 3,
+                                                      sample_method = 'sum')
+    assert len(coord_4) == 3
+    assert all([isinstance(x, dask.array.Array) for x in img_4])
+    assert all(x.shape == (2, 3, 27, 32) for x in img_4)
+
+    # sample_method = 'var'
+    coord_5, img_5 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+                                                      num_select = 3,
+                                                      sample_method = 'var')
+    assert len(coord_5) == 3
+    assert all([isinstance(x, dask.array.Array) for x in img_5])
+    assert all(x.shape == (2, 3, 27, 32) for x in img_5)
+
 
 # zarr_wraps.FractalFmiZarr ---------------------------------------------------
 def test_constructor_set(plate_set: zarr_wraps.FractalFmiZarr):
