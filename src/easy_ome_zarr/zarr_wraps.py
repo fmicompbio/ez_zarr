@@ -114,6 +114,34 @@ class FmiZarr:
             # make sure it is an integer
             pyramid_level = int(pyramid_level)
         return pyramid_level
+    
+    def _calculate_regular_grid_coordsinates(self, y, x, num_y = 10, num_x = 10):
+        """
+        Calculate the cell coordinates for a regular rectangular grid of total size (y, x)
+        by splitting the dimensions into num_y and num_x cells.
+        
+        Returns a list of (y_start, y_end, x_start, x_end) tuples. The coordinates are
+        inclusive at the start and exclusive at the end.
+
+        All returned grid cells are guaranteed to be of equal size, but a few pixels in the
+        last row or column may not be included if y or x is not divisible by `num_y` or `num_x`.
+        """
+        y_step = y // num_y
+        x_step = x // num_x
+
+        grid_coords = [] # list of (y_start, y_end, x_start, x_end)
+        for i in range(num_y):
+            for j in range(num_x):
+                y_start = i * y_step
+                # y_end = (i + 1) * y_step if i != num_y - 1 else y
+                y_end = (i + 1) * y_step # possibly miss some at the highest i
+                x_start = j * x_step
+                # x_end = (j + 1) * x_step if j != num_x - 1 else x
+                x_end = (j + 1) * x_step # possibly miss some at the highest i
+
+                grid_coords.append((y_start, y_end, x_start, x_end))
+        
+        return grid_coords
 
     # string representation
     def __str__(self):
@@ -232,21 +260,12 @@ class FmiZarr:
         if as_NumPy:
             img = np.array(img)
 
-        # calculate grid coordinates
+        # calculate grid coordinates as a list of (y_start, y_end, x_start, x_end)
         # (images are always of 4D shape c,z,y,x)
         ch, z, y, x = img.shape
-        y_step = y // num_y
-        x_step = x // num_x
-
-        grid_coordinates = [] # list of (y_start, y_end, x_start, x_end)
-        for i in range(num_y):
-            for j in range(num_x):
-                y_start = i * y_step
-                y_end = (i + 1) * y_step if i != num_y - 1 else y
-                x_start = j * x_step
-                x_end = (j + 1) * x_step if j != num_x - 1 else x
-
-                grid_coordinates.append((y_start, y_end, x_start, x_end))
+        grid_coords = self._calculate_regular_grid_coordsinates(y = y, x = x,
+                                                                num_y = num_y,
+                                                                num_x = num_x)
 
         # select and extract grid cells
         random.seed(seed)
