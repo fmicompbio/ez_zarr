@@ -143,6 +143,16 @@ class FmiZarr:
         
         return grid_coords
 
+    def _subset_czxy_dask_array_yx(self, a, y, x):
+        """Subset a dask.array.Array with shape (c, z, y, x) using two lists for y and x."""
+        assert len(a.shape) == 4
+        # remark: currently, dask does not support slicing with multiple lists
+        #         (https://docs.dask.org/en/latest/array-slicing.html)
+        #         workaround: slice in two steps (first y, then x)
+        asub = a[:, :, y, :][:, :, :, x]
+        return asub
+
+
     # string representation
     def __str__(self):
         nwells = len(self.wells)
@@ -224,10 +234,11 @@ class FmiZarr:
                 elif not lower_right:
                     lower_right = tuple(upper_left[i] + width_height[i] for i in range(2))
             assert all([upper_left[i] < lower_right[i] for i in range(len(upper_left))])
-            # remark: currently, dask does not support slicing with multiple lists
-            #         (https://docs.dask.org/en/latest/array-slicing.html)
-            #         workaround: slice in two steps (first y, then x)
-            img = img[:, :, list(range(upper_left[1], lower_right[1] + 1)), :][:, :, :, list(range(upper_left[0], lower_right[0] + 1))]
+            img = self._subset_czxy_dask_array_yx(
+                a = img,
+                y = list(range(upper_left[1], lower_right[1] + 1)),
+                x = list(range(upper_left[0], lower_right[0] + 1))
+            )
         elif num_unknowns != 3:
             raise ValueError("Either none are two of `upper_left`, `lower_rigth` and `width_height` have to be given")
 
