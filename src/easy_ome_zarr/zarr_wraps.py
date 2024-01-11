@@ -247,18 +247,24 @@ class FmiZarr:
             img = np.array(img)
         return img
 
-    def get_image_random_rects(self, well = None, pyramid_level = None,
-                               num_x = 10, num_y = 10,
-                               num_select = 9, seed = 42,
-                               as_NumPy = False):
+    def get_image_sampled_rects(self, well = None, pyramid_level = None,
+                                num_x = 10, num_y = 10,
+                                num_select = 9,
+                                sample_method = 'sum',
+                                channel = 0,
+                                seed = 42,
+                                as_NumPy = False):
         """
-        Split a well image into a regular grid and extract a random subset of grid cells (all z planes if several).
+        Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
         `num_x` and `num_y` define the grid by specifying the number of cell in x and y.
-        `num_select` picks that many from the total number of grid cells and returns them as a list.
-
-        All returned grid cells are guaranteed to be of equal size, but a few pixels in the
+        `num_select` picks that many from the total number of grid cells and returns them as a list. All returned grid cells are guaranteed to be of equal size, but a few pixels in the
         last row or column may not be included if the image shape is not divisible by `num_x` or `num_y`.
+
+        `sample_method` defines how the `num_select` cells are selected. Possible values are:
+          - 'sum': order grid cells decreasingly by the sum of `channel`
+          - 'var': order grid cells decreasingly by the variance of `channel`
+          - 'random': order grid cells randomly (use `seed`)
         """
         # digest arguments
         well = self._digest_well_argument(well)
@@ -279,17 +285,47 @@ class FmiZarr:
                                                                 num_x = num_x)
 
         # select and extract grid cells
-        random.seed(seed)
-        selected_coordinates = random.sample(grid_coordinates, num_select)
-        selected_img_cells = []
-        for i in range(num_select):
-            # remark: currently, dask does not support slicing with multiple lists
-            #         (https://docs.dask.org/en/latest/array-slicing.html)
-            #         workaround: slice in two steps (first y, then x)
-            img_cell = img[:, :, list(range(selected_coordinates[i][0], selected_coordinates[i][1])), :][:, :, :, list(range(selected_coordinates[i][2], selected_coordinates[i][3]))]
-            selected_img_cells.append(img_cell)
+        sel_coords = []
+        sel_img_cells = []
 
-        return (selected_coordinates, selected_img_cells)
+        if sample_method == 'sum':
+            grid_values = [
+                dask.array.sum(
+                    self._subset_czxy_dask_array_yx(
+                        a = img[slice(channel, channel + 1)], # use slicing to keep a 4D array
+                        y = list(range(grid_coords[i][0], grid_coords[i][1])),
+                        x = list(range(grid_coords[i][2], grid_coords[i][3]))
+                    )
+                ) for i in range(len(grid_coords))
+            ]
+            idx_sorted = list(np.argsort(np.array(grid_values)))
+            sel_coords = [grid_coords[i] for i in idx_sorted[-num_select:]]
+        elif sample_method == 'var':
+            grid_values = [
+                dask.array.var(
+                    self._subset_czxy_dask_array_yx(
+                        a = img[slice(channel, channel + 1)], # use slicing to keep a 4D array
+                        y = list(range(grid_coords[i][0], grid_coords[i][1])),
+                        x = list(range(grid_coords[i][2], grid_coords[i][3]))
+                    )
+                ) for i in range(len(grid_coords))
+            ]
+            idx_sorted = list(np.argsort(np.array(grid_values)))
+            sel_coords = [grid_coords[i] for i in idx_sorted[-num_select:]]
+        elif sample_method == 'random':
+            random.seed(seed)
+            sel_coords = random.sample(grid_coords, num_select)
+        else:
+            raise ValueError("'sample_method' must be one of 'sum', 'var' or 'random'")
+        for i in range(num_select):
+            img_cell = self._subset_czxy_dask_array_yx(
+                a = img,
+                y = list(range(sel_coords[i][0], sel_coords[i][1])),
+                x = list(range(sel_coords[i][2], sel_coords[i][3]))
+            )
+            sel_img_cells.append(img_cell)
+
+        return (sel_coords, sel_img_cells)
 
 
 
