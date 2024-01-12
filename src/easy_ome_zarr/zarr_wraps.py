@@ -178,8 +178,12 @@ class FmiZarr:
     def get_channels(self):
         """Gets info on channels in the ome-zarr fileset."""
         return self.channels
+    
+    def get_table_names(self):
+        """Gets list of table names in the ome-zarr fileset."""
+        return self.table_names
 
-    # query methods
+    # query methods -----------------------------------------------------------
     def get_table(self, table_name, include_wells = None, as_AnnData = False):
         """Extract table for wells in a ome-zarr fileset."""
         include_wells = self._digest_include_wells_argument(include_wells)

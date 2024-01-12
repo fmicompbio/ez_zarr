@@ -158,6 +158,10 @@ def test_get_channels(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr
     assert plate_3d.get_channels() == plate_3d.channels
     assert plate_3d.get_channels() == channels_expected
 
+def test_get_table_names(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
+    assert plate_2d.get_table_names() == plate_2d.table_names
+    assert plate_3d.get_table_names() == plate_3d.table_names
+
 def test_get_table_2d(plate_2d: zarr_wraps.FmiZarr):
     empty = plate_2d.get_table('does not exist')
     df = plate_2d.get_table('FOV_ROI_table')
