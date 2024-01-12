@@ -149,9 +149,12 @@ for i in range(len(zarrurl)):
         z_mu.append(zyx[0])
         y_mu.append(zyx[1])
         x_mu.append(zyx[2])
-    df["x_micrometer"] = x_mu
-    df["y_micrometer"] = y_mu
-    df["z_micrometer"] = z_mu
+    df["x_micrometer"] = [el * pxl_x for el in x_mu]
+    df["y_micrometer"] = [el * pxl_y for el in y_mu]
+    df["z_micrometer"] = [el * pxl_z for el in z_mu]
+    df["len_x_micrometer"] = [size_x * pxl_x] * df_nrow
+    df["len_y_micrometer"] = [size_y * pxl_y] * df_nrow
+    df["len_z_micrometer"] = [size_z * pxl_z] * df_nrow
     df["x_pixel"] = [size_x] * df_nrow
     df["y_pixel"] = [size_y] * df_nrow
     df["z_pixel"] = [num_Z[i]] * df_nrow
