@@ -126,19 +126,11 @@ for i in range(len(zarrurl)):
         json.dump(zattrs, jsonfile, indent=4)
 
     df_nrow = num_X[i] * num_Y[i] * num_Z[i]
-    df = pd.DataFrame(np.zeros((df_nrow, 10)), dtype=int)
+    df = pd.DataFrame(np.zeros((df_nrow, 2)), dtype=int)
     df.index = [str(j) for j in range(df_nrow)]
     df.columns = [
         "x_micrometer_original",
         "y_micrometer_original",
-        "z_micrometer",
-        "x_pixel",
-        "y_pixel",
-        "z_pixel",
-        "pixel_size_x",
-        "pixel_size_y",
-        "pixel_size_z",
-        "bit_depth",
     ]
     x_mu = []
     y_mu = []
@@ -152,12 +144,9 @@ for i in range(len(zarrurl)):
     df["x_micrometer"] = [el * pxl_x for el in x_mu]
     df["y_micrometer"] = [el * pxl_y for el in y_mu]
     df["z_micrometer"] = [el * pxl_z for el in z_mu]
-    df["len_x_micrometer"] = [size_x * pxl_x] * df_nrow
-    df["len_y_micrometer"] = [size_y * pxl_y] * df_nrow
-    df["len_z_micrometer"] = [size_z * pxl_z] * df_nrow
     df["x_pixel"] = [size_x] * df_nrow
     df["y_pixel"] = [size_y] * df_nrow
-    df["z_pixel"] = [num_Z[i]] * df_nrow
+    df["z_pixel"] = [size_z] * df_nrow
     df["pixel_size_x"] = [pxl_x] * df_nrow
     df["pixel_size_y"] = [pxl_y] * df_nrow
     df["pixel_size_z"] = [pxl_z] * df_nrow
