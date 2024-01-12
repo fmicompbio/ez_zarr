@@ -168,9 +168,10 @@ def test_get_table_2d(plate_2d: zarr_wraps.FmiZarr):
     ann = plate_2d.get_table('FOV_ROI_table', as_AnnData = True)
     assert empty is None
     assert isinstance(df, pd.DataFrame)
-    assert df.shape == (4, 8)
+    assert df.shape == (4, 9)
     assert isinstance(ann, ad.AnnData)
     assert ann.shape == (4, 8)
+    assert 'well' in ann.obs
     df2 = plate_2d.get_table('FOV_ROI_table', include_wells = ['B03'], as_AnnData = False)
     assert df.equals(df2)
 

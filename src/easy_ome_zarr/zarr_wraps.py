@@ -206,7 +206,10 @@ class FmiZarr:
         if as_AnnData:
             return anndata_combined
         else:
-            return anndata_combined.to_df()
+            df_combined = pd.concat([anndata_combined.obs['well'],
+                                     anndata_combined.to_df()],
+                                     axis = 1)
+            return df_combined
 
     def get_image_rect(self, well = None, pyramid_level = None,
                        upper_left = None, lower_right = None, width_height = None,
