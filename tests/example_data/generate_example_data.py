@@ -126,9 +126,15 @@ for i in range(len(zarrurl)):
         json.dump(zattrs, jsonfile, indent=4)
 
     df_nrow = num_X[i] * num_Y[i] * num_Z[i]
-    df = pd.DataFrame(np.zeros((df_nrow, 2)), dtype=int)
+    df = pd.DataFrame(np.zeros((df_nrow, 8)), dtype=int)
     df.index = [str(j) for j in range(df_nrow)]
     df.columns = [
+        "x_micrometer",
+        "y_micrometer",
+        "z_micrometer",
+        "len_x_micrometer",
+        "len_y_micrometer",
+        "len_z_micrometer",
         "x_micrometer_original",
         "y_micrometer_original",
     ]
