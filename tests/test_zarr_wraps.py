@@ -271,6 +271,31 @@ def test_get_image_sampled_rects_3d(plate_3d: zarr_wraps.FmiZarr):
     assert all([isinstance(x, dask.array.Array) for x in img_5])
     assert all(x.shape == (2, 3, 27, 32) for x in img_5)
 
+def test_calc_average_FOV(tmpdir: str, plate_3d: zarr_wraps.FmiZarr):
+    # test exceptions
+    # ... copy zarr fileset
+    assert tmpdir.check()
+    shutil.copytree('tests/example_data', str(tmpdir) + '/example_data')
+    assert tmpdir.join('/example_data/plate_ones.zarr/B/03/0/tables/FOV_ROI_table').check()
+    # ... remove tables
+    shutil.rmtree(str(tmpdir) + '/example_data/plate_ones.zarr/B/03/0/tables')
+    # ... test calculation
+    plate_tmp = zarr_wraps.FmiZarr(str(tmpdir) + '/example_data/plate_ones.zarr')
+    with pytest.raises(Exception) as e_info:
+        plate_tmp.calc_average_FOV()
+
+    # test expected results
+    avg0 = plate_3d.calc_average_FOV(pyramid_level=0)
+    avg1 = plate_3d.calc_average_FOV(pyramid_level=1)
+    avg2 = plate_3d.calc_average_FOV(pyramid_level=2)
+
+    assert isinstance(avg0, np.ndarray)
+    assert isinstance(avg1, np.ndarray)
+    assert isinstance(avg2, np.ndarray)
+
+    assert avg0.shape == (3, 540, 640)
+    assert avg1.shape == (3, 270, 320)
+    assert avg2.shape == (3, 135, 160)
 
 # zarr_wraps.FractalFmiZarr ---------------------------------------------------
 def test_constructor_set(plate_set: zarr_wraps.FractalFmiZarr):

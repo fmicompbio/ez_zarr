@@ -9,22 +9,23 @@ __version__ = '0.1'
 __author__ = 'Silvia Barbiero, Michael Stadler'
 
 
-# imports -------------------------------------------------------------------
+# imports ---------------------------------------------------------------------
 import os, re
 import numpy as np
 import zarr
 import dask
 import anndata as ad
+import pandas as pd
 # import tifffile
 import warnings
 import random
 
 
-# FmiZarr class -------------------------------------------------------------
+# FmiZarr class ---------------------------------------------------------------
 class FmiZarr:
     """Represents a ome-zarr fileset."""
 
-    # constructor and helper functions
+    # constructor and helper functions ----------------------------------------
     def __init__(self, zarr_path, name = None):
         """
         Initializes an ome-zarr fileset (.zarr) from its path.
@@ -86,7 +87,7 @@ class FmiZarr:
         else:
             return []
     
-    # utility functions
+    # utility functions -------------------------------------------------------
     def _digest_well_argument(self, well = None):
         """Interpret a single `well` argument in the context of a given FmiZarr object."""
         if not well:
@@ -109,7 +110,7 @@ class FmiZarr:
         """Interpret a `pyramid_level` argument in the context of a given FmiZarr object."""
         if pyramid_level == None: 
             # no pyramid level given -> pick lowest resolution one
-            pyramid_level = self.level_paths[-1]
+            pyramid_level = int(self.level_paths[-1])
         else:
             # make sure it is an integer
             pyramid_level = int(pyramid_level)
@@ -153,7 +154,7 @@ class FmiZarr:
         return asub
 
 
-    # string representation
+    # string representation ---------------------------------------------------
     def __str__(self):
         nwells = len(self.wells)
         nch = len(self.channels)
@@ -166,7 +167,7 @@ class FmiZarr:
     def __repr__(self):
         return str(self)
     
-    # slot accessors
+    # slot accessors ----------------------------------------------------------
     def get_path(self):
         """Gets the path of the ome-zarr fileset."""
         return self.path
@@ -333,6 +334,61 @@ class FmiZarr:
             sel_img_cells.append(img_cell)
 
         return (sel_coords, sel_img_cells)
+    
+    # analysis methods --------------------------------------------------------
+    def calc_average_FOV(self, include_wells = None, pyramid_level = None, channel = 0):
+        """
+        Calculate the average field of view for wells in `include_wells`,
+        at resolution `pyramid_level`, for `channel`.
+        """
+        # check if required data is available
+        if not 'FOV_ROI_table' in self.table_names:
+            raise ValueError("`FOV_ROI_table` not found - cannot calculate average FOV")
+        
+        # digest arguments
+        include_wells = self._digest_include_wells_argument(include_wells)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+
+        # extract FOV table and scaling information
+        fov_tab = self.get_table('FOV_ROI_table')
+        pyramid_spacing = self.level_zyx_spacing[pyramid_level]
+        assert len(pyramid_spacing) == 3
+        pyramid_spacing = pyramid_spacing[1:] # scale is (z, y, x), just keep y, x
+
+        # sum FOVs
+        avg_fov = None
+        n = 0
+        for well, group in fov_tab.groupby('well'):
+            well = self._digest_well_argument(well)
+            if well in include_wells:
+
+                # load full well image
+                img_path = os.path.join(self.path, well, '0', str(pyramid_level))
+                img = dask.array.from_zarr(img_path)
+                
+                # calculate coordinates for `pyramid_level` that correspond to fields of view
+                fov_yx_start_um = group[['y_micrometer', 'x_micrometer']].values
+                fov_yx_end_um = fov_yx_start_um + group[['len_y_micrometer', 'len_x_micrometer']].values
+                fov_yx_start_px = np.round(np.divide(fov_yx_start_um, pyramid_spacing)).astype(int)
+                fov_yx_end_px = np.round(np.divide(fov_yx_end_um, pyramid_spacing)).astype(int)
+                if avg_fov is None:
+                    avg_fov = np.zeros((img.shape[1],
+                                        fov_yx_end_px[0,0] - fov_yx_start_px[0,0],
+                                        fov_yx_end_px[0,1] - fov_yx_start_px[0,1]))
+
+                # add fields of view to `avg_fov`
+                for i in range(group.shape[0]):
+                    fov_img = self._subset_czxy_dask_array_yx(
+                        a = img,
+                        y = list(range(fov_yx_start_px[i,0], fov_yx_end_px[i,0])),
+                        x = list(range(fov_yx_start_px[i,1], fov_yx_end_px[i,1])))
+                    n += 1
+                    avg_fov += fov_img[channel].compute()
+        
+        # calculate mean
+        avg_fov /= n
+        return(avg_fov)
+
 
 
 
