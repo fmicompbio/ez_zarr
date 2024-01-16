@@ -277,6 +277,7 @@ class FmiZarr:
           - 'var': order grid cells decreasingly by the variance of `channel`
           - 'random': order grid cells randomly (use `seed`)
         """
+        # TODO: sample based on highest pyramic level and only then return requested `pyramid_level`
         # digest arguments
         well = self._digest_well_argument(well)
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
