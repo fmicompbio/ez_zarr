@@ -402,5 +402,42 @@ class FmiZarr:
 class FractalFmiZarr:
     """Represents a folder containing one or several ome-zarr fileset(s)."""
 
-    def __init__(self, folder_path):
-        self.path = folder_path
+    # constructor and helper functions ----------------------------------------
+    def __init__(self, path, name = None):
+        if not os.path.isdir(path):
+            raise ValueError(f'`{path}` does not exist')
+        self.path = path
+        if name is None:
+            self.name = os.path.basename(self.path)
+        else:
+            self.name = name
+        self.zarr_paths = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
+        if len(self.zarr_paths) == 0:
+            raise ValueError(f'no .zarr filesets found in `{path}`')
+        self.zarr = [FmiZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
+        self.zarr_names = [x.name for x in self.zarr]
+        self.zarr_mip_idx = None
+        self.zarr_3d_idx = None
+        if len(self.zarr) == 2 and self.zarr_names[0].replace('_mip.zarr', '.zarr') == self.zarr_names[1]:
+            # special case of 3D plate plus derived maximum intensity projection?
+            self.zarr_mip_idx = 0
+            self.zarr_3d_idx = 1
+
+    # string representation ---------------------------------------------------
+    def __str__(self):
+        nplates = len(self.zarr)
+        platenames = ''.join(f'    {i}: {self.zarr[i].name}\n' for i in range(len(self.zarr)))
+        return f"FractalFmiZarr {self.name}\n  path: {self.path}\n  n_plates: {nplates}\n{platenames}\n"
+    
+    def __repr__(self):
+        return str(self)
+
+    # accessors ---------------------------------------------------------------
+    def __len__(self):
+        return len(self.zarr)
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self.zarr[key]
+        elif isinstance(key, str):
+            return self.zarr[self.zarr_names.index(key)]

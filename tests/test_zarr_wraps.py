@@ -24,8 +24,12 @@ def plate_2d():
     return zarr_wraps.FmiZarr('tests/example_data/plate_ones_mip.zarr', name = "test")
 
 @pytest.fixture
-def plate_set():
+def plate_set1():
     return zarr_wraps.FractalFmiZarr('tests/example_data')
+
+@pytest.fixture
+def plate_set2():
+    return zarr_wraps.FractalFmiZarr('tests/example_data', name = "test")
 
 
 # exeptions -------------------------------------------------------------------
@@ -86,7 +90,7 @@ def test_constructor_2d(plate_2d: zarr_wraps.FmiZarr):
     assert plate_2d.label_names == ['organoids']
     assert plate_2d.table_names == ['FOV_ROI_table']
 
-def test_str(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
+def test_plate_str(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
     assert str(plate_2d) == repr(plate_2d)
     assert str(plate_3d) == repr(plate_3d)
 
@@ -301,6 +305,28 @@ def test_calc_average_FOV(tmpdir: str, plate_3d: zarr_wraps.FmiZarr):
     assert avg2.shape == (3, 135, 160)
 
 # zarr_wraps.FractalFmiZarr ---------------------------------------------------
-def test_constructor_set(plate_set: zarr_wraps.FractalFmiZarr):
-    assert isinstance(plate_set, zarr_wraps.FractalFmiZarr)
-    assert plate_set.path == 'tests/example_data'
+def test_constructor_set(plate_set1: zarr_wraps.FractalFmiZarr,
+                         plate_set2: zarr_wraps.FractalFmiZarr,
+                         tmpdir: str):
+    # exceptions
+    with pytest.raises(Exception) as e_info:
+        zarr_wraps.FractalFmiZarr('error')
+    
+    with pytest.raises(Exception) as e_info:
+        zarr_wraps.FractalFmiZarr(tmpdir)
+
+    # expected values    
+    assert isinstance(plate_set1, zarr_wraps.FractalFmiZarr)
+    assert plate_set1.path == 'tests/example_data'
+    assert plate_set1.name == 'example_data'
+    assert plate_set2.name == 'test'
+    assert plate_set1.zarr_mip_idx == 0
+    assert plate_set1.zarr_3d_idx == 1
+
+def test_plateset_str(plate_set1: zarr_wraps.FractalFmiZarr):
+    assert str(plate_set1) == repr(plate_set1)
+
+def test_plateset_get_element(plate_set1: zarr_wraps.FractalFmiZarr):
+    assert len(plate_set1) == 2
+    assert plate_set1[0] == plate_set1.zarr[0]
+    assert plate_set1[plate_set1.zarr_names[1]] == plate_set1.zarr[1]
