@@ -167,14 +167,17 @@ class FmiZarr:
     def __repr__(self):
         return str(self)
     
-    # slot accessors ----------------------------------------------------------
+    # accessors ---------------------------------------------------------------
     def get_path(self):
         """Gets the path of the ome-zarr fileset."""
         return self.path
 
-    def get_wells(self):
+    def get_wells(self, simplify = False):
         """Gets info on wells in the ome-zarr fileset."""
-        return self.wells
+        if simplify:
+            return [w['path'].replace('/', '') for w in self.wells]
+        else:
+            return self.wells
 
     def get_channels(self):
         """Gets info on channels in the ome-zarr fileset."""

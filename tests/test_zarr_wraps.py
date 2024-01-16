@@ -141,10 +141,13 @@ def test_get_path(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
 
 def test_get_wells(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
     wells_expected = [{'columnIndex': 0, 'path': 'B/03', 'rowIndex': 0}]
+    wells_expected_simple = ['B03']
     assert plate_2d.get_wells() == plate_2d.wells
     assert plate_2d.get_wells() == wells_expected
     assert plate_3d.get_wells() == plate_3d.wells
     assert plate_3d.get_wells() == wells_expected
+    assert plate_2d.get_wells(simplify=True) == wells_expected_simple
+    assert plate_3d.get_wells(simplify=True) == wells_expected_simple
 
 def test_get_channels(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
     channels_expected = [{'wavelength_id': 'A01_C01', 'label': 'some-label-1',
