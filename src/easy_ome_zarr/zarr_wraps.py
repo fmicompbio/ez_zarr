@@ -258,7 +258,8 @@ class FmiZarr:
             img = np.array(img)
         return img
 
-    def get_image_sampled_rects(self, well = None, pyramid_level = None,
+    def get_image_sampled_rects(self, well = None,
+                                pyramid_level = None, lowres_level = None,
                                 num_x = 10, num_y = 10,
                                 num_select = 9,
                                 sample_method = 'sum',
@@ -273,26 +274,30 @@ class FmiZarr:
         last row or column may not be included if the image shape is not divisible by `num_x` or `num_y`.
 
         `sample_method` defines how the `num_select` cells are selected. Possible values are:
-          - 'sum': order grid cells decreasingly by the sum of `channel`
-          - 'var': order grid cells decreasingly by the variance of `channel`
+          - 'sum': order grid cells decreasingly by the sum of `channel` (working on `lowres_level`)
+          - 'var': order grid cells decreasingly by the variance of `channel` (working on `lowres_level`)
           - 'random': order grid cells randomly (use `seed`)
         """
-        # TODO: sample based on highest pyramic level and only then return requested `pyramid_level`
         # digest arguments
         well = self._digest_well_argument(well)
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+        lowres_level = self._digest_pyramid_level_argument(lowres_level)
         assert num_select <= num_x * num_y
 
         # load image (convention: single field of view per well -> '0')
         img_path = os.path.join(self.path, well, '0', str(pyramid_level))
         img = dask.array.from_zarr(img_path)
-        if as_NumPy:
-            img = np.array(img)
+        img_path_lowres = os.path.join(self.path, well, '0', str(lowres_level))
+        img_lowres = dask.array.from_zarr(img_path_lowres)
 
         # calculate grid coordinates as a list of (y_start, y_end, x_start, x_end)
         # (images are always of 4D shape c,z,y,x)
         ch, z, y, x = img.shape
-        grid_coords = self._calculate_regular_grid_coordsinates(y = y, x = x,
+        grid = self._calculate_regular_grid_coordsinates(y = y, x = x,
+                                                         num_y = num_y,
+                                                         num_x = num_x)
+        ch_lr, z_lr, y_lr, x_lr = img_lowres.shape
+        grid_lowres = self._calculate_regular_grid_coordsinates(y = y_lr, x = x_lr,
                                                                 num_y = num_y,
                                                                 num_x = num_x)
 
@@ -304,29 +309,29 @@ class FmiZarr:
             grid_values = [
                 dask.array.sum(
                     self._subset_czxy_dask_array_yx(
-                        a = img[slice(channel, channel + 1)], # use slicing to keep a 4D array
-                        y = list(range(grid_coords[i][0], grid_coords[i][1])),
-                        x = list(range(grid_coords[i][2], grid_coords[i][3]))
+                        a = img_lowres[slice(channel, channel + 1)], # use slicing to keep a 4D array
+                        y = list(range(grid_lowres[i][0], grid_lowres[i][1])),
+                        x = list(range(grid_lowres[i][2], grid_lowres[i][3]))
                     )
-                ) for i in range(len(grid_coords))
+                ) for i in range(len(grid_lowres))
             ]
             idx_sorted = list(np.argsort(np.array(grid_values)))
-            sel_coords = [grid_coords[i] for i in idx_sorted[-num_select:]]
+            sel_coords = [grid[i] for i in idx_sorted[-num_select:]]
         elif sample_method == 'var':
             grid_values = [
                 dask.array.var(
                     self._subset_czxy_dask_array_yx(
-                        a = img[slice(channel, channel + 1)], # use slicing to keep a 4D array
-                        y = list(range(grid_coords[i][0], grid_coords[i][1])),
-                        x = list(range(grid_coords[i][2], grid_coords[i][3]))
+                        a = img_lowres[slice(channel, channel + 1)], # use slicing to keep a 4D array
+                        y = list(range(grid_lowres[i][0], grid_lowres[i][1])),
+                        x = list(range(grid_lowres[i][2], grid_lowres[i][3]))
                     )
-                ) for i in range(len(grid_coords))
+                ) for i in range(len(grid_lowres))
             ]
             idx_sorted = list(np.argsort(np.array(grid_values)))
-            sel_coords = [grid_coords[i] for i in idx_sorted[-num_select:]]
+            sel_coords = [grid[i] for i in idx_sorted[-num_select:]]
         elif sample_method == 'random':
             random.seed(seed)
-            sel_coords = random.sample(grid_coords, num_select)
+            sel_coords = random.sample(grid, num_select)
         else:
             raise ValueError("'sample_method' must be one of 'sum', 'var' or 'random'")
         for i in range(num_select):
@@ -335,6 +340,8 @@ class FmiZarr:
                 y = list(range(sel_coords[i][0], sel_coords[i][1])),
                 x = list(range(sel_coords[i][2], sel_coords[i][3]))
             )
+            if as_NumPy:
+                img_cell = np.array(img_cell)
             sel_img_cells.append(img_cell)
 
         return (sel_coords, sel_img_cells)
