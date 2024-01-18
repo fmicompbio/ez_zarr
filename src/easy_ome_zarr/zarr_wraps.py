@@ -29,8 +29,22 @@ class FmiZarr:
     def __init__(self, zarr_path, name = None):
         """
         Initializes an ome-zarr fileset (.zarr) from its path.
-        We assume that the structure (pyramid levels, labels, table, etc.)
+        Typically, the fileset represents a single assay plate, and 
+        we assume that the structures (pyramid levels, labels, table, etc.)
         are consistent across wells.
+
+        Parameters:
+            zarr_path (str): Path containing the plate ome-zarr fileset.
+            name (str): Optional name for the plate.
+        
+        Examples:
+            Get an object corresponding to a plate.
+
+            >>> from easy_ome_zarr import zarr_wraps
+            >>> plateA = zarr_wraps.FmiZarr('path/to/plate.zarr')
+            >>> plateA
+
+            This will print information on the plate.
         """
 
         self.path = zarr_path
