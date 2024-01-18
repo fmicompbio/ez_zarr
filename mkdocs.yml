@@ -1,0 +1,16 @@
+site_name: easy_ome_zarr
+
+theme: 'material'
+
+plugins:
+  - search  # To have search functionality on the document
+  - mkdocstrings:  # To generate documentation from the code docstrings
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]  # search packages in the src folder
+
+# nav: # Setting up the navigation. Te below list will be tabs on left panel
+#   - index.md
+#   - zarr_wraps.md # A markdown file for documenting the methods
+#   - testing.md  # A markdown to list all the test cases

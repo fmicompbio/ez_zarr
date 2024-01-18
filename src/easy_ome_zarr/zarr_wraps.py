@@ -29,8 +29,22 @@ class FmiZarr:
     def __init__(self, zarr_path, name = None):
         """
         Initializes an ome-zarr fileset (.zarr) from its path.
-        We assume that the structure (pyramid levels, labels, table, etc.)
+        Typically, the fileset represents a single assay plate, and 
+        we assume that the structures (pyramid levels, labels, table, etc.)
         are consistent across wells.
+
+        Parameters:
+            zarr_path (str): Path containing the plate ome-zarr fileset.
+            name (str): Optional name for the plate.
+        
+        Examples:
+            Get an object corresponding to a plate.
+
+            >>> from easy_ome_zarr import zarr_wraps
+            >>> plateA = zarr_wraps.FmiZarr('path/to/plate.zarr')
+            >>> plateA
+
+            This will print information on the plate.
         """
 
         self.path = zarr_path
@@ -144,16 +158,6 @@ class FmiZarr:
         
         return grid_coords
 
-    def _subset_czxy_dask_array_yx(self, a, y, x):
-        """Subset a dask.array.Array with shape (c, z, y, x) using two lists for y and x."""
-        assert len(a.shape) == 4
-        # remark: currently, dask does not support slicing with multiple lists
-        #         (https://docs.dask.org/en/latest/array-slicing.html)
-        #         workaround: slice in two steps (first y, then x)
-        asub = a[:, :, y, :][:, :, :, x]
-        return asub
-
-
     # string representation ---------------------------------------------------
     def __str__(self):
         nwells = len(self.wells)
@@ -245,13 +249,12 @@ class FmiZarr:
                 elif not lower_right:
                     lower_right = tuple(upper_left[i] + width_height[i] for i in range(2))
             assert all([upper_left[i] < lower_right[i] for i in range(len(upper_left))])
-            img = self._subset_czxy_dask_array_yx(
-                a = img,
-                y = list(range(upper_left[1], lower_right[1] + 1)),
-                x = list(range(upper_left[0], lower_right[0] + 1))
-            )
+            img = img[:,
+                      :,
+                      slice(upper_left[1], lower_right[1] + 1),
+                      slice(upper_left[0], lower_right[0] + 1)]
         elif num_unknowns != 3:
-            raise ValueError("Either none are two of `upper_left`, `lower_rigth` and `width_height` have to be given")
+            raise ValueError("Either none or two of `upper_left`, `lower_rigth` and `width_height` have to be given")
 
         # convert if needed and return
         if as_NumPy:
@@ -308,11 +311,10 @@ class FmiZarr:
         if sample_method == 'sum':
             grid_values = [
                 dask.array.sum(
-                    self._subset_czxy_dask_array_yx(
-                        a = img_lowres[slice(channel, channel + 1)], # use slicing to keep a 4D array
-                        y = list(range(grid_lowres[i][0], grid_lowres[i][1])),
-                        x = list(range(grid_lowres[i][2], grid_lowres[i][3]))
-                    )
+                    img_lowres[slice(channel, channel + 1),
+                               :,
+                               slice(grid_lowres[i][0], grid_lowres[i][1]),
+                               slice(grid_lowres[i][2], grid_lowres[i][3])]
                 ) for i in range(len(grid_lowres))
             ]
             idx_sorted = list(np.argsort(np.array(grid_values)))
@@ -320,11 +322,10 @@ class FmiZarr:
         elif sample_method == 'var':
             grid_values = [
                 dask.array.var(
-                    self._subset_czxy_dask_array_yx(
-                        a = img_lowres[slice(channel, channel + 1)], # use slicing to keep a 4D array
-                        y = list(range(grid_lowres[i][0], grid_lowres[i][1])),
-                        x = list(range(grid_lowres[i][2], grid_lowres[i][3]))
-                    )
+                    img_lowres[slice(channel, channel + 1),
+                               :,
+                               slice(grid_lowres[i][0], grid_lowres[i][1]),
+                               slice(grid_lowres[i][2], grid_lowres[i][3])]
                 ) for i in range(len(grid_lowres))
             ]
             idx_sorted = list(np.argsort(np.array(grid_values)))
@@ -335,11 +336,10 @@ class FmiZarr:
         else:
             raise ValueError("'sample_method' must be one of 'sum', 'var' or 'random'")
         for i in range(num_select):
-            img_cell = self._subset_czxy_dask_array_yx(
-                a = img,
-                y = list(range(sel_coords[i][0], sel_coords[i][1])),
-                x = list(range(sel_coords[i][2], sel_coords[i][3]))
-            )
+            img_cell = img[:,
+                           :,
+                           slice(sel_coords[i][0], sel_coords[i][1]),
+                           slice(sel_coords[i][2], sel_coords[i][3])]
             if as_NumPy:
                 img_cell = np.array(img_cell)
             sel_img_cells.append(img_cell)
@@ -389,10 +389,10 @@ class FmiZarr:
 
                 # add fields of view to `avg_fov`
                 for i in range(group.shape[0]):
-                    fov_img = self._subset_czxy_dask_array_yx(
-                        a = img,
-                        y = list(range(fov_yx_start_px[i,0], fov_yx_end_px[i,0])),
-                        x = list(range(fov_yx_start_px[i,1], fov_yx_end_px[i,1])))
+                    fov_img = img[:,
+                                  :,
+                                  slice(fov_yx_start_px[i,0], fov_yx_end_px[i,0]),
+                                  slice(fov_yx_start_px[i,1], fov_yx_end_px[i,1])]
                     n += 1
                     avg_fov += fov_img[channel].compute()
         
