@@ -19,6 +19,7 @@ import pandas as pd
 # import tifffile
 import warnings
 import random
+from typing import Union
 
 
 # FmiZarr class ---------------------------------------------------------------
@@ -68,7 +69,7 @@ class FmiZarr:
         self.table_names = self._load_table_names()
 
     def _load_channel_info(self):
-        """Load info about available channels."""
+        """[internal] Load info about available channels."""
         well = self.wells[0]['path']
         well_group = self.top[os.path.join(well, '0')] # convention: single field of view per well
         if not 'omero' in well_group.attrs or not 'channels' in well_group.attrs['omero']:
@@ -76,7 +77,7 @@ class FmiZarr:
         return well_group.attrs['omero']['channels']
     
     def _load_multiscale_info(self):
-        """Load info about available scales."""
+        """[internal] Load info about available scales."""
         well = self.wells[0]['path']
         well_group = self.top[os.path.join(well, '0')] # convention: single field of view per well
         if not 'multiscales' in well_group.attrs:
@@ -84,7 +85,7 @@ class FmiZarr:
         return well_group.attrs['multiscales'][0]
     
     def _load_label_names(self):
-        """Load label names (available segmentations)."""
+        """[internal] Load label names (available segmentations)."""
         well = self.wells[0]['path']
         label_path = os.path.join(well, '0', 'labels')
         if label_path in self.top:
@@ -93,7 +94,7 @@ class FmiZarr:
             return []
 
     def _load_table_names(self):
-        """Load table names (can be extracted using .get_table())."""
+        """[internal] Load table names (can be extracted using .get_table())."""
         well = self.wells[0]['path']
         table_path = os.path.join(well, '0', 'tables')
         if table_path in self.top:
@@ -103,7 +104,7 @@ class FmiZarr:
     
     # utility functions -------------------------------------------------------
     def _digest_well_argument(self, well = None):
-        """Interpret a single `well` argument in the context of a given FmiZarr object."""
+        """[internal] Interpret a single `well` argument in the context of a given FmiZarr object."""
         if not well:
             # no well given -> pick first one
             return self.wells[0]['path']
@@ -111,7 +112,7 @@ class FmiZarr:
             return os.path.join(well[:1].upper(), well[1:])
 
     def _digest_include_wells_argument(self, include_wells = None):
-        """Interpret an `include_wells` argument in the context of a given FmiZarr object."""
+        """[internal] Interpret an `include_wells` argument in the context of a given FmiZarr object."""
         if not include_wells: 
             # no wells given -> include all wells
             include_wells = [x['path'] for x in self.wells]
@@ -121,7 +122,7 @@ class FmiZarr:
         return include_wells
 
     def _digest_pyramid_level_argument(self, pyramid_level = None):
-        """Interpret a `pyramid_level` argument in the context of a given FmiZarr object."""
+        """[internal] Interpret a `pyramid_level` argument in the context of a given FmiZarr object."""
         if pyramid_level == None: 
             # no pyramid level given -> pick lowest resolution one
             pyramid_level = int(self.level_paths[-1])
@@ -132,7 +133,7 @@ class FmiZarr:
     
     def _calculate_regular_grid_coordsinates(self, y, x, num_y = 10, num_x = 10):
         """
-        Calculate the cell coordinates for a regular rectangular grid of total size (y, x)
+        [internal] Calculate the cell coordinates for a regular rectangular grid of total size (y, x)
         by splitting the dimensions into num_y and num_x cells.
         
         Returns a list of (y_start, y_end, x_start, x_end) tuples. The coordinates are
@@ -173,27 +174,60 @@ class FmiZarr:
     
     # accessors ---------------------------------------------------------------
     def get_path(self):
-        """Gets the path of the ome-zarr fileset."""
+        """Gets the path of the ome-zarr fileset.
+        
+        Returns:
+            path (str): The path to the ome-zarr fileset.
+        """
         return self.path
 
     def get_wells(self, simplify = False):
-        """Gets info on wells in the ome-zarr fileset."""
+        """Gets info on wells in the ome-zarr fileset.
+
+        Parameters:
+            simplify (bool): If `True`, the well names are returned in human readable form (e.g. 'B03').
+        
+        Returns:
+            wells (list): A list of wells in the plate, either name strings (if `simplify=True`) or dicts with well attributes.
+        """
         if simplify:
             return [w['path'].replace('/', '') for w in self.wells]
         else:
             return self.wells
 
     def get_channels(self):
-        """Gets info on channels in the ome-zarr fileset."""
+        """Gets info on channels in the ome-zarr fileset.
+        
+        Returns:
+            channels (list): A list of dicts with information on channels.
+        """
         return self.channels
     
-    def get_table_names(self):
-        """Gets list of table names in the ome-zarr fileset."""
+    def get_table_names(self) -> list:
+        """Gets list of table names in the ome-zarr fileset.
+        
+        Returns:
+            table_names (list): A list of table names (str) available in the plate.
+        """
         return self.table_names
 
     # query methods -----------------------------------------------------------
-    def get_table(self, table_name, include_wells = None, as_AnnData = False):
-        """Extract table for wells in a ome-zarr fileset."""
+    def get_table(self, table_name, include_wells = None, as_AnnData = False) -> Union[ad.AnnData, pd.DataFrame]:
+        """Extract table for wells in a ome-zarr fileset.
+        
+        Parameters:
+            table_name (str): The name of the table to extract.
+            include_wells (list): List of well names to include. If `None`, all wells are included.
+            as_AnnData (bool): If `True`, the table is returned as an `AnnData` object, otherwise it is converted to a `pandas.DataFrame`.
+        
+        Returns:
+            table (anndata.AnnData | pandas.DataFrame): The extracted table, either as an `anndata.AnnData` object if `as_AnnData=True`, and as a `pandas.DataFrame` otherwise.
+        
+        Examples:
+            Get a table with coordinates of fields of view:
+
+            >>> plateA.get_table(table_name='FOV_ROI_table')
+        """
         include_wells = self._digest_include_wells_argument(include_wells)
 
         table_paths = [os.path.join(w, '0', 'tables', table_name) for w in include_wells]
@@ -226,9 +260,30 @@ class FmiZarr:
         Extract a rectangular image region (all z planes if several) from a well by coordinates.
 
         None or at least two of `upper_left`, `lower_right` and `width_height` need to be given.
-        If none are given, it will return the full image.
+        If none are given, it will return the full image (typically the whole well).
         Otherwise, `upper_left` contains the lower indices than `lower_right`
         (origin on the top-left, zero-based coordinates), and each of them is a tuple of (x, y).
+
+        Parameters:
+            well (str): The well (e.g. 'B03') from which an image should be extracted.
+            pyramid_level (int): The pyramid level (resolution level), from which the image
+                should be extracted. If `None`, the lowest-resolution (highest) pyramid level
+                will be selected.
+            upper_left (tuple): Tuple of (x, y) coordinates for the upper-left (lower) coordinates
+                defining the image rectangle.
+            lower_right (tuple): Tuple of (x, y) coordinates for the lower-right (higher) coordinates
+                defining the image rectangle.
+            width_height (tuple): Tuple of (wx, wy) width and height defining the image rectangle.
+            as_NumPy (bool): If `True`, return the image as 4D `numpy.ndarray` object (c,z,y,x).
+                Otherwise, return the (on-disk) `dask` array of the same dimensions.
+        
+        Returns:
+
+        
+        Examples:
+            Obtain the image of the lowest-resolution for the full well 'A02':
+
+            >>> plateA.get_image_rect(well = 'A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)
