@@ -569,3 +569,16 @@ class FractalFmiZarr:
             return self.zarr[key]
         elif isinstance(key, str):
             return self.zarr[self.zarr_names.index(key)]
+
+    def __getattr__(self, name):
+        try:
+            attr = getattr(self.zarr[0], name)
+        except AttributeError:
+            raise AttributeError(f"'{type(self.zarr[0]).__name__}' objects have no attribute '{name}'")
+
+        if callable(attr):
+            def wrapper(*args, **kwargs):
+                return [getattr(plate, name)(*args, **kwargs) for plate in self.zarr]
+            return wrapper
+        else:
+            return [getattr(plate, name) for plate in self.zarr]

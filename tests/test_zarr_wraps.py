@@ -352,3 +352,13 @@ def test_plateset_get_element(plate_set1: zarr_wraps.FractalFmiZarr):
     assert len(plate_set1) == 2
     assert plate_set1[0] == plate_set1.zarr[0]
     assert plate_set1[plate_set1.zarr_names[1]] == plate_set1.zarr[1]
+
+def test_plateset_get_plate_attributes(plate_set1: zarr_wraps.FractalFmiZarr):
+    # exceptions
+    with pytest.raises(Exception) as e_info:
+        plate_set1.does_not_exist
+
+    # expected values    
+    assert plate_set1.name == 'example_data'
+    assert plate_set1.wells == plate_set1.get_wells()
+    assert plate_set1.get_table_names() == [['FOV_ROI_table'], ['FOV_ROI_table']]
