@@ -173,7 +173,7 @@ class FmiZarr:
         return str(self)
     
     # accessors ---------------------------------------------------------------
-    def get_path(self):
+    def get_path(self) -> str:
         """Gets the path of the ome-zarr fileset.
         
         Returns:
@@ -181,7 +181,7 @@ class FmiZarr:
         """
         return self.path
 
-    def get_wells(self, simplify = False):
+    def get_wells(self, simplify = False) -> list[Union[dict, str]]:
         """Gets info on wells in the ome-zarr fileset.
 
         Parameters:
@@ -195,7 +195,7 @@ class FmiZarr:
         else:
             return self.wells
 
-    def get_channels(self):
+    def get_channels(self) -> list:
         """Gets info on channels in the ome-zarr fileset.
         
         Returns:
@@ -255,7 +255,7 @@ class FmiZarr:
 
     def get_image_rect(self, well = None, pyramid_level = None,
                        upper_left = None, lower_right = None, width_height = None,
-                       as_NumPy = False):
+                       as_NumPy = False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a rectangular image region (all z planes if several) from a well by coordinates.
 
@@ -323,7 +323,7 @@ class FmiZarr:
                                 sample_method = 'sum',
                                 channel = 0,
                                 seed = 42,
-                                as_NumPy = False):
+                                as_NumPy = False) -> list[Union[dask.array.Array, np.ndarray]]:
         """
         Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
@@ -402,7 +402,7 @@ class FmiZarr:
         return (sel_coords, sel_img_cells)
     
     # analysis methods --------------------------------------------------------
-    def calc_average_FOV(self, include_wells = None, pyramid_level = None, channel = 0):
+    def calc_average_FOV(self, include_wells = None, pyramid_level = None, channel = 0) -> np.ndarray:
         """
         Calculate the average field of view for wells in `include_wells`,
         at resolution `pyramid_level`, for `channel`.
