@@ -183,7 +183,7 @@ class FmiZarr:
         """Gets the path of the ome-zarr fileset.
         
         Returns:
-            str: The path to the ome-zarr fileset.
+            The path to the ome-zarr fileset.
         """
         return self.path
 
@@ -194,7 +194,7 @@ class FmiZarr:
             simplify (bool): If `True`, the well names are returned in human readable form (e.g. 'B03').
         
         Returns:
-            list: A list of wells in the plate, either name strings (if `simplify=True`) or dicts with well attributes.
+            A list of wells in the plate, either name strings (if `simplify=True`) or dicts with well attributes.
         """
         if simplify:
             return [w['path'].replace('/', '') for w in self.wells]
@@ -205,7 +205,7 @@ class FmiZarr:
         """Gets info on channels in the ome-zarr fileset.
         
         Returns:
-            list: A list of dicts with information on channels.
+            A list of dicts with information on channels.
         """
         return self.channels
     
@@ -213,12 +213,15 @@ class FmiZarr:
         """Gets list of table names in the ome-zarr fileset.
         
         Returns:
-            list: A list of table names (str) available in the plate.
+            A list of table names (str) available in the plate.
         """
         return self.table_names
 
     # query methods -----------------------------------------------------------
-    def get_table(self, table_name: str, include_wells: list[str] = [], as_AnnData: bool = False) -> Union[ad.AnnData, pd.DataFrame]:
+    def get_table(self,
+                  table_name: str,
+                  include_wells: list[str] = [],
+                  as_AnnData: bool = False) -> Union[ad.AnnData, pd.DataFrame]:
         """Extract table for wells in a ome-zarr fileset.
         
         Parameters:
@@ -227,7 +230,7 @@ class FmiZarr:
             as_AnnData (bool): If `True`, the table is returned as an `AnnData` object, otherwise it is converted to a `pandas.DataFrame`.
         
         Returns:
-            anndata.AnnData | pandas.DataFrame: The extracted table, either as an `anndata.AnnData` object if `as_AnnData=True`, and as a `pandas.DataFrame` otherwise.
+            The extracted table, either as an `anndata.AnnData` object if `as_AnnData=True`, and as a `pandas.DataFrame` otherwise.
         
         Examples:
             Get a table with coordinates of fields of view:
@@ -259,9 +262,13 @@ class FmiZarr:
                                      axis = 1)
             return df_combined
 
-    def get_image_rect(self, well = None, pyramid_level = None,
-                       upper_left = None, lower_right = None, width_height = None,
-                       as_NumPy = False) -> Union[dask.array.Array, np.ndarray]:
+    def get_image_rect(self,
+                       well: Optional[str] = None,
+                       pyramid_level: Optional[int] = None,
+                       upper_left: Optional[tuple[int]] = None,
+                       lower_right: Optional[tuple[int]] = None,
+                       width_height: Optional[tuple[int]] = None,
+                       as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a rectangular image region (all z planes if several) from a well by coordinates.
 
@@ -284,7 +291,7 @@ class FmiZarr:
                 Otherwise, return the (on-disk) `dask` array of the same dimensions.
         
         Returns:
-            dask.array.Array | numpy.ndarray: The extracted image, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
+            The extracted image, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
         
         Examples:
             Obtain the image of the lowest-resolution for the full well 'A02':
@@ -364,7 +371,7 @@ class FmiZarr:
                 shapes (c,z,y,x). Otherwise, return the (on-disk) `dask` arrays of the same dimensions.
         
         Returns:
-            list: List of `num_select` selected grid cell images.
+            List of `num_select` selected grid cell images.
 
         Examples:
             Obtain grid cells with highest signal sum in channel 0 from well 'A02':
@@ -455,7 +462,7 @@ class FmiZarr:
             channel (int): The channel for which the fields of view should be averaged.
 
         Returns:
-            numpy.ndarray: The averaged field of view, as an array of shape (z,y,x).
+            The averaged field of view, as an array of shape (z,y,x).
 
         Examples:
             Calculate the averaged field of view for channel zero over all wells
