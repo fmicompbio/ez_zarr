@@ -19,7 +19,7 @@ import pandas as pd
 # import tifffile
 import warnings
 import random
-from typing import Union
+from typing import Union, Optional, Any
 
 
 # FmiZarr class ---------------------------------------------------------------
@@ -27,7 +27,7 @@ class FmiZarr:
     """Represents a ome-zarr fileset."""
 
     # constructor and helper functions ----------------------------------------
-    def __init__(self, zarr_path, name = None):
+    def __init__(self, zarr_path: str, name: Optional[str] = None) -> None:
         """
         Initializes an ome-zarr fileset (.zarr) from its path.
         Typically, the fileset represents a single assay plate, and 
@@ -48,27 +48,28 @@ class FmiZarr:
             This will print information on the plate.
         """
 
-        self.path = zarr_path
+        self.path: str = zarr_path
+        self.name: str = ''
         if name:
             self.name = name
         else:
             self.name = os.path.basename(self.path)
-        self.__top = zarr.open_group(store = self.path, mode = 'r')
+        self.__top: zarr.Group = zarr.open_group(store = self.path, mode = 'r')
         if not 'plate' in self.__top.attrs:
             raise ValueError(f"{self.name} does not contain a zarr fileset with a 'plate'")
-        self.acquisitions = self.__top.attrs['plate']['acquisitions']
-        self.columns = self.__top.attrs['plate']['columns']
-        self.rows = self.__top.attrs['plate']['rows']
-        self.wells = self.__top.attrs['plate']['wells']
-        self.channels = self._load_channel_info()
-        self.multiscales = self._load_multiscale_info()
-        self.level_paths = [x['path'] for x in self.multiscales['datasets']]
-        self.level_zyx_spacing = [x['coordinateTransformations'][0]['scale'][1:] for x in self.multiscales['datasets']] # convention: unit is micrometer
-        self.level_zyx_scalefactor = np.divide(self.level_zyx_spacing[1], self.level_zyx_spacing[0])
-        self.label_names = self._load_label_names()
-        self.table_names = self._load_table_names()
+        self.acquisitions: list = self.__top.attrs['plate']['acquisitions']
+        self.columns: list[dict] = self.__top.attrs['plate']['columns']
+        self.rows: list[dict] = self.__top.attrs['plate']['rows']
+        self.wells: list[dict] = self.__top.attrs['plate']['wells']
+        self.channels: list[dict] = self._load_channel_info()
+        self.multiscales: dict[str, Any] = self._load_multiscale_info()
+        self.level_paths: list[str] = [x['path'] for x in self.multiscales['datasets']]
+        self.level_zyx_spacing: list[list[float]] = [x['coordinateTransformations'][0]['scale'][1:] for x in self.multiscales['datasets']] # convention: unit is micrometer
+        self.level_zyx_scalefactor: np.ndarray = np.divide(self.level_zyx_spacing[1], self.level_zyx_spacing[0])
+        self.label_names: list[str] = self._load_label_names()
+        self.table_names: list[str] = self._load_table_names()
 
-    def _load_channel_info(self):
+    def _load_channel_info(self) -> list:
         """[internal] Load info about available channels."""
         well = self.wells[0]['path']
         well_group = self.__top[os.path.join(well, '0')] # convention: single field of view per well
@@ -76,7 +77,7 @@ class FmiZarr:
             raise ValueError(f"no channel info found in well {well}")
         return well_group.attrs['omero']['channels']
     
-    def _load_multiscale_info(self):
+    def _load_multiscale_info(self) -> dict[str, Any]:
         """[internal] Load info about available scales."""
         well = self.wells[0]['path']
         well_group = self.__top[os.path.join(well, '0')] # convention: single field of view per well
@@ -84,7 +85,7 @@ class FmiZarr:
             raise ValueError(f"no multiscale info found in well {well}")
         return well_group.attrs['multiscales'][0]
     
-    def _load_label_names(self):
+    def _load_label_names(self) -> list[str]:
         """[internal] Load label names (available segmentations)."""
         well = self.wells[0]['path']
         label_path = os.path.join(well, '0', 'labels')
@@ -93,7 +94,7 @@ class FmiZarr:
         else:
             return []
 
-    def _load_table_names(self):
+    def _load_table_names(self) -> list[str]:
         """[internal] Load table names (can be extracted using .get_table())."""
         well = self.wells[0]['path']
         table_path = os.path.join(well, '0', 'tables')
@@ -111,9 +112,9 @@ class FmiZarr:
         else:
             return os.path.join(well[:1].upper(), well[1:])
 
-    def _digest_include_wells_argument(self, include_wells = None):
+    def _digest_include_wells_argument(self, include_wells: list[str] = []) -> list[str]:
         """[internal] Interpret an `include_wells` argument in the context of a given FmiZarr object."""
-        if not include_wells: 
+        if len(include_wells) == 0: 
             # no wells given -> include all wells
             include_wells = [x['path'] for x in self.wells]
         else:
@@ -121,7 +122,7 @@ class FmiZarr:
             include_wells = [self._digest_well_argument(w) for w in include_wells]
         return include_wells
 
-    def _digest_pyramid_level_argument(self, pyramid_level = None):
+    def _digest_pyramid_level_argument(self, pyramid_level = None) -> int:
         """[internal] Interpret a `pyramid_level` argument in the context of a given FmiZarr object."""
         if pyramid_level == None: 
             # no pyramid level given -> pick lowest resolution one
@@ -177,11 +178,11 @@ class FmiZarr:
         """Gets the path of the ome-zarr fileset.
         
         Returns:
-            path (str): The path to the ome-zarr fileset.
+            str: The path to the ome-zarr fileset.
         """
         return self.path
 
-    def get_wells(self, simplify = False) -> list[Union[dict, str]]:
+    def get_wells(self, simplify: bool = False) -> Union[list[dict[str, Any]], list[str]]:
         """Gets info on wells in the ome-zarr fileset.
 
         Parameters:
@@ -212,7 +213,7 @@ class FmiZarr:
         return self.table_names
 
     # query methods -----------------------------------------------------------
-    def get_table(self, table_name, include_wells = None, as_AnnData = False) -> Union[ad.AnnData, pd.DataFrame]:
+    def get_table(self, table_name: str, include_wells: list[str] = [], as_AnnData: bool = False) -> Union[ad.AnnData, pd.DataFrame]:
         """Extract table for wells in a ome-zarr fileset.
         
         Parameters:
@@ -232,7 +233,7 @@ class FmiZarr:
 
         table_paths = [os.path.join(w, '0', 'tables', table_name) for w in include_wells]
         # remark: warn if not all well have the table?
-        table_paths = [p for p in table_paths if p in self.top]
+        table_paths = [p for p in table_paths if p in self.__top]
 
         if len(table_paths) == 0:
             return None
@@ -316,14 +317,16 @@ class FmiZarr:
             img = np.array(img)
         return img
 
-    def get_image_sampled_rects(self, well = None,
-                                pyramid_level = None, lowres_level = None,
-                                num_x = 10, num_y = 10,
-                                num_select = 9,
-                                sample_method = 'sum',
-                                channel = 0,
-                                seed = 42,
-                                as_NumPy = False) -> list[Union[dask.array.Array, np.ndarray]]:
+    def get_image_sampled_rects(self,
+                                well: Optional[str] = None,
+                                pyramid_level: Optional[int] = None,
+                                lowres_level: Optional[int] = None,
+                                num_x: int = 10, num_y: int = 10,
+                                num_select: int = 9,
+                                sample_method: str = 'sum',
+                                channel: int = 0,
+                                seed: int = 42,
+                                as_NumPy: bool = False) -> Union[tuple[list[tuple[int]], list[dask.array.Array]], tuple[list[tuple[int]], list[np.ndarray]]]:
         """
         Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
@@ -429,7 +432,10 @@ class FmiZarr:
         return (sel_coords, sel_img_cells)
     
     # analysis methods --------------------------------------------------------
-    def calc_average_FOV(self, include_wells = None, pyramid_level = None, channel = 0) -> np.ndarray:
+    def calc_average_FOV(self,
+                         include_wells: list[str] = [],
+                         pyramid_level: Optional[int] = None,
+                         channel: int = 0) -> np.ndarray:
         """
         Calculate the average field of view.
          
@@ -467,7 +473,7 @@ class FmiZarr:
         pyramid_spacing = pyramid_spacing[1:] # scale is (z, y, x), just keep y, x
 
         # sum FOVs
-        avg_fov = None
+        avg_fov = np.zeros((0))
         n = 0
         for well, group in fov_tab.groupby('well'):
             well = self._digest_well_argument(well)
@@ -482,7 +488,7 @@ class FmiZarr:
                 fov_yx_end_um = fov_yx_start_um + group[['len_y_micrometer', 'len_x_micrometer']].values
                 fov_yx_start_px = np.round(np.divide(fov_yx_start_um, pyramid_spacing)).astype(int)
                 fov_yx_end_px = np.round(np.divide(fov_yx_end_um, pyramid_spacing)).astype(int)
-                if avg_fov is None:
+                if len(avg_fov) == 0:
                     avg_fov = np.zeros((img.shape[1],
                                         fov_yx_end_px[0,0] - fov_yx_start_px[0,0],
                                         fov_yx_end_px[0,1] - fov_yx_start_px[0,1]))
@@ -511,7 +517,7 @@ class FractalFmiZarr:
     """Represents a folder containing one or several ome-zarr fileset(s)."""
 
     # constructor and helper functions ----------------------------------------
-    def __init__(self, path, name = None):
+    def __init__(self, path: str, name = None) -> None:
         """
         Initializes a container for a folder containing one or several ome-zarr
         fileset(s) (.zarr). Typically, the object is used for a folder which
@@ -534,37 +540,38 @@ class FractalFmiZarr:
         """
         if not os.path.isdir(path):
             raise ValueError(f'`{path}` does not exist')
-        self.path = path
+        self.path: str = path
+        self.name: str = ''
         if name is None:
             self.name = os.path.basename(self.path)
         else:
             self.name = name
-        self.zarr_paths = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
+        self.zarr_paths: list[str] = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
         if len(self.zarr_paths) == 0:
             raise ValueError(f'no .zarr filesets found in `{path}`')
-        self.zarr = [FmiZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
-        self.zarr_names = [x.name for x in self.zarr]
-        self.zarr_mip_idx = None
-        self.zarr_3d_idx = None
+        self.zarr: list[FmiZarr] = [FmiZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
+        self.zarr_names: list[str] = [x.name for x in self.zarr]
+        self.zarr_mip_idx: Optional[int] = None
+        self.zarr_3d_idx: Optional[int] = None
         if len(self.zarr) == 2 and self.zarr_names[0].replace('_mip.zarr', '.zarr') == self.zarr_names[1]:
             # special case of 3D plate plus derived maximum intensity projection?
             self.zarr_mip_idx = 0
             self.zarr_3d_idx = 1
 
     # string representation ---------------------------------------------------
-    def __str__(self):
+    def __str__(self) -> str:
         nplates = len(self.zarr)
         platenames = ''.join(f'    {i}: {self.zarr[i].name}\n' for i in range(len(self.zarr)))
         return f"FractalFmiZarr {self.name}\n  path: {self.path}\n  n_plates: {nplates}\n{platenames}\n"
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
     # accessors ---------------------------------------------------------------
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.zarr)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[int, str]) -> FmiZarr:
         if isinstance(key, int):
             return self.zarr[key]
         elif isinstance(key, str):
