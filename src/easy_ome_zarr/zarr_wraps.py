@@ -2,6 +2,11 @@
 
 Represent an ome-zarr fileset as a class to give high-level
 access to its contents.
+
+Classes:
+    FmiZarr: Contains a single .zarr fileset, typically a plate.
+    FractalFmiZarr: Contains one or several .zarr filesets, typically a plate
+        (4 dimensional data) and a maximum-intensity projection derived from it.
 """
 
 __all__ = ['FmiZarr', 'FractalFmiZarr']
@@ -36,7 +41,7 @@ class FmiZarr:
 
         Parameters:
             zarr_path (str): Path containing the plate ome-zarr fileset.
-            name (str): Optional name for the plate.
+            name (str, optional): Optional name for the plate.
         
         Examples:
             Get an object corresponding to a plate.
@@ -189,7 +194,7 @@ class FmiZarr:
             simplify (bool): If `True`, the well names are returned in human readable form (e.g. 'B03').
         
         Returns:
-            wells (list): A list of wells in the plate, either name strings (if `simplify=True`) or dicts with well attributes.
+            list: A list of wells in the plate, either name strings (if `simplify=True`) or dicts with well attributes.
         """
         if simplify:
             return [w['path'].replace('/', '') for w in self.wells]
@@ -200,7 +205,7 @@ class FmiZarr:
         """Gets info on channels in the ome-zarr fileset.
         
         Returns:
-            channels (list): A list of dicts with information on channels.
+            list: A list of dicts with information on channels.
         """
         return self.channels
     
@@ -208,7 +213,7 @@ class FmiZarr:
         """Gets list of table names in the ome-zarr fileset.
         
         Returns:
-            table_names (list): A list of table names (str) available in the plate.
+            list: A list of table names (str) available in the plate.
         """
         return self.table_names
 
@@ -218,11 +223,11 @@ class FmiZarr:
         
         Parameters:
             table_name (str): The name of the table to extract.
-            include_wells (list): List of well names to include. If `None`, all wells are included.
+            include_wells (list): List of well names to include. If empty `[]`, all wells are included.
             as_AnnData (bool): If `True`, the table is returned as an `AnnData` object, otherwise it is converted to a `pandas.DataFrame`.
         
         Returns:
-            table (anndata.AnnData | pandas.DataFrame): The extracted table, either as an `anndata.AnnData` object if `as_AnnData=True`, and as a `pandas.DataFrame` otherwise.
+            anndata.AnnData | pandas.DataFrame: The extracted table, either as an `anndata.AnnData` object if `as_AnnData=True`, and as a `pandas.DataFrame` otherwise.
         
         Examples:
             Get a table with coordinates of fields of view:
@@ -279,7 +284,7 @@ class FmiZarr:
                 Otherwise, return the (on-disk) `dask` array of the same dimensions.
         
         Returns:
-            image (dask.array.Array | numpy.ndarray): The extracted image, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
+            dask.array.Array | numpy.ndarray: The extracted image, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
         
         Examples:
             Obtain the image of the lowest-resolution for the full well 'A02':
@@ -359,7 +364,7 @@ class FmiZarr:
                 shapes (c,z,y,x). Otherwise, return the (on-disk) `dask` arrays of the same dimensions.
         
         Returns:
-            grid_cells (list): List of `num_select` selected grid cell images.
+            list: List of `num_select` selected grid cell images.
 
         Examples:
             Obtain grid cells with highest signal sum in channel 0 from well 'A02':
@@ -443,14 +448,14 @@ class FmiZarr:
         field of view for wells in `include_wells`, for `channel` at resolution `pyramid_level`.
 
         Parameters:
-            include_wells (list): List of well names to include. If `None`, all wells are included.
+            include_wells (list): List of well names to include. If empty `[]`, all wells are included.
             pyramid_level (int): The pyramid level (resolution level), from which the image
                 should be extracted. If `None`, the lowest-resolution (highest) pyramid level
                 will be selected.
             channel (int): The channel for which the fields of view should be averaged.
 
         Returns:
-            avg_image (numpy.ndarray): The averaged field of view, as an array of shape (z,y,x).
+            numpy.ndarray: The averaged field of view, as an array of shape (z,y,x).
 
         Examples:
             Calculate the averaged field of view for channel zero over all wells
