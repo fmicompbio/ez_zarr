@@ -53,13 +53,13 @@ class FmiZarr:
             self.name = name
         else:
             self.name = os.path.basename(self.path)
-        self.top = zarr.open_group(store = self.path, mode = 'r')
-        if not 'plate' in self.top.attrs:
+        self.__top = zarr.open_group(store = self.path, mode = 'r')
+        if not 'plate' in self.__top.attrs:
             raise ValueError(f"{self.name} does not contain a zarr fileset with a 'plate'")
-        self.acquisitions = self.top.attrs['plate']['acquisitions']
-        self.columns = self.top.attrs['plate']['columns']
-        self.rows = self.top.attrs['plate']['rows']
-        self.wells = self.top.attrs['plate']['wells']
+        self.acquisitions = self.__top.attrs['plate']['acquisitions']
+        self.columns = self.__top.attrs['plate']['columns']
+        self.rows = self.__top.attrs['plate']['rows']
+        self.wells = self.__top.attrs['plate']['wells']
         self.channels = self._load_channel_info()
         self.multiscales = self._load_multiscale_info()
         self.level_paths = [x['path'] for x in self.multiscales['datasets']]
@@ -71,7 +71,7 @@ class FmiZarr:
     def _load_channel_info(self):
         """[internal] Load info about available channels."""
         well = self.wells[0]['path']
-        well_group = self.top[os.path.join(well, '0')] # convention: single field of view per well
+        well_group = self.__top[os.path.join(well, '0')] # convention: single field of view per well
         if not 'omero' in well_group.attrs or not 'channels' in well_group.attrs['omero']:
             raise ValueError(f"no channel info found in well {well}")
         return well_group.attrs['omero']['channels']
@@ -79,7 +79,7 @@ class FmiZarr:
     def _load_multiscale_info(self):
         """[internal] Load info about available scales."""
         well = self.wells[0]['path']
-        well_group = self.top[os.path.join(well, '0')] # convention: single field of view per well
+        well_group = self.__top[os.path.join(well, '0')] # convention: single field of view per well
         if not 'multiscales' in well_group.attrs:
             raise ValueError(f"no multiscale info found in well {well}")
         return well_group.attrs['multiscales'][0]
@@ -88,8 +88,8 @@ class FmiZarr:
         """[internal] Load label names (available segmentations)."""
         well = self.wells[0]['path']
         label_path = os.path.join(well, '0', 'labels')
-        if label_path in self.top:
-            return self.top[label_path].attrs['labels']
+        if label_path in self.__top:
+            return self.__top[label_path].attrs['labels']
         else:
             return []
 
@@ -97,8 +97,8 @@ class FmiZarr:
         """[internal] Load table names (can be extracted using .get_table())."""
         well = self.wells[0]['path']
         table_path = os.path.join(well, '0', 'tables')
-        if table_path in self.top:
-            return self.top[table_path].attrs['tables']
+        if table_path in self.__top:
+            return self.__top[table_path].attrs['tables']
         else:
             return []
     

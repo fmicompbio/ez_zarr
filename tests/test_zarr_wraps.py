@@ -63,7 +63,7 @@ def test_constructor_3d(plate_3d: zarr_wraps.FmiZarr):
     # expected values
     assert isinstance(plate_3d, zarr_wraps.FmiZarr)
     assert plate_3d.name == 'plate_ones.zarr'
-    assert isinstance(plate_3d.top, zarr.Group)
+    assert isinstance(plate_3d._FmiZarr__top, zarr.Group)
     assert plate_3d.columns == [{'name': '03'}]
     assert plate_3d.rows == [{'name': 'B'}]
     assert len(plate_3d.wells) == 1
@@ -82,7 +82,7 @@ def test_constructor_2d(plate_2d: zarr_wraps.FmiZarr):
     """Test the `FmiZarr` constructor (2D)."""
     assert isinstance(plate_2d, zarr_wraps.FmiZarr)
     assert plate_2d.name == 'test'
-    assert isinstance(plate_2d.top, zarr.Group)
+    assert isinstance(plate_2d._FmiZarr__top, zarr.Group)
     assert plate_2d.columns == [{'name': '03'}]
     assert plate_2d.rows == [{'name': 'B'}]
     assert len(plate_2d.wells) == 1
