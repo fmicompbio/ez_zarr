@@ -278,7 +278,7 @@ class FmiZarr:
                 Otherwise, return the (on-disk) `dask` array of the same dimensions.
         
         Returns:
-
+            image (dask.array.Array | numpy.ndarray): The extracted image, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
         
         Examples:
             Obtain the image of the lowest-resolution for the full well 'A02':
@@ -328,13 +328,40 @@ class FmiZarr:
         Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
         `num_x` and `num_y` define the grid by specifying the number of cell in x and y.
-        `num_select` picks that many from the total number of grid cells and returns them as a list. All returned grid cells are guaranteed to be of equal size, but a few pixels in the
-        last row or column may not be included if the image shape is not divisible by `num_x` or `num_y`.
+        `num_select` picks that many from the total number of grid cells and returns them as a list.
+        All returned grid cells are guaranteed to be of equal size, but a few pixels from the image
+        may not be included in grid cells of the last row or column if the image shape
+        is not divisible by `num_x` or `num_y`.
 
-        `sample_method` defines how the `num_select` cells are selected. Possible values are:
-          - 'sum': order grid cells decreasingly by the sum of `channel` (working on `lowres_level`)
-          - 'var': order grid cells decreasingly by the variance of `channel` (working on `lowres_level`)
-          - 'random': order grid cells randomly (use `seed`)
+        Parameters:
+            well (str):  The well (e.g. 'B03') from which an image should be extracted.
+            pyramid_level (int): The pyramid level (resolution level), from which the
+                selected image grid cells should be returned. If `None`, the lowest-resolution
+                (highest) pyramid level will be selected.
+            lowres_level (int): Similar to `pyramid_level`, but defining the resolution
+                for calculating the `sample_method`. Calculations on low-resolution
+                images are faster and often result in identical ordering of grid cells,
+                so that high-resolution images can be returned by `pyramid_level` without making
+                their sampling slower.
+            num_x (int): The size of the grid in x.
+            num_y (int): The size of the grid in y.
+            num_select (int): The number of grid cells to return as images.
+            sample_method (str): Defines how the `num_select` cells are selected. Possible values are:
+                - 'sum': order grid cells decreasingly by the sum of `channel` (working on `lowres_level`)
+                - 'var': order grid cells decreasingly by the variance of `channel` (working on `lowres_level`)
+                - 'random': order grid cells randomly (use `seed`)
+            channel (int): Selects the channel on which `sample_method` is calculated.
+            seed (int): Used in `random.seed()` to make sampling for `sample_method = 'random'` reproducible.
+            as_NumPy (bool): If `True`, return the grid cell image as `numpy.ndarray` objects with
+                shapes (c,z,y,x). Otherwise, return the (on-disk) `dask` arrays of the same dimensions.
+        
+        Returns:
+            grid_cells (list): List of `num_select` selected grid cell images.
+
+        Examples:
+            Obtain grid cells with highest signal sum in channel 0 from well 'A02':
+
+            >>> plateA.get_image_sampled_rects(well = 'A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)
@@ -404,8 +431,26 @@ class FmiZarr:
     # analysis methods --------------------------------------------------------
     def calc_average_FOV(self, include_wells = None, pyramid_level = None, channel = 0) -> np.ndarray:
         """
-        Calculate the average field of view for wells in `include_wells`,
-        at resolution `pyramid_level`, for `channel`.
+        Calculate the average field of view.
+         
+        Using the coordinates stored in table 'FOV_ROI_table', calculate the averge
+        field of view for wells in `include_wells`, for `channel` at resolution `pyramid_level`.
+
+        Parameters:
+            include_wells (list): List of well names to include. If `None`, all wells are included.
+            pyramid_level (int): The pyramid level (resolution level), from which the image
+                should be extracted. If `None`, the lowest-resolution (highest) pyramid level
+                will be selected.
+            channel (int): The channel for which the fields of view should be averaged.
+
+        Returns:
+            avg_image (numpy.ndarray): The averaged field of view, as an array of shape (z,y,x).
+
+        Examples:
+            Calculate the averaged field of view for channel zero over all wells
+            for pyramid level 1.
+
+            >>> avg_fov = plateA.calc_average_FOV(pyramid_level = 1, channel = 0)
         """
         # check if required data is available
         if not 'FOV_ROI_table' in self.table_names:
@@ -467,6 +512,26 @@ class FractalFmiZarr:
 
     # constructor and helper functions ----------------------------------------
     def __init__(self, path, name = None):
+        """
+        Initializes a container for a folder containing one or several ome-zarr
+        fileset(s) (.zarr). Typically, the object is used for a folder which
+        contains exactly two related .zarr objects, one corresponding to the
+        four-dimensional (c,z,y,x) plate dataset, and a second one corresponding to
+        a three-dimensional maximum intensity projection derived from it.
+
+        Parameters:
+            path (str): Path containing the ome-zarr fileset(s).
+            name (str): Optional name for the experiment.
+        
+        Examples:
+            Get an object corresponding to a set of .zarr's.
+
+            >>> from easy_ome_zarr import zarr_wraps
+            >>> plate_set = zarr_wraps.FractalFmiZarr('path/to/zarrs')
+            >>> plate_set
+
+            This will print information on the zarrs.
+        """
         if not os.path.isdir(path):
             raise ValueError(f'`{path}` does not exist')
         self.path = path
