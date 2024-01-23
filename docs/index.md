@@ -1,7 +1,7 @@
-# Welcome to `easy_ome_zarr`
+# Welcome to `ez_zarr`
 
 ## Goals
-The aim of `easy_ome_zarr` is to provide easy, high-level access
+The aim of `ez_zarr` is to provide easy, high-level access
 to OME-Zarr filesets (high content screening microscopy data, stored
 according to the [NGFF](https://ngff.openmicroscopy.org/latest/)
 specifications in OME-Zarr with additional metadata fields, for
@@ -14,7 +14,7 @@ are represented within an OME-Zarr fileset.
 ## Example
 ```
 # import module
-from easy_ome_zarr import zarr_wraps
+from ez_zarr import zarr_wraps
 
 # create `plate_3d` object representing an OME-Zarr fileset
 plate_3d = zarr_wraps.FmiZarr('tests/example_data/plate_ones.zarr')
@@ -33,13 +33,13 @@ plate_3d
 ```
 
 ## Software status
-[![unit-tests](https://github.com/fmi-basel/gbioinfo-easy_ome_zarr/actions/workflows/test_and_deploy.yaml/badge.svg)](https://github.com/fmi-basel/gbioinfo-easy_ome_zarr/actions/workflows/test_and_deploy.yaml)
-[![codecov](https://codecov.io/gh/fmi-basel/gbioinfo-easy_ome_zarr/graph/badge.svg?token=GEBLX8ENJ1)](https://codecov.io/gh/fmi-basel/gbioinfo-easy_ome_zarr)
+[![unit-tests](https://github.com/fmi-basel/gbioinfo-ez_zarr/actions/workflows/test_and_deploy.yaml/badge.svg)](https://github.com/fmi-basel/gbioinfo-ez_zarr/actions/workflows/test_and_deploy.yaml)
+[![codecov](https://codecov.io/gh/fmi-basel/gbioinfo-ez_zarr/graph/badge.svg?token=GEBLX8ENJ1)](https://codecov.io/gh/fmi-basel/gbioinfo-ez_zarr)
 
 ## Contributors and License
-`easy_ome_zarr` is released under the MIT License, and the copyright
+`ez_zarr` is released under the MIT License, and the copyright
 is with the Friedrich Miescher Insitute for Biomedical Research
-(see [LICENSE](https://github.com/fmi-basel/gbioinfo-easy_ome_zarr/blob/main/LICENSE)).
+(see [LICENSE](https://github.com/fmi-basel/gbioinfo-ez_zarr/blob/main/LICENSE)).
 
-`easy_ome_zarr` is being developed at the Friedrich Miescher Institute for
+`ez_zarr` is being developed at the Friedrich Miescher Institute for
 Biomedical Research by [@silvbarb](https://github.com/silvbarb) and [@mbstadler](https://github.com/mbstadler).

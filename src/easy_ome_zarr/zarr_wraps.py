@@ -46,7 +46,7 @@ class FmiZarr:
         Examples:
             Get an object corresponding to a plate.
 
-            >>> from easy_ome_zarr import zarr_wraps
+            >>> from ez_zarr import zarr_wraps
             >>> plateA = zarr_wraps.FmiZarr('path/to/plate.zarr')
             >>> plateA
 
@@ -544,7 +544,7 @@ class FractalFmiZarr:
         Examples:
             Get an object corresponding to a set of .zarr's.
 
-            >>> from easy_ome_zarr import zarr_wraps
+            >>> from ez_zarr import zarr_wraps
             >>> plate_set = zarr_wraps.FractalFmiZarr('path/to/zarrs')
             >>> plate_set
 

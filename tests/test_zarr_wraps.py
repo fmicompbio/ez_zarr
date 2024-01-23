@@ -12,7 +12,7 @@ import zarr
 import numpy as np
 import dask
 
-from easy_ome_zarr import zarr_wraps
+from ez_zarr import zarr_wraps
 
 # fixtures --------------------------------------------------------------------
 @pytest.fixture

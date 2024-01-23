@@ -1,2 +1,2 @@
 # Classes that wrap ome-zarr filesets 
-::: src.easy_ome_zarr.zarr_wraps
+::: src.ez_zarr.zarr_wraps

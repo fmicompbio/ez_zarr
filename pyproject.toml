@@ -4,4 +4,4 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.setuptools_scm]
-write_to = "src/easy_ome_zarr/_version.py"
+write_to = "src/ez_zarr/_version.py"
