@@ -5,11 +5,11 @@ access to its contents.
 
 Classes:
     FractalZarr: Contains a single .zarr fileset, typically a plate.
-    FractalFmiZarr: Contains one or several .zarr filesets, typically a plate
+    FractalZarrSet: Contains one or several .zarr filesets, typically a plate
         (4 dimensional data) and a maximum-intensity projection derived from it.
 """
 
-__all__ = ['FractalZarr', 'FractalFmiZarr']
+__all__ = ['FractalZarr', 'FractalZarrSet']
 __version__ = '0.1'
 __author__ = 'Silvia Barbiero, Michael Stadler'
 
@@ -524,8 +524,8 @@ class FractalZarr:
 
 
 
-# FractalFmiZarr class ------------------------------------------------------
-class FractalFmiZarr:
+# FractalZarrSet class ------------------------------------------------------
+class FractalZarrSet:
     """Represents a folder containing one or several ome-zarr fileset(s)."""
 
     # constructor and helper functions ----------------------------------------
@@ -545,7 +545,7 @@ class FractalFmiZarr:
             Get an object corresponding to a set of .zarr's.
 
             >>> from ez_zarr import hcs_wrappers
-            >>> plate_set = hcs_wrappers.FractalFmiZarr('path/to/zarrs')
+            >>> plate_set = hcs_wrappers.FractalZarrSet('path/to/zarrs')
             >>> plate_set
 
             This will print information on the zarrs.
@@ -574,7 +574,7 @@ class FractalFmiZarr:
     def __str__(self) -> str:
         nplates = len(self.zarr)
         platenames = ''.join(f'    {i}: {self.zarr[i].name}\n' for i in range(len(self.zarr)))
-        return f"FractalFmiZarr {self.name}\n  path: {self.path}\n  n_plates: {nplates}\n{platenames}\n"
+        return f"FractalZarrSet {self.name}\n  path: {self.path}\n  n_plates: {nplates}\n{platenames}\n"
     
     def __repr__(self) -> str:
         return str(self)

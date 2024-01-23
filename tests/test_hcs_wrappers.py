@@ -27,13 +27,13 @@ def plate_2d():
 
 @pytest.fixture
 def plate_set1():
-    """A `hcs_wrappers.FractalFmiZarr` object representing a two ome-zarr filesets"""
-    return hcs_wrappers.FractalFmiZarr('tests/example_data')
+    """A `hcs_wrappers.FractalZarrSet` object representing a two ome-zarr filesets"""
+    return hcs_wrappers.FractalZarrSet('tests/example_data')
 
 @pytest.fixture
 def plate_set2():
-    """A `hcs_wrappers.FractalFmiZarr` object representing a two ome-zarr filesets"""
-    return hcs_wrappers.FractalFmiZarr('tests/example_data', name = "test")
+    """A `hcs_wrappers.FractalZarrSet` object representing a two ome-zarr filesets"""
+    return hcs_wrappers.FractalZarrSet('tests/example_data', name = "test")
 
 
 # hcs_wrappers.FractalZarr ----------------------------------------------------------
@@ -323,37 +323,37 @@ def test_calc_average_FOV(tmpdir: str, plate_3d: hcs_wrappers.FractalZarr):
     assert avg1.shape == (3, 270, 320)
     assert avg2.shape == (3, 135, 160)
 
-# hcs_wrappers.FractalFmiZarr ---------------------------------------------------
-def test_constructor_set(plate_set1: hcs_wrappers.FractalFmiZarr,
-                         plate_set2: hcs_wrappers.FractalFmiZarr,
+# hcs_wrappers.FractalZarrSet ---------------------------------------------------
+def test_constructor_set(plate_set1: hcs_wrappers.FractalZarrSet,
+                         plate_set2: hcs_wrappers.FractalZarrSet,
                          tmpdir: str):
-    """Test `FractalFmiZarr` object constructor."""
+    """Test `FractalZarrSet` object constructor."""
     # exceptions
     with pytest.raises(Exception) as e_info:
-        hcs_wrappers.FractalFmiZarr('error')
+        hcs_wrappers.FractalZarrSet('error')
     
     with pytest.raises(Exception) as e_info:
-        hcs_wrappers.FractalFmiZarr(tmpdir)
+        hcs_wrappers.FractalZarrSet(tmpdir)
 
     # expected values    
-    assert isinstance(plate_set1, hcs_wrappers.FractalFmiZarr)
+    assert isinstance(plate_set1, hcs_wrappers.FractalZarrSet)
     assert plate_set1.path == 'tests/example_data'
     assert plate_set1.name == 'example_data'
     assert plate_set2.name == 'test'
     assert plate_set1.zarr_mip_idx == 0
     assert plate_set1.zarr_3d_idx == 1
 
-def test_plateset_str(plate_set1: hcs_wrappers.FractalFmiZarr):
-    """Test `FractalFmiZarr` object string representation."""
+def test_plateset_str(plate_set1: hcs_wrappers.FractalZarrSet):
+    """Test `FractalZarrSet` object string representation."""
     assert str(plate_set1) == repr(plate_set1)
 
-def test_plateset_get_element(plate_set1: hcs_wrappers.FractalFmiZarr):
+def test_plateset_get_element(plate_set1: hcs_wrappers.FractalZarrSet):
     """Test `FractFmiZarr.get_element()`."""
     assert len(plate_set1) == 2
     assert plate_set1[0] == plate_set1.zarr[0]
     assert plate_set1[plate_set1.zarr_names[1]] == plate_set1.zarr[1]
 
-def test_plateset_get_plate_attributes(plate_set1: hcs_wrappers.FractalFmiZarr):
+def test_plateset_get_plate_attributes(plate_set1: hcs_wrappers.FractalZarrSet):
     # exceptions
     with pytest.raises(Exception) as e_info:
         plate_set1.does_not_exist
