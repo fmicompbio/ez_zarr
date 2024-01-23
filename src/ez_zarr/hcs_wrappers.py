@@ -46,8 +46,8 @@ class FmiZarr:
         Examples:
             Get an object corresponding to a plate.
 
-            >>> from ez_zarr import zarr_wraps
-            >>> plateA = zarr_wraps.FmiZarr('path/to/plate.zarr')
+            >>> from ez_zarr import hcs_wrappers
+            >>> plateA = hcs_wrappers.FmiZarr('path/to/plate.zarr')
             >>> plateA
 
             This will print information on the plate.
@@ -544,8 +544,8 @@ class FractalFmiZarr:
         Examples:
             Get an object corresponding to a set of .zarr's.
 
-            >>> from ez_zarr import zarr_wraps
-            >>> plate_set = zarr_wraps.FractalFmiZarr('path/to/zarrs')
+            >>> from ez_zarr import hcs_wrappers
+            >>> plate_set = hcs_wrappers.FractalFmiZarr('path/to/zarrs')
             >>> plate_set
 
             This will print information on the zarrs.

@@ -14,10 +14,10 @@ are represented within an OME-Zarr fileset.
 ## Example
 ```
 # import module
-from ez_zarr import zarr_wraps
+from ez_zarr import hcs_wrappers
 
 # create `plate_3d` object representing an OME-Zarr fileset
-plate_3d = zarr_wraps.FmiZarr('tests/example_data/plate_ones.zarr')
+plate_3d = hcs_wrappers.FmiZarr('tests/example_data/plate_ones.zarr')
 
 # print fileset summary
 plate_3d

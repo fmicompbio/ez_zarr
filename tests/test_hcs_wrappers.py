@@ -12,56 +12,56 @@ import zarr
 import numpy as np
 import dask
 
-from ez_zarr import zarr_wraps
+from ez_zarr import hcs_wrappers
 
 # fixtures --------------------------------------------------------------------
 @pytest.fixture
 def plate_3d():
-    """A `zarr_wraps.FmiZarr` object representing a 3D ome-zarr fileset"""
-    return zarr_wraps.FmiZarr('tests/example_data/plate_ones.zarr')
+    """A `hcs_wrappers.FmiZarr` object representing a 3D ome-zarr fileset"""
+    return hcs_wrappers.FmiZarr('tests/example_data/plate_ones.zarr')
 
 @pytest.fixture
 def plate_2d():
-    """A `zarr_wraps.FmiZarr` object representing a 2D ome-zarr fileset"""
-    return zarr_wraps.FmiZarr('tests/example_data/plate_ones_mip.zarr', name = "test")
+    """A `hcs_wrappers.FmiZarr` object representing a 2D ome-zarr fileset"""
+    return hcs_wrappers.FmiZarr('tests/example_data/plate_ones_mip.zarr', name = "test")
 
 @pytest.fixture
 def plate_set1():
-    """A `zarr_wraps.FractalFmiZarr` object representing a two ome-zarr filesets"""
-    return zarr_wraps.FractalFmiZarr('tests/example_data')
+    """A `hcs_wrappers.FractalFmiZarr` object representing a two ome-zarr filesets"""
+    return hcs_wrappers.FractalFmiZarr('tests/example_data')
 
 @pytest.fixture
 def plate_set2():
-    """A `zarr_wraps.FractalFmiZarr` object representing a two ome-zarr filesets"""
-    return zarr_wraps.FractalFmiZarr('tests/example_data', name = "test")
+    """A `hcs_wrappers.FractalFmiZarr` object representing a two ome-zarr filesets"""
+    return hcs_wrappers.FractalFmiZarr('tests/example_data', name = "test")
 
 
-# zarr_wraps.FmiZarr ----------------------------------------------------------
-def test_digest_well_argument(plate_3d: zarr_wraps.FmiZarr):
+# hcs_wrappers.FmiZarr ----------------------------------------------------------
+def test_digest_well_argument(plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr._digest_well_argument`."""
     assert plate_3d._digest_well_argument(None) == 'B/03'
     assert plate_3d._digest_well_argument('B03') == 'B/03'
 
-def test_digest_include_wells_argument(plate_3d: zarr_wraps.FmiZarr):
+def test_digest_include_wells_argument(plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr._digest_include_wells_argument`."""
     assert plate_3d._digest_include_wells_argument([]) == ['B/03']
     assert plate_3d._digest_include_wells_argument(['B03']) == ['B/03']
 
-def test_digest_pyramid_level_argument(plate_3d: zarr_wraps.FmiZarr):
+def test_digest_pyramid_level_argument(plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr._digest_pyramid_level_argument`."""
     assert plate_3d._digest_pyramid_level_argument(None) == 2
     assert plate_3d._digest_pyramid_level_argument(1) == 1
 
-def test_constructor_3d(plate_3d: zarr_wraps.FmiZarr):
+def test_constructor_3d(plate_3d: hcs_wrappers.FmiZarr):
     """Test the `FmiZarr` constructor (3D)."""
     # exceptions
     with pytest.raises(Exception) as e_info:
-        zarr_wraps.FmiZarr('does-not-exist')
+        hcs_wrappers.FmiZarr('does-not-exist')
     with pytest.raises(Exception) as e_info:
-        zarr_wraps.FmiZarr('tests/example_data/plate_ones_mip.zarr/B')
+        hcs_wrappers.FmiZarr('tests/example_data/plate_ones_mip.zarr/B')
 
     # expected values
-    assert isinstance(plate_3d, zarr_wraps.FmiZarr)
+    assert isinstance(plate_3d, hcs_wrappers.FmiZarr)
     assert plate_3d.name == 'plate_ones.zarr'
     assert isinstance(plate_3d._FmiZarr__top, zarr.Group)
     assert plate_3d.columns == [{'name': '03'}]
@@ -78,9 +78,9 @@ def test_constructor_3d(plate_3d: zarr_wraps.FmiZarr):
     assert plate_3d.label_names == []
     assert plate_3d.table_names == ['FOV_ROI_table']
 
-def test_constructor_2d(plate_2d: zarr_wraps.FmiZarr):
+def test_constructor_2d(plate_2d: hcs_wrappers.FmiZarr):
     """Test the `FmiZarr` constructor (2D)."""
-    assert isinstance(plate_2d, zarr_wraps.FmiZarr)
+    assert isinstance(plate_2d, hcs_wrappers.FmiZarr)
     assert plate_2d.name == 'test'
     assert isinstance(plate_2d._FmiZarr__top, zarr.Group)
     assert plate_2d.columns == [{'name': '03'}]
@@ -97,7 +97,7 @@ def test_constructor_2d(plate_2d: zarr_wraps.FmiZarr):
     assert plate_2d.label_names == ['organoids']
     assert plate_2d.table_names == ['FOV_ROI_table']
 
-def test_plate_str(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
+def test_plate_str(plate_2d: hcs_wrappers.FmiZarr, plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr` object string representation."""
     assert str(plate_2d) == repr(plate_2d)
     assert str(plate_3d) == repr(plate_3d)
@@ -117,7 +117,7 @@ def test_missing_channel_attrs(tmpdir: str):
         json.dump(zattr, jsonfile, indent=4)
     # test loading
     with pytest.raises(Exception) as e_info:
-        zarr_wraps.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
+        hcs_wrappers.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
 
 def test_missing_multiscales_attrs(tmpdir: str):
     """Test `FmiZarr` missing multiscales attributes."""
@@ -134,7 +134,7 @@ def test_missing_multiscales_attrs(tmpdir: str):
         json.dump(zattr, jsonfile, indent=4)
     # test loading
     with pytest.raises(Exception) as e_info:
-        zarr_wraps.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
+        hcs_wrappers.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
 
 def test_missing_tables(tmpdir: str):
     """Test `FmiZarr` missing tables."""
@@ -145,17 +145,17 @@ def test_missing_tables(tmpdir: str):
     # remove tables
     shutil.rmtree(str(tmpdir) + '/example_data/plate_ones_mip.zarr/B/03/0/tables')
     # test loading
-    plate = zarr_wraps.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
+    plate = hcs_wrappers.FmiZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
     assert plate.table_names == []
 
-def test_get_path(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
+def test_get_path(plate_2d: hcs_wrappers.FmiZarr, plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr.get_path().`"""
     assert plate_2d.get_path() == plate_2d.path
     assert plate_2d.get_path() == 'tests/example_data/plate_ones_mip.zarr'
     assert plate_3d.get_path() == plate_3d.path
     assert plate_3d.get_path() == 'tests/example_data/plate_ones.zarr'
 
-def test_get_wells(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
+def test_get_wells(plate_2d: hcs_wrappers.FmiZarr, plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr.get_wells().`"""
     wells_expected = [{'columnIndex': 0, 'path': 'B/03', 'rowIndex': 0}]
     wells_expected_simple = ['B03']
@@ -166,7 +166,7 @@ def test_get_wells(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
     assert plate_2d.get_wells(simplify=True) == wells_expected_simple
     assert plate_3d.get_wells(simplify=True) == wells_expected_simple
 
-def test_get_channels(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
+def test_get_channels(plate_2d: hcs_wrappers.FmiZarr, plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr.get_channels().`"""
     channels_expected = [{'wavelength_id': 'A01_C01', 'label': 'some-label-1',
                           'window': {'min': '0', 'max': '10', 'start': '0', 'end': '10'},
@@ -179,12 +179,12 @@ def test_get_channels(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr
     assert plate_3d.get_channels() == plate_3d.channels
     assert plate_3d.get_channels() == channels_expected
 
-def test_get_table_names(plate_2d: zarr_wraps.FmiZarr, plate_3d: zarr_wraps.FmiZarr):
+def test_get_table_names(plate_2d: hcs_wrappers.FmiZarr, plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr.get_table_names().`"""
     assert plate_2d.get_table_names() == plate_2d.table_names
     assert plate_3d.get_table_names() == plate_3d.table_names
 
-def test_get_table(plate_2d: zarr_wraps.FmiZarr):
+def test_get_table(plate_2d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr.get_table`."""
     empty = plate_2d.get_table('does not exist')
     df = plate_2d.get_table('FOV_ROI_table')
@@ -198,7 +198,7 @@ def test_get_table(plate_2d: zarr_wraps.FmiZarr):
     df2 = plate_2d.get_table('FOV_ROI_table', include_wells = ['B03'], as_AnnData = False)
     assert df.equals(df2)
 
-def test_get_image_rect_3d(plate_3d: zarr_wraps.FmiZarr):
+def test_get_image_rect_3d(plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr.get_image_rect()`."""
     img0a = plate_3d.get_image_rect(well = None, pyramid_level = 2,
                                     upper_left = None,
@@ -244,7 +244,7 @@ def test_get_image_rect_3d(plate_3d: zarr_wraps.FmiZarr):
     assert (img1b == img1a).all()
     assert (img1c == img1a).all()
 
-def test_get_image_sampled_rects_3d(plate_3d: zarr_wraps.FmiZarr):
+def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr.get_image_sampled_rects().`"""
     # exceptions
     with pytest.raises(Exception) as e_info:
@@ -296,7 +296,7 @@ def test_get_image_sampled_rects_3d(plate_3d: zarr_wraps.FmiZarr):
     assert all([isinstance(x, dask.array.Array) for x in img_5])
     assert all(x.shape == (2, 3, 27, 32) for x in img_5)
 
-def test_calc_average_FOV(tmpdir: str, plate_3d: zarr_wraps.FmiZarr):
+def test_calc_average_FOV(tmpdir: str, plate_3d: hcs_wrappers.FmiZarr):
     """Test `FmiZarr.calc_average_FOV().`"""
     # test exceptions
     # ... copy zarr fileset
@@ -306,7 +306,7 @@ def test_calc_average_FOV(tmpdir: str, plate_3d: zarr_wraps.FmiZarr):
     # ... remove tables
     shutil.rmtree(str(tmpdir) + '/example_data/plate_ones.zarr/B/03/0/tables')
     # ... test calculation
-    plate_tmp = zarr_wraps.FmiZarr(str(tmpdir) + '/example_data/plate_ones.zarr')
+    plate_tmp = hcs_wrappers.FmiZarr(str(tmpdir) + '/example_data/plate_ones.zarr')
     with pytest.raises(Exception) as e_info:
         plate_tmp.calc_average_FOV()
 
@@ -323,37 +323,37 @@ def test_calc_average_FOV(tmpdir: str, plate_3d: zarr_wraps.FmiZarr):
     assert avg1.shape == (3, 270, 320)
     assert avg2.shape == (3, 135, 160)
 
-# zarr_wraps.FractalFmiZarr ---------------------------------------------------
-def test_constructor_set(plate_set1: zarr_wraps.FractalFmiZarr,
-                         plate_set2: zarr_wraps.FractalFmiZarr,
+# hcs_wrappers.FractalFmiZarr ---------------------------------------------------
+def test_constructor_set(plate_set1: hcs_wrappers.FractalFmiZarr,
+                         plate_set2: hcs_wrappers.FractalFmiZarr,
                          tmpdir: str):
     """Test `FractalFmiZarr` object constructor."""
     # exceptions
     with pytest.raises(Exception) as e_info:
-        zarr_wraps.FractalFmiZarr('error')
+        hcs_wrappers.FractalFmiZarr('error')
     
     with pytest.raises(Exception) as e_info:
-        zarr_wraps.FractalFmiZarr(tmpdir)
+        hcs_wrappers.FractalFmiZarr(tmpdir)
 
     # expected values    
-    assert isinstance(plate_set1, zarr_wraps.FractalFmiZarr)
+    assert isinstance(plate_set1, hcs_wrappers.FractalFmiZarr)
     assert plate_set1.path == 'tests/example_data'
     assert plate_set1.name == 'example_data'
     assert plate_set2.name == 'test'
     assert plate_set1.zarr_mip_idx == 0
     assert plate_set1.zarr_3d_idx == 1
 
-def test_plateset_str(plate_set1: zarr_wraps.FractalFmiZarr):
+def test_plateset_str(plate_set1: hcs_wrappers.FractalFmiZarr):
     """Test `FractalFmiZarr` object string representation."""
     assert str(plate_set1) == repr(plate_set1)
 
-def test_plateset_get_element(plate_set1: zarr_wraps.FractalFmiZarr):
+def test_plateset_get_element(plate_set1: hcs_wrappers.FractalFmiZarr):
     """Test `FractFmiZarr.get_element()`."""
     assert len(plate_set1) == 2
     assert plate_set1[0] == plate_set1.zarr[0]
     assert plate_set1[plate_set1.zarr_names[1]] == plate_set1.zarr[1]
 
-def test_plateset_get_plate_attributes(plate_set1: zarr_wraps.FractalFmiZarr):
+def test_plateset_get_plate_attributes(plate_set1: hcs_wrappers.FractalFmiZarr):
     # exceptions
     with pytest.raises(Exception) as e_info:
         plate_set1.does_not_exist

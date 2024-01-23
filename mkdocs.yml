@@ -12,5 +12,5 @@ plugins:
 
 # nav: # Setting up the navigation. Te below list will be tabs on left panel
 #   - index.md
-#   - zarr_wraps.md # A markdown file for documenting the methods
+#   - hcs_wrappers.md # A markdown file for documenting the methods
 #   - testing.md  # A markdown to list all the test cases
