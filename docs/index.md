@@ -17,11 +17,11 @@ are represented within an OME-Zarr fileset.
 from ez_zarr import hcs_wrappers
 
 # create `plate_3d` object representing an OME-Zarr fileset
-plate_3d = hcs_wrappers.FmiZarr('tests/example_data/plate_ones.zarr')
+plate_3d = hcs_wrappers.FractalZarr('tests/example_data/plate_ones.zarr')
 
 # print fileset summary
 plate_3d
-# FmiZarr plate_ones.zarr with 1 well and 2 channels
+# FractalZarr plate_ones.zarr with 1 well and 2 channels
 #   path: tests/example_data/plate_ones.zarr
 #   n_wells: 1
 #   n_channels: 2 (some-label-1, some-label-2)

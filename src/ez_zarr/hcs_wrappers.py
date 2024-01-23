@@ -4,12 +4,12 @@ Represent an ome-zarr fileset as a class to give high-level
 access to its contents.
 
 Classes:
-    FmiZarr: Contains a single .zarr fileset, typically a plate.
+    FractalZarr: Contains a single .zarr fileset, typically a plate.
     FractalFmiZarr: Contains one or several .zarr filesets, typically a plate
         (4 dimensional data) and a maximum-intensity projection derived from it.
 """
 
-__all__ = ['FmiZarr', 'FractalFmiZarr']
+__all__ = ['FractalZarr', 'FractalFmiZarr']
 __version__ = '0.1'
 __author__ = 'Silvia Barbiero, Michael Stadler'
 
@@ -27,8 +27,8 @@ import random
 from typing import Union, Optional, Any
 
 
-# FmiZarr class ---------------------------------------------------------------
-class FmiZarr:
+# FractalZarr class ---------------------------------------------------------------
+class FractalZarr:
     """Represents a ome-zarr fileset."""
 
     # constructor and helper functions ----------------------------------------
@@ -47,7 +47,7 @@ class FmiZarr:
             Get an object corresponding to a plate.
 
             >>> from ez_zarr import hcs_wrappers
-            >>> plateA = hcs_wrappers.FmiZarr('path/to/plate.zarr')
+            >>> plateA = hcs_wrappers.FractalZarr('path/to/plate.zarr')
             >>> plateA
 
             This will print information on the plate.
@@ -110,7 +110,7 @@ class FmiZarr:
     
     # utility functions -------------------------------------------------------
     def _digest_well_argument(self, well = None):
-        """[internal] Interpret a single `well` argument in the context of a given FmiZarr object."""
+        """[internal] Interpret a single `well` argument in the context of a given FractalZarr object."""
         if not well:
             # no well given -> pick first one
             return self.wells[0]['path']
@@ -118,7 +118,7 @@ class FmiZarr:
             return os.path.join(well[:1].upper(), well[1:])
 
     def _digest_include_wells_argument(self, include_wells: list[str] = []) -> list[str]:
-        """[internal] Interpret an `include_wells` argument in the context of a given FmiZarr object."""
+        """[internal] Interpret an `include_wells` argument in the context of a given FractalZarr object."""
         if len(include_wells) == 0: 
             # no wells given -> include all wells
             include_wells = [x['path'] for x in self.wells]
@@ -128,7 +128,7 @@ class FmiZarr:
         return include_wells
 
     def _digest_pyramid_level_argument(self, pyramid_level = None) -> int:
-        """[internal] Interpret a `pyramid_level` argument in the context of a given FmiZarr object."""
+        """[internal] Interpret a `pyramid_level` argument in the context of a given FractalZarr object."""
         if pyramid_level == None: 
             # no pyramid level given -> pick lowest resolution one
             pyramid_level = int(self.level_paths[-1])
@@ -173,7 +173,7 @@ class FmiZarr:
         npl = len(self.multiscales['datasets'])
         segnames = ', '.join(self.label_names)
         tabnames = ', '.join(self.table_names)
-        return f"FmiZarr {self.name}\n  path: {self.path}\n  n_wells: {nwells}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_zyx_scalefactor: {self.level_zyx_scalefactor}\n  full_resolution_zyx_spacing: {self.level_zyx_spacing[0]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
+        return f"FractalZarr {self.name}\n  path: {self.path}\n  n_wells: {nwells}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_zyx_scalefactor: {self.level_zyx_scalefactor}\n  full_resolution_zyx_spacing: {self.level_zyx_spacing[0]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
     
     def __repr__(self):
         return str(self)
@@ -561,7 +561,7 @@ class FractalFmiZarr:
         self.zarr_paths: list[str] = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
         if len(self.zarr_paths) == 0:
             raise ValueError(f'no .zarr filesets found in `{path}`')
-        self.zarr: list[FmiZarr] = [FmiZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
+        self.zarr: list[FractalZarr] = [FractalZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
         self.zarr_names: list[str] = [x.name for x in self.zarr]
         self.zarr_mip_idx: Optional[int] = None
         self.zarr_3d_idx: Optional[int] = None
@@ -583,7 +583,7 @@ class FractalFmiZarr:
     def __len__(self) -> int:
         return len(self.zarr)
 
-    def __getitem__(self, key: Union[int, str]) -> FmiZarr:
+    def __getitem__(self, key: Union[int, str]) -> FractalZarr:
         if isinstance(key, int):
             return self.zarr[key]
         elif isinstance(key, str):
