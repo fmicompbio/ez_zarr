@@ -1,2 +1,2 @@
 # Unit tests
-::: tests.test_zarr_wraps
+::: tests.test_hcs_wrappers
