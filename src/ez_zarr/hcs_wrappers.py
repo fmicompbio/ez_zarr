@@ -334,7 +334,8 @@ class FractalZarr:
                             well: Optional[str] = None,
                             pyramid_level: Optional[int] = None,
                             lowres_level: Optional[int] = None,
-                            num_x: int = 10, num_y: int = 10,
+                            num_y: int = 10,
+                            num_x: int = 10,
                             num_select: int = 9,
                             sample_method: str = 'sum',
                             channel: int = 0,
@@ -343,11 +344,11 @@ class FractalZarr:
         """
         Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
-        `num_x` and `num_y` define the grid by specifying the number of cell in x and y.
+        `num_y` and `num_x` define the grid by specifying the number of cell in y and x.
         `num_select` picks that many from the total number of grid cells and returns them as a list.
         All returned grid cells are guaranteed to be of equal size, but a few pixels from the image
         may not be included in grid cells of the last row or column if the image shape
-        is not divisible by `num_x` or `num_y`.
+        is not divisible by `num_y` or `num_x`.
 
         Parameters:
             well (str):  The well (e.g. 'B03') from which an image should be extracted.
@@ -359,8 +360,8 @@ class FractalZarr:
                 images are faster and often result in identical ordering of grid cells,
                 so that high-resolution images can be returned by `pyramid_level` without making
                 their sampling slower.
-            num_x (int): The size of the grid in x.
             num_y (int): The size of the grid in y.
+            num_x (int): The size of the grid in x.
             num_select (int): The number of grid cells to return as images.
             sample_method (str): Defines how the `num_select` cells are selected. Possible values are:
                 - 'sum': order grid cells decreasingly by the sum of `channel` (working on `lowres_level`)
@@ -372,7 +373,9 @@ class FractalZarr:
                 shapes (c,z,y,x). Otherwise, return the (on-disk) `dask` arrays of the same dimensions.
         
         Returns:
-            List of `num_select` selected grid cell images.
+            A tuple of two lists (coord_list, img_list), each with `num_select` elements
+            corresponding to the coordinates and images of selected grid cells.
+            The coordinates are tuples of the form  (y_start, y_end, x_start, x_end).
 
         Examples:
             Obtain grid cells with highest signal sum in channel 0 from well 'A02':
