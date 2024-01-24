@@ -296,6 +296,34 @@ def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert all([isinstance(x, dask.array.Array) for x in img_5])
     assert all(x.shape == (2, 3, 27, 32) for x in img_5)
 
+def test_coordinate_conversions(plate_3d: hcs_wrappers.FractalZarr):
+    """Test `FractalZarr.convert_*` coordinate conversions."""
+    # test exceptions
+    with pytest.raises(Exception) as e_info:
+        plate_3d.convert_micrometer_to_pixel('error')
+    with pytest.raises(Exception) as e_info:
+        plate_3d.convert_pixel_to_micrometer('error')
+    with pytest.raises(Exception) as e_info:
+        plate_3d.convert_pixel_to_pixel('error', 0, 0)
+
+    # test expected results
+    zyx_um_orig = (30, 40, 50)
+    zyx_px_0 = plate_3d.convert_micrometer_to_pixel(zyx=zyx_um_orig, pyramid_level=0)
+    zyx_px_1 = plate_3d.convert_micrometer_to_pixel(zyx=zyx_um_orig, pyramid_level=1)
+    zyx_px_2 = plate_3d.convert_micrometer_to_pixel(zyx=zyx_um_orig, pyramid_level=2)
+    zyx_um_from1 = plate_3d.convert_pixel_to_micrometer(zyx=zyx_px_1, pyramid_level=1)
+    zyx_um_from2 = plate_3d.convert_pixel_to_micrometer(zyx=zyx_px_2, pyramid_level=2)
+    zyx_px_0_from1 = plate_3d.convert_pixel_to_pixel(zyx=zyx_px_1, pyramid_level_from=1, pyramid_level_to=0)
+    zyx_px_2_from1 = plate_3d.convert_pixel_to_pixel(zyx=zyx_px_1, pyramid_level_from=1, pyramid_level_to=2)
+    assert isinstance(zyx_px_1, tuple)
+    assert all([isinstance(v, np.int_) for v in zyx_px_1])
+    assert len(zyx_px_1) == 3
+    assert zyx_px_1 == (30, 123, 154)
+    assert zyx_um_from1 == zyx_um_orig
+    assert zyx_um_from2 == zyx_um_orig
+    assert zyx_px_0_from1 == zyx_px_0
+    assert zyx_px_2_from1 == zyx_px_2
+
 def test_calc_average_FOV(tmpdir: str, plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr.calc_average_FOV().`"""
     # test exceptions

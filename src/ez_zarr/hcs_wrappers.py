@@ -442,7 +442,103 @@ class FractalZarr:
             sel_img_cells.append(img_cell)
 
         return (sel_coords, sel_img_cells)
-    
+
+    def convert_micrometer_to_pixel(self,
+                                    zyx: tuple[float],
+                                    pyramid_level: Optional[int] = None) -> tuple[int]:
+        """
+        Convert micrometers to pixels for a given pyramid level.
+
+        Parameters:
+            zyx (tuple): The micrometer coordinates in the form (z, y, x) to be converted
+                to pixels.
+            pyramid_level (int): The pyramid level (resolution), to which the output
+                pixel coordinates will refer to.
+        
+        Returns:
+            A tuple (z, y, x) with pixel coordinates.
+        
+        Examples:
+            Obtain the x-length (x_px) of a scale bar corresopnding to 10 micrometer for
+            pyramid level 0:
+
+            >>> z_px, y_px, x_px = plateA.convert_micrometer_to_pixel(zyx=(0,0,10), pyramid_level=0)
+        """
+        # digest arguments
+        assert isinstance(zyx, tuple)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+
+        # convert
+        pyramid_spacing = self.level_zyx_spacing[pyramid_level]
+        zyx_px = np.round(np.divide(zyx, pyramid_spacing)).astype(int)
+
+        # return as tuple
+        return(tuple(zyx_px))
+
+    def convert_pixel_to_micrometer(self,
+                                    zyx: tuple[int],
+                                    pyramid_level: Optional[int] = None) -> tuple[float]:
+        """
+        Convert pixels to micrometers for a given pyramid level.
+
+        Parameters:
+            zyx (tuple): The pixel coordinates in the form (z, y, x) to be converted
+                to micrometers.
+            pyramid_level (int): The pyramid level (resolution), to which the input
+                pixel coordinates refer to.
+        
+        Returns:
+            A tuple (z, y, x) with micrometer coordinates.
+        
+        Examples:
+            Obtain the micrometer dimensions of a cube with 10 pixel sides for pyramid level 0:
+
+            >>> z_um, y_um, x_um = plateA.convert_pixel_to_micrometer(zyx=(10,10,10), pyramid_level=0)
+        """
+        # digest arguments
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+
+        # convert
+        pyramid_spacing = self.level_zyx_spacing[pyramid_level]
+        zyx_um = np.round(np.multiply(zyx, pyramid_spacing)).astype(float)
+
+        # return as tuple
+        return(tuple(zyx_um))
+
+    def convert_pixel_to_pixel(self,
+                               zyx: tuple[int],
+                               pyramid_level_from: int,
+                               pyramid_level_to: int) -> tuple[int]:
+        """
+        Convert pixel coordinates between pyramid levels.
+
+        Parameters:
+            zyx (tuple): The pixel coordinates in the form (z, y, x) to be converted.
+            pyramid_level_from (int): The pyramid level (resolution), to which the input
+                pixel coordinates refer to.
+            pyramid_level_to (int): The pyramid level (resolution), to which the output
+                pixel coordinates will refer to.
+        
+        Returns:
+            A tuple (z, y, x) with pixel coordinates in the new pyramid level.
+        
+        Examples:
+            Convert a point (0, 10, 30) from pyramid level 3 to 0:
+
+            >>> z0, y0, x0 = plateA.convert_pixel_to_pixel(zyx=(0,10,30), pyramid_level_from=3, pyramid_level_to=0)
+        """
+        # digest arguments
+        assert isinstance(pyramid_level_from, int) and pyramid_level_from in range(len(self.level_paths))
+        assert isinstance(pyramid_level_to, int) and pyramid_level_to in range(len(self.level_paths))
+
+        # convert
+        zyx_scale = self.level_zyx_scalefactor**(pyramid_level_from - pyramid_level_to)
+        zyx_new = np.round(np.multiply(zyx, zyx_scale)).astype(int)
+
+        # return as tuple
+        return(tuple(zyx_new))
+
+
     # analysis methods --------------------------------------------------------
     def calc_average_FOV(self,
                          include_wells: list[str] = [],
