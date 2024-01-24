@@ -262,31 +262,32 @@ class FractalZarr:
                                      axis = 1)
             return df_combined
 
-    def get_image_rect(self,
-                       well: Optional[str] = None,
-                       pyramid_level: Optional[int] = None,
-                       upper_left: Optional[tuple[int]] = None,
-                       lower_right: Optional[tuple[int]] = None,
-                       width_height: Optional[tuple[int]] = None,
-                       as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+    def get_image_ROI(self,
+                      well: Optional[str] = None,
+                      pyramid_level: Optional[int] = None,
+                      upper_left_yx: Optional[tuple[int]] = None,
+                      lower_right_yx: Optional[tuple[int]] = None,
+                      size_yx: Optional[tuple[int]] = None,
+                      as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
         """
-        Extract a rectangular image region (all z planes if several) from a well by coordinates.
+        Extract a region of interest from a well image by coordinates.
 
-        None or at least two of `upper_left`, `lower_right` and `width_height` need to be given.
-        If none are given, it will return the full image (typically the whole well).
-        Otherwise, `upper_left` contains the lower indices than `lower_right`
-        (origin on the top-left, zero-based coordinates), and each of them is a tuple of (x, y).
+        None or at least two of `upper_left_yx`, `lower_right_yx` and `size_yx` need to be given.
+        If none are given, it will return the full image (the whole well).
+        Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
+        (origin on the top-left, zero-based coordinates), and each of them is
+        a tuple of (y, x). No z coordinate needs to be given, all z planes are returned
+        if there are several ones.
 
         Parameters:
             well (str): The well (e.g. 'B03') from which an image should be extracted.
             pyramid_level (int): The pyramid level (resolution level), from which the image
                 should be extracted. If `None`, the lowest-resolution (highest) pyramid level
                 will be selected.
-            upper_left (tuple): Tuple of (x, y) coordinates for the upper-left (lower) coordinates
-                defining the image rectangle.
-            lower_right (tuple): Tuple of (x, y) coordinates for the lower-right (higher) coordinates
-                defining the image rectangle.
-            width_height (tuple): Tuple of (wx, wy) width and height defining the image rectangle.
+            upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left (lower) coordinates
+                defining the region of interest.
+            lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right (higher) coordinates defining the region of interest.
+            size_yx (tuple): Tuple of (size_y, size_x) defining the size of the region of interest.
             as_NumPy (bool): If `True`, return the image as 4D `numpy.ndarray` object (c,z,y,x).
                 Otherwise, return the (on-disk) `dask` array of the same dimensions.
         
@@ -296,7 +297,7 @@ class FractalZarr:
         Examples:
             Obtain the image of the lowest-resolution for the full well 'A02':
 
-            >>> plateA.get_image_rect(well = 'A02')
+            >>> plateA.get_image_ROI(well = 'A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)
@@ -308,45 +309,46 @@ class FractalZarr:
 
         # calculate corner coordinates and subset if needed
         # (images are always of 4D shape c,z,y,x)
-        num_unknowns = sum([x == None for x in [upper_left, lower_right, width_height]])
+        num_unknowns = sum([x == None for x in [upper_left_yx, lower_right_yx, size_yx]])
         if num_unknowns == 1:
-            if width_height:
-                assert all([x > 0 for x in width_height])
-                if not upper_left:
-                    upper_left = tuple(lower_right[i] - width_height[i] for i in range(2))
-                elif not lower_right:
-                    lower_right = tuple(upper_left[i] + width_height[i] for i in range(2))
-            assert all([upper_left[i] < lower_right[i] for i in range(len(upper_left))])
+            if size_yx:
+                assert all([x > 0 for x in size_yx])
+                if not upper_left_yx:
+                    upper_left_yx = tuple(lower_right_yx[i] - size_yx[i] for i in range(2))
+                elif not lower_right_yx:
+                    lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
+            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))])
             img = img[:,
                       :,
-                      slice(upper_left[1], lower_right[1] + 1),
-                      slice(upper_left[0], lower_right[0] + 1)]
+                      slice(upper_left_yx[0], lower_right_yx[0] + 1),
+                      slice(upper_left_yx[1], lower_right_yx[1] + 1)]
         elif num_unknowns != 3:
-            raise ValueError("Either none or two of `upper_left`, `lower_rigth` and `width_height` have to be given")
+            raise ValueError("Either none or two of `upper_left_yx`, `lower_rigth` and `size_yx` have to be given")
 
         # convert if needed and return
         if as_NumPy:
             img = np.array(img)
         return img
 
-    def get_image_sampled_rects(self,
-                                well: Optional[str] = None,
-                                pyramid_level: Optional[int] = None,
-                                lowres_level: Optional[int] = None,
-                                num_x: int = 10, num_y: int = 10,
-                                num_select: int = 9,
-                                sample_method: str = 'sum',
-                                channel: int = 0,
-                                seed: int = 42,
-                                as_NumPy: bool = False) -> Union[tuple[list[tuple[int]], list[dask.array.Array]], tuple[list[tuple[int]], list[np.ndarray]]]:
+    def get_image_grid_ROIs(self,
+                            well: Optional[str] = None,
+                            pyramid_level: Optional[int] = None,
+                            lowres_level: Optional[int] = None,
+                            num_y: int = 10,
+                            num_x: int = 10,
+                            num_select: int = 9,
+                            sample_method: str = 'sum',
+                            channel: int = 0,
+                            seed: int = 42,
+                            as_NumPy: bool = False) -> Union[tuple[list[tuple[int]], list[dask.array.Array]], tuple[list[tuple[int]], list[np.ndarray]]]:
         """
         Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
-        `num_x` and `num_y` define the grid by specifying the number of cell in x and y.
+        `num_y` and `num_x` define the grid by specifying the number of cell in y and x.
         `num_select` picks that many from the total number of grid cells and returns them as a list.
         All returned grid cells are guaranteed to be of equal size, but a few pixels from the image
         may not be included in grid cells of the last row or column if the image shape
-        is not divisible by `num_x` or `num_y`.
+        is not divisible by `num_y` or `num_x`.
 
         Parameters:
             well (str):  The well (e.g. 'B03') from which an image should be extracted.
@@ -358,8 +360,8 @@ class FractalZarr:
                 images are faster and often result in identical ordering of grid cells,
                 so that high-resolution images can be returned by `pyramid_level` without making
                 their sampling slower.
-            num_x (int): The size of the grid in x.
             num_y (int): The size of the grid in y.
+            num_x (int): The size of the grid in x.
             num_select (int): The number of grid cells to return as images.
             sample_method (str): Defines how the `num_select` cells are selected. Possible values are:
                 - 'sum': order grid cells decreasingly by the sum of `channel` (working on `lowres_level`)
@@ -371,12 +373,14 @@ class FractalZarr:
                 shapes (c,z,y,x). Otherwise, return the (on-disk) `dask` arrays of the same dimensions.
         
         Returns:
-            List of `num_select` selected grid cell images.
+            A tuple of two lists (coord_list, img_list), each with `num_select` elements
+            corresponding to the coordinates and images of selected grid cells.
+            The coordinates are tuples of the form  (y_start, y_end, x_start, x_end).
 
         Examples:
             Obtain grid cells with highest signal sum in channel 0 from well 'A02':
 
-            >>> plateA.get_image_sampled_rects(well = 'A02')
+            >>> plateA.get_image_grid_ROIs(well = 'A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)

@@ -199,42 +199,42 @@ def test_get_table(plate_2d: hcs_wrappers.FractalZarr):
     assert df.equals(df2)
 
 def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
-    """Test `FractalZarr.get_image_rect()`."""
-    img0a = plate_3d.get_image_rect(well = None, pyramid_level = 2,
-                                    upper_left = None,
-                                    lower_right = None,
-                                    width_height = None,
-                                    as_NumPy = False)
-    img0b = plate_3d.get_image_rect(well = 'B03', pyramid_level = 2,
-                                    upper_left = (0, 0),
-                                    lower_right = (319, 269),
-                                    width_height = None,
-                                    as_NumPy = True)
+    """Test `FractalZarr.get_image_ROI()`."""
+    img0a = plate_3d.get_image_ROI(well = None, pyramid_level = 2,
+                                   upper_left_yx = None,
+                                   lower_right_yx = None,
+                                   size_yx = None,
+                                   as_NumPy = False)
+    img0b = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 2,
+                                   upper_left_yx = (0, 0),
+                                   lower_right_yx = (269, 319),
+                                   size_yx = None,
+                                   as_NumPy = True)
     assert isinstance(img0a, dask.array.Array)
     assert isinstance(img0b, np.ndarray)
     assert img0a.shape == (2, 3, 270, 320)
     assert (np.array(img0a) == img0b).all()
     
     with pytest.raises(Exception) as e_info:
-        plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
-                                upper_left = (10, 11),
-                                lower_right = None, width_height = None)
+        plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
+                               upper_left_yx = (11, 10),
+                               lower_right_yx = None, size_yx = None)
 
-    img1a = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
-                                    upper_left = (10, 11),
-                                    lower_right = (20, 22),
-                                    width_height = None,
-                                    as_NumPy = True)
-    img1b = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
-                                    upper_left = (10, 11),
-                                    lower_right = None,
-                                    width_height = (10, 11),
-                                    as_NumPy = True)
-    img1c = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
-                                    upper_left = None,
-                                    lower_right = (20, 22),
-                                    width_height = (10, 11),
-                                    as_NumPy = True)
+    img1a = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
+                                   upper_left_yx = (11, 10),
+                                   lower_right_yx = (22, 20),
+                                   size_yx = None,
+                                   as_NumPy = True)
+    img1b = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
+                                   upper_left_yx = (11, 10),
+                                   lower_right_yx = None,
+                                   size_yx = (11, 10),
+                                   as_NumPy = True)
+    img1c = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
+                                   upper_left_yx = None,
+                                   lower_right_yx = (22, 20),
+                                   size_yx = (11, 10),
+                                   as_NumPy = True)
     assert isinstance(img1a, np.ndarray)
     assert isinstance(img1b, np.ndarray)
     assert isinstance(img1c, np.ndarray)
@@ -245,29 +245,29 @@ def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert (img1c == img1a).all()
 
 def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FractalZarr):
-    """Test `FractalZarr.get_image_sampled_rects().`"""
+    """Test `FractalZarr.get_image_grid_ROIs().`"""
     # exceptions
     with pytest.raises(Exception) as e_info:
-        plate_3d.get_image_sampled_rects(num_x = 2, num_y = 2, num_select = 5)
+        plate_3d.get_image_grid_ROIs(num_x = 2, num_y = 2, num_select = 5)
     
     with pytest.raises(Exception) as e_info:
-        plate_3d.get_image_sampled_rects(pyramid_level = 2, sample_method = 'error')
+        plate_3d.get_image_grid_ROIs(pyramid_level = 2, sample_method = 'error')
 
     # sample_method = 'random'                        
-    coord_1a, img_1a = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
-                                                        num_select = 3,
-                                                        sample_method = 'random', seed = 1)
-    coord_1b, img_1b = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
-                                                        num_select = 3,
-                                                        sample_method = 'random', seed = 1)
-    coord_2, img_2 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
-                                                      num_select = 3,
-                                                      sample_method = 'random', seed = 2)
-    coord_3, img_3 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
-                                                      num_x = 8, num_y = 8,
-                                                      num_select = 3,
-                                                      sample_method = 'random', seed = 3,
-                                                      as_NumPy = True)
+    coord_1a, img_1a = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
+                                                    num_select = 3,
+                                                    sample_method = 'random', seed = 1)
+    coord_1b, img_1b = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
+                                                    num_select = 3,
+                                                    sample_method = 'random', seed = 1)
+    coord_2, img_2 = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
+                                                  num_select = 3,
+                                                  sample_method = 'random', seed = 2)
+    coord_3, img_3 = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
+                                                  num_x = 8, num_y = 8,
+                                                  num_select = 3,
+                                                  sample_method = 'random', seed = 3,
+                                                  as_NumPy = True)
     assert len(coord_1a) == 3
     assert coord_1a == coord_1b
     assert len(coord_2) == 3
@@ -281,17 +281,17 @@ def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert all(x.shape == (2, 3, 33, 40) for x in img_3)
 
     # sample_method = 'sum'
-    coord_4, img_4 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
-                                                      num_select = 3,
-                                                      sample_method = 'sum')
+    coord_4, img_4 = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
+                                                  num_select = 3,
+                                                  sample_method = 'sum')
     assert len(coord_4) == 3
     assert all([isinstance(x, dask.array.Array) for x in img_4])
     assert all(x.shape == (2, 3, 27, 32) for x in img_4)
 
     # sample_method = 'var'
-    coord_5, img_5 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
-                                                      num_select = 3,
-                                                      sample_method = 'var')
+    coord_5, img_5 = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
+                                                  num_select = 3,
+                                                  sample_method = 'var')
     assert len(coord_5) == 3
     assert all([isinstance(x, dask.array.Array) for x in img_5])
     assert all(x.shape == (2, 3, 27, 32) for x in img_5)
