@@ -21,7 +21,7 @@ plate_3d = hcs_wrappers.FractalZarr('tests/example_data/plate_ones.zarr')
 
 # print fileset summary
 plate_3d
-# FractalZarr plate_ones.zarr with 1 well and 2 channels
+# FractalZarr plate_ones.zarr
 #   path: tests/example_data/plate_ones.zarr
 #   n_wells: 1
 #   n_channels: 2 (some-label-1, some-label-2)
