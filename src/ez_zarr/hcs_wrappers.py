@@ -453,7 +453,8 @@ class FractalZarr:
             zyx (tuple): The micrometer coordinates in the form (z, y, x) to be converted
                 to pixels.
             pyramid_level (int): The pyramid level (resolution), to which the output
-                pixel coordinates will refer to.
+                pixel coordinates will refer to.  If `None`, the lowest-resolution
+                (highest) pyramid level will be selected.
         
         Returns:
             A tuple (z, y, x) with pixel coordinates.
@@ -485,7 +486,8 @@ class FractalZarr:
             zyx (tuple): The pixel coordinates in the form (z, y, x) to be converted
                 to micrometers.
             pyramid_level (int): The pyramid level (resolution), to which the input
-                pixel coordinates refer to.
+                pixel coordinates refer to. If `None`, the lowest-resolution
+                (highest) pyramid level will be selected.
         
         Returns:
             A tuple (z, y, x) with micrometer coordinates.
@@ -507,17 +509,19 @@ class FractalZarr:
 
     def convert_pixel_to_pixel(self,
                                zyx: tuple[int],
-                               pyramid_level_from: int,
-                               pyramid_level_to: int) -> tuple[int]:
+                               pyramid_level_from: Optional[int] = None,
+                               pyramid_level_to: Optional[int] = None) -> tuple[int]:
         """
         Convert pixel coordinates between pyramid levels.
 
         Parameters:
             zyx (tuple): The pixel coordinates in the form (z, y, x) to be converted.
             pyramid_level_from (int): The pyramid level (resolution), to which the input
-                pixel coordinates refer to.
+                pixel coordinates refer to. If `None`, the lowest-resolution
+                (highest) pyramid level will be selected.
             pyramid_level_to (int): The pyramid level (resolution), to which the output
-                pixel coordinates will refer to.
+                pixel coordinates will refer to. If `None`, the lowest-resolution
+                (highest) pyramid level will be selected.
         
         Returns:
             A tuple (z, y, x) with pixel coordinates in the new pyramid level.
@@ -528,8 +532,8 @@ class FractalZarr:
             >>> z0, y0, x0 = plateA.convert_pixel_to_pixel(zyx=(0,10,30), pyramid_level_from=3, pyramid_level_to=0)
         """
         # digest arguments
-        assert isinstance(pyramid_level_from, int) and pyramid_level_from in range(len(self.level_paths))
-        assert isinstance(pyramid_level_to, int) and pyramid_level_to in range(len(self.level_paths))
+        pyramid_level_from = self._digest_pyramid_level_argument(pyramid_level_from)
+        pyramid_level_to = self._digest_pyramid_level_argument(pyramid_level_to)
 
         # convert
         zyx_scale = self.level_zyx_scalefactor**(pyramid_level_from - pyramid_level_to)
