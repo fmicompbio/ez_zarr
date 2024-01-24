@@ -199,13 +199,13 @@ def test_get_table(plate_2d: hcs_wrappers.FractalZarr):
     assert df.equals(df2)
 
 def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
-    """Test `FractalZarr.get_image_rect()`."""
-    img0a = plate_3d.get_image_rect(well = None, pyramid_level = 2,
+    """Test `FractalZarr.get_image_ROI()`."""
+    img0a = plate_3d.get_image_ROI(well = None, pyramid_level = 2,
                                     upper_left = None,
                                     lower_right = None,
                                     width_height = None,
                                     as_NumPy = False)
-    img0b = plate_3d.get_image_rect(well = 'B03', pyramid_level = 2,
+    img0b = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 2,
                                     upper_left = (0, 0),
                                     lower_right = (319, 269),
                                     width_height = None,
@@ -216,21 +216,21 @@ def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert (np.array(img0a) == img0b).all()
     
     with pytest.raises(Exception) as e_info:
-        plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
+        plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
                                 upper_left = (10, 11),
                                 lower_right = None, width_height = None)
 
-    img1a = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
+    img1a = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
                                     upper_left = (10, 11),
                                     lower_right = (20, 22),
                                     width_height = None,
                                     as_NumPy = True)
-    img1b = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
+    img1b = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
                                     upper_left = (10, 11),
                                     lower_right = None,
                                     width_height = (10, 11),
                                     as_NumPy = True)
-    img1c = plate_3d.get_image_rect(well = 'B03', pyramid_level = 1,
+    img1c = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
                                     upper_left = None,
                                     lower_right = (20, 22),
                                     width_height = (10, 11),

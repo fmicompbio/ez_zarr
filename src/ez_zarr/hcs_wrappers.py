@@ -262,7 +262,7 @@ class FractalZarr:
                                      axis = 1)
             return df_combined
 
-    def get_image_rect(self,
+    def get_image_ROI(self,
                        well: Optional[str] = None,
                        pyramid_level: Optional[int] = None,
                        upper_left: Optional[tuple[int]] = None,
@@ -296,7 +296,7 @@ class FractalZarr:
         Examples:
             Obtain the image of the lowest-resolution for the full well 'A02':
 
-            >>> plateA.get_image_rect(well = 'A02')
+            >>> plateA.get_image_ROI(well = 'A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)
