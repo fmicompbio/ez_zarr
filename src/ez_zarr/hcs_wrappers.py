@@ -263,12 +263,12 @@ class FractalZarr:
             return df_combined
 
     def get_image_ROI(self,
-                       well: Optional[str] = None,
-                       pyramid_level: Optional[int] = None,
-                       upper_left: Optional[tuple[int]] = None,
-                       lower_right: Optional[tuple[int]] = None,
-                       width_height: Optional[tuple[int]] = None,
-                       as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+                      well: Optional[str] = None,
+                      pyramid_level: Optional[int] = None,
+                      upper_left: Optional[tuple[int]] = None,
+                      lower_right: Optional[tuple[int]] = None,
+                      width_height: Optional[tuple[int]] = None,
+                      as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a rectangular image region (all z planes if several) from a well by coordinates.
 
@@ -329,16 +329,16 @@ class FractalZarr:
             img = np.array(img)
         return img
 
-    def get_image_sampled_rects(self,
-                                well: Optional[str] = None,
-                                pyramid_level: Optional[int] = None,
-                                lowres_level: Optional[int] = None,
-                                num_x: int = 10, num_y: int = 10,
-                                num_select: int = 9,
-                                sample_method: str = 'sum',
-                                channel: int = 0,
-                                seed: int = 42,
-                                as_NumPy: bool = False) -> Union[tuple[list[tuple[int]], list[dask.array.Array]], tuple[list[tuple[int]], list[np.ndarray]]]:
+    def get_image_grid_ROIs(self,
+                            well: Optional[str] = None,
+                            pyramid_level: Optional[int] = None,
+                            lowres_level: Optional[int] = None,
+                            num_x: int = 10, num_y: int = 10,
+                            num_select: int = 9,
+                            sample_method: str = 'sum',
+                            channel: int = 0,
+                            seed: int = 42,
+                            as_NumPy: bool = False) -> Union[tuple[list[tuple[int]], list[dask.array.Array]], tuple[list[tuple[int]], list[np.ndarray]]]:
         """
         Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
@@ -376,7 +376,7 @@ class FractalZarr:
         Examples:
             Obtain grid cells with highest signal sum in channel 0 from well 'A02':
 
-            >>> plateA.get_image_sampled_rects(well = 'A02')
+            >>> plateA.get_image_grid_ROIs(well = 'A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)

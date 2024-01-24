@@ -245,25 +245,25 @@ def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert (img1c == img1a).all()
 
 def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FractalZarr):
-    """Test `FractalZarr.get_image_sampled_rects().`"""
+    """Test `FractalZarr.get_image_grid_ROIs().`"""
     # exceptions
     with pytest.raises(Exception) as e_info:
-        plate_3d.get_image_sampled_rects(num_x = 2, num_y = 2, num_select = 5)
+        plate_3d.get_image_grid_ROIs(num_x = 2, num_y = 2, num_select = 5)
     
     with pytest.raises(Exception) as e_info:
-        plate_3d.get_image_sampled_rects(pyramid_level = 2, sample_method = 'error')
+        plate_3d.get_image_grid_ROIs(pyramid_level = 2, sample_method = 'error')
 
     # sample_method = 'random'                        
-    coord_1a, img_1a = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+    coord_1a, img_1a = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
                                                         num_select = 3,
                                                         sample_method = 'random', seed = 1)
-    coord_1b, img_1b = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+    coord_1b, img_1b = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
                                                         num_select = 3,
                                                         sample_method = 'random', seed = 1)
-    coord_2, img_2 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+    coord_2, img_2 = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
                                                       num_select = 3,
                                                       sample_method = 'random', seed = 2)
-    coord_3, img_3 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+    coord_3, img_3 = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
                                                       num_x = 8, num_y = 8,
                                                       num_select = 3,
                                                       sample_method = 'random', seed = 3,
@@ -281,7 +281,7 @@ def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert all(x.shape == (2, 3, 33, 40) for x in img_3)
 
     # sample_method = 'sum'
-    coord_4, img_4 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+    coord_4, img_4 = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
                                                       num_select = 3,
                                                       sample_method = 'sum')
     assert len(coord_4) == 3
@@ -289,7 +289,7 @@ def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert all(x.shape == (2, 3, 27, 32) for x in img_4)
 
     # sample_method = 'var'
-    coord_5, img_5 = plate_3d.get_image_sampled_rects(well = 'B03', pyramid_level = 2,
+    coord_5, img_5 = plate_3d.get_image_grid_ROIs(well = 'B03', pyramid_level = 2,
                                                       num_select = 3,
                                                       sample_method = 'var')
     assert len(coord_5) == 3
