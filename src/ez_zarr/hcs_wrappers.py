@@ -265,28 +265,29 @@ class FractalZarr:
     def get_image_ROI(self,
                       well: Optional[str] = None,
                       pyramid_level: Optional[int] = None,
-                      upper_left: Optional[tuple[int]] = None,
-                      lower_right: Optional[tuple[int]] = None,
-                      width_height: Optional[tuple[int]] = None,
+                      upper_left_yx: Optional[tuple[int]] = None,
+                      lower_right_yx: Optional[tuple[int]] = None,
+                      size_yx: Optional[tuple[int]] = None,
                       as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
         """
-        Extract a rectangular image region (all z planes if several) from a well by coordinates.
+        Extract a region of interest from a well image by coordinates.
 
-        None or at least two of `upper_left`, `lower_right` and `width_height` need to be given.
-        If none are given, it will return the full image (typically the whole well).
-        Otherwise, `upper_left` contains the lower indices than `lower_right`
-        (origin on the top-left, zero-based coordinates), and each of them is a tuple of (x, y).
+        None or at least two of `upper_left_yx`, `lower_right_yx` and `size_yx` need to be given.
+        If none are given, it will return the full image (the whole well).
+        Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
+        (origin on the top-left, zero-based coordinates), and each of them is
+        a tuple of (y, x). No z coordinate needs to be given, all z planes are returned
+        if there are several ones.
 
         Parameters:
             well (str): The well (e.g. 'B03') from which an image should be extracted.
             pyramid_level (int): The pyramid level (resolution level), from which the image
                 should be extracted. If `None`, the lowest-resolution (highest) pyramid level
                 will be selected.
-            upper_left (tuple): Tuple of (x, y) coordinates for the upper-left (lower) coordinates
-                defining the image rectangle.
-            lower_right (tuple): Tuple of (x, y) coordinates for the lower-right (higher) coordinates
-                defining the image rectangle.
-            width_height (tuple): Tuple of (wx, wy) width and height defining the image rectangle.
+            upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left (lower) coordinates
+                defining the region of interest.
+            lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right (higher) coordinates defining the region of interest.
+            size_yx (tuple): Tuple of (size_y, size_x) defining the size of the region of interest.
             as_NumPy (bool): If `True`, return the image as 4D `numpy.ndarray` object (c,z,y,x).
                 Otherwise, return the (on-disk) `dask` array of the same dimensions.
         
@@ -308,21 +309,21 @@ class FractalZarr:
 
         # calculate corner coordinates and subset if needed
         # (images are always of 4D shape c,z,y,x)
-        num_unknowns = sum([x == None for x in [upper_left, lower_right, width_height]])
+        num_unknowns = sum([x == None for x in [upper_left_yx, lower_right_yx, size_yx]])
         if num_unknowns == 1:
-            if width_height:
-                assert all([x > 0 for x in width_height])
-                if not upper_left:
-                    upper_left = tuple(lower_right[i] - width_height[i] for i in range(2))
-                elif not lower_right:
-                    lower_right = tuple(upper_left[i] + width_height[i] for i in range(2))
-            assert all([upper_left[i] < lower_right[i] for i in range(len(upper_left))])
+            if size_yx:
+                assert all([x > 0 for x in size_yx])
+                if not upper_left_yx:
+                    upper_left_yx = tuple(lower_right_yx[i] - size_yx[i] for i in range(2))
+                elif not lower_right_yx:
+                    lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
+            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))])
             img = img[:,
                       :,
-                      slice(upper_left[1], lower_right[1] + 1),
-                      slice(upper_left[0], lower_right[0] + 1)]
+                      slice(upper_left_yx[0], lower_right_yx[0] + 1),
+                      slice(upper_left_yx[1], lower_right_yx[1] + 1)]
         elif num_unknowns != 3:
-            raise ValueError("Either none or two of `upper_left`, `lower_rigth` and `width_height` have to be given")
+            raise ValueError("Either none or two of `upper_left_yx`, `lower_rigth` and `size_yx` have to be given")
 
         # convert if needed and return
         if as_NumPy:

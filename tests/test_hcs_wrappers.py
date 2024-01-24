@@ -201,14 +201,14 @@ def test_get_table(plate_2d: hcs_wrappers.FractalZarr):
 def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr.get_image_ROI()`."""
     img0a = plate_3d.get_image_ROI(well = None, pyramid_level = 2,
-                                   upper_left = None,
-                                   lower_right = None,
-                                   width_height = None,
+                                   upper_left_yx = None,
+                                   lower_right_yx = None,
+                                   size_yx = None,
                                    as_NumPy = False)
     img0b = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 2,
-                                   upper_left = (0, 0),
-                                   lower_right = (319, 269),
-                                   width_height = None,
+                                   upper_left_yx = (0, 0),
+                                   lower_right_yx = (269, 319),
+                                   size_yx = None,
                                    as_NumPy = True)
     assert isinstance(img0a, dask.array.Array)
     assert isinstance(img0b, np.ndarray)
@@ -217,23 +217,23 @@ def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
     
     with pytest.raises(Exception) as e_info:
         plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
-                               upper_left = (10, 11),
-                               lower_right = None, width_height = None)
+                               upper_left_yx = (11, 10),
+                               lower_right_yx = None, size_yx = None)
 
     img1a = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
-                                   upper_left = (10, 11),
-                                   lower_right = (20, 22),
-                                   width_height = None,
+                                   upper_left_yx = (11, 10),
+                                   lower_right_yx = (22, 20),
+                                   size_yx = None,
                                    as_NumPy = True)
     img1b = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
-                                   upper_left = (10, 11),
-                                   lower_right = None,
-                                   width_height = (10, 11),
+                                   upper_left_yx = (11, 10),
+                                   lower_right_yx = None,
+                                   size_yx = (11, 10),
                                    as_NumPy = True)
     img1c = plate_3d.get_image_ROI(well = 'B03', pyramid_level = 1,
-                                   upper_left = None,
-                                   lower_right = (20, 22),
-                                   width_height = (10, 11),
+                                   upper_left_yx = None,
+                                   lower_right_yx = (22, 20),
+                                   size_yx = (11, 10),
                                    as_NumPy = True)
     assert isinstance(img1a, np.ndarray)
     assert isinstance(img1b, np.ndarray)
