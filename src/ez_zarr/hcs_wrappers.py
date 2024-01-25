@@ -10,7 +10,7 @@ Classes:
 """
 
 __all__ = ['FractalZarr', 'FractalZarrSet']
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'Silvia Barbiero, Michael Stadler'
 
 
