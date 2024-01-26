@@ -32,14 +32,20 @@ plate_3d
 #   tables (measurements): FOV_ROI_table
 ```
 
+## Install
+`ez_zarr` can be installed directly from github.com using pip:
+```
+pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
+```
+
 ## Software status
-[![unit-tests](https://github.com/fmi-basel/gbioinfo-ez_zarr/actions/workflows/test_and_deploy.yaml/badge.svg)](https://github.com/fmi-basel/gbioinfo-ez_zarr/actions/workflows/test_and_deploy.yaml)
-[![codecov](https://codecov.io/gh/fmi-basel/gbioinfo-ez_zarr/graph/badge.svg?token=GEBLX8ENJ1)](https://codecov.io/gh/fmi-basel/gbioinfo-ez_zarr)
+[![unit-tests](https://github.com/fmicompbio/ez_zarr/actions/workflows/test_and_deploy.yaml/badge.svg)](https://github.com/fmicompbio/ez_zarr/actions/workflows/test_and_deploy.yaml)
+[![codecov](https://codecov.io/gh/fmicompbio/ez_zarr/graph/badge.svg?token=GEBLX8ENJ1)](https://codecov.io/gh/fmicompbio/ez_zarr)
 
 ## Contributors and License
 `ez_zarr` is released under the MIT License, and the copyright
 is with the Friedrich Miescher Insitute for Biomedical Research
-(see [LICENSE](https://github.com/fmi-basel/gbioinfo-ez_zarr/blob/main/LICENSE)).
+(see [LICENSE](https://github.com/fmicompbio/ez_zarr/blob/main/LICENSE)).
 
 `ez_zarr` is being developed at the Friedrich Miescher Institute for
 Biomedical Research by [@silvbarb](https://github.com/silvbarb) and [@mbstadler](https://github.com/mbstadler).
