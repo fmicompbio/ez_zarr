@@ -7,3 +7,4 @@ mkdocs-section-index==0.3.5
 mkdocstrings[python]==0.22.0
 mkdocs-include-markdown-plugin==4.0.4
 jupyter==1.0.0
+matplotlib==3.8.2
