@@ -28,7 +28,11 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
       
       - name: Compile quarto documents
-        run: cd docs && quarto build quickstart.qmd --to md && cd ..
+        run: |
+          cd docs
+          quarto build quickstart.qmd --to md
+          cd ..
+        shell: bash
 
       - name: MKDocs build
         run: mkdocs build --config-file mkdocs.yml --strict
