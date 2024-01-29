@@ -24,15 +24,19 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r docs/doc-requirements.txt
 
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
+      # - name: Set up Quarto
+      #   uses: quarto-dev/quarto-actions/setup@v2
       
       - name: Compile quarto documents
-        run: |
-          cd docs
-          quarto render quickstart.qmd --to md
-          cd ..
-        shell: bash
+      #   run: |
+      #     cd docs
+      #     quarto render quickstart.qmd --to md
+      #     cd ..
+      #   shell: bash
+      uses: quarto-dev/quarto-actions/render@v2
+      with:
+        to: md # If set, it will be equivalent to `quarto render --to html`
+        path: docs/quickstart.qmd # By default, the current working dir is used i.e `quarto render .`
 
       - name: MKDocs build
         run: mkdocs build --config-file mkdocs.yml --strict
