@@ -1,6 +1,9 @@
 site_name: ez_zarr
 
-theme: 'material'
+theme:
+  name: 'material'
+  features:
+    - content.code.copy
 
 plugins:
   - search  # To have search functionality on the document
@@ -9,9 +12,24 @@ plugins:
       handlers:
         python:
           paths: [src]  # search packages in the src folder
+  # - mkquartodocs # maps quarto CSS to admonition CSS (see https://github.com/jspaezp/mkquartodocs/blob/e5c3f825f86645f13f57bc0789f64c4db2f3863b/mkquartodocs/extension.py#L25-L30)
+
+# for info on code block formatting, see: https://squidfunk.github.io/mkdocs-material/reference/code-blocks
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      # line_spans: __span # wraps lines in <span>, needed for highlithing to work
+      pygments_lang_class: true
+      # auto_title: true # adds titles like 'Python', 'Bash' or 'Text Only'
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra_css:
+    - 'extra.css'
 
 nav: # Setting up the navigation. Te below list will be tabs on left panel
   - Home: 'index.md'
   - Documentation: 'hcs_wrappers.md'
   - Unit tests: 'testing.md'
-  - Quickstart: 'vignette.html'
+  - Quickstart: 'quickstart.md'
