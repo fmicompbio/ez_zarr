@@ -113,8 +113,16 @@ The tables are stored within the fileset as describe in the [Fractal documentati
 
 As mentioned the goal of `ez_zarr` is to abstract the internal structure and make it simple to obtain these tables, if necessary accumulated over many wells, as a `pandas.DataFrame` :
 ```{python}
+#| output: false
 df = plate.get_table(table_name='FOV_ROI_table')
 df
+```
+```{python}
+#| echo: false
+#| output: asis
+
+# output table as md (instead of html to better play with mkdocs)
+print(df.to_markdown())
 ```
 
 or `anndata.AnnData` object:
