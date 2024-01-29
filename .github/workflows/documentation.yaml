@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
           cache: pip
 
       - name: Install Python dependencies
@@ -39,9 +39,6 @@ jobs:
           to: md # If set, it will be equivalent to `quarto render --to html`
           path: docs/quickstart.qmd # By default, the current working dir is used i.e `quarto render .`
 
-      # - name: MKDocs build
-      #   run: mkdocs build --config-file mkdocs.yml --strict
-        
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
