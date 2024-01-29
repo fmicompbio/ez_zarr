@@ -32,6 +32,8 @@ plate_3d
 #   tables (measurements): FOV_ROI_table
 ```
 
+A slightly more extensive example is available from [here](https://fmicompbio.github.io/ez_zarr/quickstart/).
+
 ## Install
 `ez_zarr` can be installed directly from github.com using pip:
 ```
