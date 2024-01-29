@@ -33,10 +33,10 @@ jobs:
       #     quarto render quickstart.qmd --to md
       #     cd ..
       #   shell: bash
-      uses: quarto-dev/quarto-actions/render@v2
-      with:
-        to: md # If set, it will be equivalent to `quarto render --to html`
-        path: docs/quickstart.qmd # By default, the current working dir is used i.e `quarto render .`
+        uses: quarto-dev/quarto-actions/render@v2
+        with:
+          to: md # If set, it will be equivalent to `quarto render --to html`
+          path: docs/quickstart.qmd # By default, the current working dir is used i.e `quarto render .`
 
       - name: MKDocs build
         run: mkdocs build --config-file mkdocs.yml --strict
