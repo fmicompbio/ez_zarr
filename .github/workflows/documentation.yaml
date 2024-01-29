@@ -30,7 +30,7 @@ jobs:
       - name: Compile quarto documents
         run: |
           cd docs
-          quarto build quickstart.qmd --to md
+          quarto render quickstart.qmd --to md
           cd ..
         shell: bash
 
