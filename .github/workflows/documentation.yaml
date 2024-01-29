@@ -19,6 +19,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get install linux-headers-$(uname -r)
+          sudo apt-get install ethtool
 
       - uses: actions/setup-python@v4
         with:
