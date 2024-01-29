@@ -4,9 +4,9 @@
 
 /* for info on customization of the mkdocs styles, see:
    https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#customization */
-.language-python {
+/* .language-python {
     --md-code-bg-color: #f5f5f5;
-}
+} */
 
 .language-text {
     --md-code-bg-color: transparent;
