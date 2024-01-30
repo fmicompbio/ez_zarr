@@ -45,4 +45,5 @@ nav: # Setting up the navigation. Te below list will be tabs on left panel
   - Home: 'index.md'
   - Documentation: 'hcs_wrappers.md'
   - Unit tests: 'testing.md'
-  - Quickstart: 'quickstart.md'
+  - Quickstart (html): 'quickstart.md'
+  - Quickstart (ipynb): 'quickstart.ipynb'
