@@ -12,6 +12,12 @@ wells and fields of view, without having to understand how these
 are represented within an OME-Zarr fileset.
 
 ## Example
+You can use `ez_zarr` from the command line to get information about an OME-Zarr fileset:
+```
+ez_zarr tests/example_data/plate_ones.zarr
+```
+
+or from within python to get access to all its functionality:
 ```
 # import module
 from ez_zarr import hcs_wrappers
@@ -31,6 +37,8 @@ plate_3d
 #   segmentations: 
 #   tables (measurements): FOV_ROI_table
 ```
+
+A more extensive example is available from [here](https://fmicompbio.github.io/ez_zarr/quickstart/).
 
 ## Install
 `ez_zarr` can be installed directly from github.com using pip:

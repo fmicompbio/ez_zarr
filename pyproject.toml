@@ -1,7 +1,46 @@
+# pyproject.toml
+
 [build-system]
 requires = ["setuptools", "wheel", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "ez_zarr"
+version = "0.1.1"
+description = "Give easy, high-level access to ome-zarr filesets."
+readme = "README.md"
+authors = [{ name = "Silvia Barbiero", email = "silvia.barbiero@fmi.ch" },
+           { name = "Michael Stadler", email = "michael.stadler@fmi.ch" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.11",
+]
+keywords = ["ome_zarr", "image analysis", "Fractal"]
+dependencies = [
+    "anndata",
+    "dask",
+    "numpy",
+    "pandas",
+    "zarr",
+]
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov"]
+
+[project.urls]
+Homepage = "https://github.com/fmicompbio/ez_zarr"
+
+[project.scripts]
+ez_zarr = "ez_zarr.__main__:main"
 
 [tool.setuptools_scm]
 write_to = "src/ez_zarr/_version.py"
