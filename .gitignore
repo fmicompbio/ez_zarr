@@ -169,3 +169,4 @@ docs/__MACOSX
 # local vignette files (will be re-created online)
 docs/quickstart.md
 docs/quickstart_files
+docs/quickstart.ipynb
