@@ -15,13 +15,12 @@ __author__ = 'Silvia Barbiero, Michael Stadler'
 
 
 # imports ---------------------------------------------------------------------
-import os, re
+import os
 import numpy as np
 import zarr
 import dask
 import anndata as ad
 import pandas as pd
-# import tifffile
 import warnings
 import random
 from typing import Union, Optional, Any
@@ -66,12 +65,18 @@ class FractalZarr:
         self.columns: list[dict] = self.__top.attrs['plate']['columns']
         self.rows: list[dict] = self.__top.attrs['plate']['rows']
         self.wells: list[dict] = self.__top.attrs['plate']['wells']
+        # images
         self.channels: list[dict] = self._load_channel_info()
-        self.multiscales: dict[str, Any] = self._load_multiscale_info()
+        self.multiscales: dict[str, Any] = self._load_multiscale_info_images()
         self.level_paths: list[str] = [x['path'] for x in self.multiscales['datasets']]
         self.level_zyx_spacing: list[list[float]] = [x['coordinateTransformations'][0]['scale'][1:] for x in self.multiscales['datasets']] # convention: unit is micrometer
         self.level_zyx_scalefactor: np.ndarray = np.divide(self.level_zyx_spacing[1], self.level_zyx_spacing[0])
+        # labels
         self.label_names: list[str] = self._load_label_names()
+        self.multiscales_labels: dict[str, Any] = self._load_multiscale_info_labels()
+        self.level_paths_labels: dict[str, list[str]] = {lab: [x['path'] for x in self.multiscales_labels[lab]['datasets']] for lab in self.label_names}
+        self.level_zyx_spacing_labels: dict[str, list[list[float]]] = {lab: [x['coordinateTransformations'][0]['scale'] for x in self.multiscales_labels[lab]['datasets']] for lab in self.label_names} # convention: unit is micrometer
+        # tables
         self.table_names: list[str] = self._load_table_names()
 
     def _load_channel_info(self) -> list:
@@ -82,13 +87,24 @@ class FractalZarr:
             raise ValueError(f"no channel info found in well {well}")
         return well_group.attrs['omero']['channels']
     
-    def _load_multiscale_info(self) -> dict[str, Any]:
-        """[internal] Load info about available scales."""
+    def _load_multiscale_info_images(self) -> dict[str, Any]:
+        """[internal] Load info about available scales (images)."""
         well = self.wells[0]['path']
         well_group = self.__top[os.path.join(well, '0')] # convention: single field of view per well
         if not 'multiscales' in well_group.attrs:
             raise ValueError(f"no multiscale info found in well {well}")
         return well_group.attrs['multiscales'][0]
+    
+    def _load_multiscale_info_labels(self) -> dict[str, Any]:
+        """[internal] Load info about available scales (labels)."""
+        well = self.wells[0]['path']
+        info = {}
+        for lab in self.label_names:
+            lab_group = self.__top[os.path.join(well, '0', 'labels', lab)] # convention: single field of view per well
+            if not 'multiscales' in lab_group.attrs:
+                raise ValueError(f"no multiscale info found in well {well}, label {lab}")
+            info[lab] = lab_group.attrs['multiscales'][0]
+        return info
     
     def _load_label_names(self) -> list[str]:
         """[internal] Load label names (available segmentations)."""
@@ -209,6 +225,14 @@ class FractalZarr:
         """
         return self.channels
     
+    def get_label_names(self) -> list:
+        """Gets list of label names in the ome-zarr fileset.
+        
+        Returns:
+            A list of label names (str) available in the plate.
+        """
+        return self.label_names
+
     def get_table_names(self) -> list:
         """Gets list of table names in the ome-zarr fileset.
         
