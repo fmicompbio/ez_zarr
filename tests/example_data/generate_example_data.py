@@ -4,6 +4,7 @@
 
 import json
 import os
+from copy import deepcopy
 import shutil
 
 import dask.array as da
@@ -179,4 +180,8 @@ for i in range(len(zarrurl)):
             )
         with open(f"{zarrurl[i]}{component}labels/.zattrs", "w") as jsonfile:
             json.dump(label_zattrs, jsonfile, indent=4)
+        label_org_zattrs = deepcopy(zattrs)
+        del(label_org_zattrs['omero'])
+        with open(f"{zarrurl[i]}{component}labels/organoids/.zattrs", "w") as jsonfile:
+            json.dump(label_org_zattrs, jsonfile, indent=4)
 
