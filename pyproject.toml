@@ -10,7 +10,8 @@ version = "0.1.2"
 description = "Give easy, high-level access to ome-zarr filesets."
 readme = { file = "README.md", content-type = "text/markdown" }
 authors = [{ name = "Silvia Barbiero", email = "silvia.barbiero@fmi.ch" },
-           { name = "Michael Stadler", email = "michael.stadler@fmi.ch" }]
+           { name = "Michael Stadler", email = "michael.stadler@fmi.ch" }],
+maintainer = [{ name = "Michael Stadler", email = "michael.stadler@fmi.ch" }]
 license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 3 - Alpha",
