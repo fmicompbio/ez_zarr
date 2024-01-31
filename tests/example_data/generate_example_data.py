@@ -126,6 +126,32 @@ for i in range(len(zarrurl)):
     with open(f"{zarrurl[i]}{component}.zattrs", "w") as jsonfile:
         json.dump(zattrs, jsonfile, indent=4)
 
+    label_org_zattrs = {
+        "multiscales": [
+            {
+                "axes": axes,
+                "datasets": [
+                    {
+                        "path": level,
+                        cT: [
+                            {
+                                "type": "scale",
+                                "scale": [
+                                    pxl_z,
+                                    pxl_y * cxy**level,
+                                    pxl_x * cxy**level,
+                                ],
+                            }
+                        ],
+                    }
+                    for level in range(num_levels)
+                ],
+                "version": "0.4",
+            }
+        ],
+    }
+
+
     df_nrow = num_X[i] * num_Y[i] * num_Z[i]
     df = pd.DataFrame(np.zeros((df_nrow, 8)), dtype=int)
     df.index = [str(j) for j in range(df_nrow)]
@@ -180,8 +206,6 @@ for i in range(len(zarrurl)):
             )
         with open(f"{zarrurl[i]}{component}labels/.zattrs", "w") as jsonfile:
             json.dump(label_zattrs, jsonfile, indent=4)
-        label_org_zattrs = deepcopy(zattrs)
-        del(label_org_zattrs['omero'])
         with open(f"{zarrurl[i]}{component}labels/organoids/.zattrs", "w") as jsonfile:
             json.dump(label_org_zattrs, jsonfile, indent=4)
 
