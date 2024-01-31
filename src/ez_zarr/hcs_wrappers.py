@@ -471,6 +471,76 @@ class FractalZarr:
 
         return (sel_coords, sel_img_cells)
 
+    def get_label_ROI(self,
+                      label_name: str,
+                      well: Optional[str] = None,
+                      pyramid_level: Optional[int] = None,
+                      upper_left_yx: Optional[tuple[int]] = None,
+                      lower_right_yx: Optional[tuple[int]] = None,
+                      size_yx: Optional[tuple[int]] = None,
+                      as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+        """
+        Extract a region of interest from a label mask (segmentation) by coordinates.
+
+        None or at least two of `upper_left_yx`, `lower_right_yx` and `size_yx` need to be given.
+        If none are given, it will return the full image (the whole well).
+        Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
+        (origin on the top-left, zero-based coordinates), and each of them is
+        a tuple of (y, x). No z coordinate needs to be given, all z planes are returned
+        if there are several ones.
+
+        Parameters:
+            label_name (str): The name of the segmentation
+            well (str): The well (e.g. 'B03') from which an image should be extracted.
+            pyramid_level (int): The pyramid level (resolution level), from which the image
+                should be extracted. If `None`, the lowest-resolution (highest) pyramid level
+                will be selected.
+            upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left (lower) coordinates
+                defining the region of interest.
+            lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right (higher) coordinates defining the region of interest.
+            size_yx (tuple): Tuple of (size_y, size_x) defining the size of the region of interest.
+            as_NumPy (bool): If `True`, return the image as 4D `numpy.ndarray` object (c,z,y,x).
+                Otherwise, return the (on-disk) `dask` array of the same dimensions.
+        
+        Returns:
+            The extracted label mask, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
+        
+        Examples:
+            Obtain the label mask of the lowest-resolution for the full well 'A02':
+
+            >>> plateA.get_label_ROI(well = 'A02')
+        """
+        # digest arguments
+        well = self._digest_well_argument(well)
+        assert label_name in self.label_names
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+
+        # load image (convention: single field of view per well -> '0')
+        msk_path = os.path.join(self.path, well, '0', 'labels', label_name, str(pyramid_level))
+        msk = dask.array.from_zarr(msk_path)
+
+        # calculate corner coordinates and subset if needed
+        # (images are always of 4D shape c,z,y,x)
+        num_unknowns = sum([x == None for x in [upper_left_yx, lower_right_yx, size_yx]])
+        if num_unknowns == 1:
+            if size_yx:
+                assert all([x > 0 for x in size_yx])
+                if not upper_left_yx:
+                    upper_left_yx = tuple(lower_right_yx[i] - size_yx[i] for i in range(2))
+                elif not lower_right_yx:
+                    lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
+            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))])
+            msk = msk[:,
+                      slice(upper_left_yx[0], lower_right_yx[0] + 1),
+                      slice(upper_left_yx[1], lower_right_yx[1] + 1)]
+        elif num_unknowns != 3:
+            raise ValueError("Either none or two of `upper_left_yx`, `lower_rigth` and `size_yx` have to be given")
+
+        # convert if needed and return
+        if as_NumPy:
+            msk = np.array(msk)
+        return msk
+
     def convert_micrometer_to_pixel(self,
                                     zyx: tuple[float],
                                     pyramid_level: Optional[int] = None) -> tuple[int]:
