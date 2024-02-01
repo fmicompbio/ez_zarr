@@ -181,8 +181,8 @@ def test_get_channels(plate_2d: hcs_wrappers.FractalZarr, plate_3d: hcs_wrappers
 
 def test_get_label_names(plate_2d: hcs_wrappers.FractalZarr, plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr.get_label_names().`"""
-    assert plate_2d.get_table_names() == ['organoids']
-    assert plate_3d.get_table_names() == []
+    assert plate_2d.get_label_names() == ['organoids']
+    assert plate_3d.get_label_names() == []
 
 def test_get_table_names(plate_2d: hcs_wrappers.FractalZarr, plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr.get_table_names().`"""
