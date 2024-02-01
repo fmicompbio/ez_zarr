@@ -33,7 +33,7 @@ To run the code below, you will first need to download some Fractal output data.
 You can do this for example by running the following from a terminal:
 ```{.bash}
 # Download small Fractal output from Zenodo
-curl -o temp.zip https://zenodo.org/records/10257149/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip
+curl -o temp.zip https://zenodo.org/records/10519143/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip
 
 # Unzip and remove the temporary zip file
 unzip temp.zip
@@ -47,7 +47,7 @@ import zipfile
 import os
 
 # for info on data see: https://zenodo.org/records/10257149
-url = 'https://zenodo.org/records/10257149/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip'
+url = 'https://zenodo.org/records/10519143/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip'
 
 # download
 response = requests.get(url)
@@ -66,6 +66,9 @@ os.remove('temp.zip')
 ```{python}
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib.colors import ListedColormap
+import numpy as np
+from skimage import color
 
 from ez_zarr import hcs_wrappers
 ```
@@ -73,16 +76,16 @@ from ez_zarr import hcs_wrappers
 ## Open OME-Zarr file set
 We open a single OME-Zarr directory, typically representing a single plate:
 ```{python}
-zarr_directory = '20200812-CardiomyocyteDifferentiation14-Cycle1.zarr'
+zarr_directory = '20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr'
 plate = hcs_wrappers.FractalZarr(zarr_directory, name = 'cardio-d14')
 plate
 ```
 
-`plate` represents an acquisition of 1 wells with 4 channels.
+`plate` represents a maximum intensity projection of an acquisition with 1 wells and 1 channel.
 
 There are 5 `pyramid_levels` available (0 to 4), meaning that in addition to the full resolution data (level 0), we have four more levels that provide the data in 2-fold lower resolutions (see `pyramid_zyx_scalefactor`), for example for faster plotting.
 
-This OME-Zarr fileset does not contain any segmentations, but some tables, such as `FOV_ROI_table`, which contains the coordinates of the fields of view.
+This OME-Zarr fileset also contains a segmentation (`nuclei`), for which measurements ahve been extracted and saved in table `nuclei`. In addition, there are some further tables, such as `FOV_ROI_table`, which contains the coordinates of the fields of view, or `nuclei_ROI_table`, which contains the bounding box coordinates for the segmented nuclei.
 
 ## Get information from `plate`
 You can obtain information on the content available in the fileset:
@@ -100,12 +103,19 @@ plate.get_wells()
 plate.get_wells(simplify=True)
 ```
 ```{python}
+# available labels
+plate.get_label_names()
+```
+```{python}
 # available tables
 plate.get_table_names()
 ```
 ```{python}
 # zyx pixel spacing in micrometers for pyramid levels
+# ... for images
 plate.level_zyx_spacing
+# ... for labels
+plate.level_zyx_spacing_labels
 ```
 
 ## Extract a table from the OME-Zarr fileset
@@ -277,6 +287,112 @@ with plt.style.context('dark_background'):
     plt.show()
     plt.close()
 ```
+
+## Extract segmentation
+When segmentation masks (labels) are available, we can also extract them.
+For example, we can plot the labels with transparency on top of the image:
+```{python}
+# select which object to plot
+label = 'nuclei'
+img_pl = 2  # image pyramid level
+
+# find corresponding mask pyramid level
+pl_match = [plate.level_zyx_spacing[img_pl] == x for x in plate.level_zyx_spacing_labels[label]]
+assert sum(pl_match) == 1
+msk_pl = pl_match.index(True)
+
+# load image and corresponding mask
+img = plate.get_image_ROI(well=my_well, pyramid_level=img_pl,
+                          upper_left_yx=(200, 160), lower_right_yx=(480, 360))
+msk = plate.get_label_ROI(label_name=label, well=my_well, pyramid_level=msk_pl,
+                          upper_left_yx=(200, 160), lower_right_yx=(480, 360))
+assert img[0].shape == msk.shape
+
+# create shuffled color map
+cmap = plt.colormaps.get_cmap('hsv')
+all_colors = cmap(np.linspace(0, 1, cmap.N))
+np.random.seed(42)
+np.random.shuffle(all_colors)
+shuffled_cmap = ListedColormap(all_colors)
+
+with plt.style.context('dark_background'):
+    fig = plt.figure(figsize=(6,6))
+    fig.set_dpi(100)
+
+    plt.imshow(img[0,0], cmap='gray', vmin=100, vmax=600)
+    plt.imshow(msk[0], interpolation='none', cmap=shuffled_cmap,
+               alpha=np.multiply(0.2, msk[0] > 0))
+    plt.title(plate.name + ' ' + my_well)
+    plt.xticks([])
+    plt.yticks([])
+
+    plt.show()
+    plt.close()
+```
+
+Using the tables, we can get the bounding box coordinates in micrometers from
+`nuclei_ROI_table` (here just showing the rows 100 to 110):
+```{python}
+#| output: false
+nucl = plate.get_table('nuclei_ROI_table')
+nucl.iloc[100:111]
+```
+```{python}
+#| echo: false
+#| output: asis
+
+# output table as md (instead of html to better play with mkdocs)
+print(nucl.head(n=10).to_markdown())
+```
+
+We can plot the image region corresponding to a single segmented object,
+for example the nucleus at index 106:
+```{python}
+# select which object to plot
+idx = 106 # index of the object in `nucl`
+
+# get upper left coordinates
+ul = plate.convert_micrometer_to_pixel(zyx=(0,
+                                            nucl['y_micrometer'][idx],
+                                            nucl['x_micrometer'][idx]),
+                                       pyramid_level=img_pl)
+# get width and height
+wh = plate.convert_micrometer_to_pixel(zyx=(0,
+                                            nucl['len_y_micrometer'][idx],
+                                            nucl['len_x_micrometer'][idx]),
+                                       pyramid_level=img_pl)
+
+img_nucl = plate.get_image_ROI(upper_left_yx=ul[1:],
+                               size_yx=wh[1:],
+                               pyramid_level=img_pl)
+msk_nucl = plate.get_label_ROI(label_name='nuclei',
+                               upper_left_yx=ul[1:],
+                               size_yx=wh[1:],
+                               pyramid_level=msk_pl,
+                               as_NumPy=True)
+assert img_nucl.shape[1:] == msk_nucl.shape
+
+# plot 
+with plt.style.context('dark_background'):
+    fig = plt.figure(figsize=(8, 4))
+    fig.set_dpi(100)
+
+    # ... channel for segmentation mask
+    plt.subplot(1, 2, 1)
+    plt.title('Zoom-in image (DAPI)')
+    plt.imshow(img_nucl[0,0], vmin=100, vmax=600, cmap='gray')
+    plt.axis('off')
+    
+    # ... threshold mask
+    plt.subplot(1, 2, 2)
+    plt.title('Mask (nuclei)')
+    plt.imshow(color.label2rgb(msk_nucl[0]))
+    plt.axis('off')
+
+    plt.show()
+    plt.close()
+```
+
 
 ## Calculate on the image data
 To save memory, images are stored on disk and only loaded when needed (for implementation details see the [`dask` Array documentation](https://docs.dask.org/en/stable/array.html)).
