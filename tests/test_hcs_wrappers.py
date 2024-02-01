@@ -36,7 +36,19 @@ def plate_set2():
     return hcs_wrappers.FractalZarrSet('tests/example_data', name = "test")
 
 
-# hcs_wrappers.FractalZarr ----------------------------------------------------------
+# # ez_zarr.__main__ ------------------------------------------------------------
+# def test_main():
+#     result = subprocess.run(['python', '-m', 'ez_zarr', 'tests/example_data/plate_ones.zarr'],
+#                             capture_output=True, text=True)
+#     assert 'FractalZarr' in result.stdout
+#     result = subprocess.run(['python', '-m', 'ez_zarr', 'tests/example_data/'],
+#                             capture_output=True, text=True)
+#     assert 'FractalZarrSet' in result.stdout
+#     result = subprocess.run(['python', '-m', 'ez_zarr', 'does-not-exist'],
+#                             capture_output=True, text=True)
+#     assert 'usage' in result.stdout
+
+# hcs_wrappers.FractalZarr ----------------------------------------------------
 def test_digest_well_argument(plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr._digest_well_argument`."""
     assert plate_3d._digest_well_argument(None) == 'B/03'
@@ -431,7 +443,7 @@ def test_calc_average_FOV(tmpdir: str, plate_3d: hcs_wrappers.FractalZarr):
     assert avg1.shape == (3, 270, 320)
     assert avg2.shape == (3, 135, 160)
 
-# hcs_wrappers.FractalZarrSet ---------------------------------------------------
+# hcs_wrappers.FractalZarrSet -------------------------------------------------
 def test_constructor_set(plate_set1: hcs_wrappers.FractalZarrSet,
                          plate_set2: hcs_wrappers.FractalZarrSet,
                          tmpdir: str):
