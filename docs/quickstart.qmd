@@ -2,14 +2,6 @@
 jupyter: python3
 title: "Using `ez_zarr` to explore Fractal outputs"
 author: Silvia Barbiero, Michael Stadler
-# format:
-#   html:
-#     toc: true
-#     toc-location: left
-#     code-copy: true
-#     embed-resources: true
-#     keep-md: true
-#     link-external-icon: true
 ---
 
 # Goal
@@ -20,7 +12,12 @@ The goal is that users can write simple scripts working with plates, wells and f
 # Installation
 `ez_zarr` is hosted on GitHub at [github.com/fmicompbio/ez_zarr](https://github.com/fmicompbio/ez_zarr) and the documentation of can be found at [fmicompbio.github.io/ez_zarr](https://fmicompbio.github.io/ez_zarr/).
 
-To install it, activate a `conda` environment, or create a new one (using `python 3.9` or newer), and install `ez_zarr` from GitHub using:
+The release version of `ez_zarr` can be installed using:
+```{.bash}
+pip install ez-zarr
+```
+
+The current (development) `ez_zarr` can be installed from github.com using:
 ```{.bash}
 pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
 ```
