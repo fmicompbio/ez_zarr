@@ -119,7 +119,7 @@ def test_missing_channel_attrs(tmpdir: str):
     with pytest.raises(Exception) as e_info:
         hcs_wrappers.FractalZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
 
-def test_missing_multiscales_attrs(tmpdir: str):
+def test_missing_image_multiscales_attrs(tmpdir: str):
     """Test `FractalZarr` missing multiscales attributes."""
     # copy zarr fileset
     assert tmpdir.check()
@@ -127,6 +127,23 @@ def test_missing_multiscales_attrs(tmpdir: str):
     assert tmpdir.join('/example_data/plate_ones_mip.zarr/B/03/0/.zattrs').check()
     # remove multiscales attributes from copy
     zattr_file = str(tmpdir) + '/example_data/plate_ones_mip.zarr/B/03/0/.zattrs'
+    with open(zattr_file) as f:
+       zattr = json.load(f)
+    del zattr['multiscales']
+    with open(zattr_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    # test loading
+    with pytest.raises(Exception) as e_info:
+        hcs_wrappers.FractalZarr(str(tmpdir) + '/example_data/plate_ones_mip.zarr')
+
+def test_missing_label_multiscales_attrs(tmpdir: str):
+    """Test `FractalZarr` missing multiscales attributes."""
+    # copy zarr fileset
+    assert tmpdir.check()
+    shutil.copytree('tests/example_data', str(tmpdir) + '/example_data')
+    assert tmpdir.join('/example_data/plate_ones_mip.zarr/B/03/0/labels/organoids/.zattrs').check()
+    # remove multiscales attributes from copy
+    zattr_file = str(tmpdir) + '/example_data/plate_ones_mip.zarr/B/03/0/labels/organoids/.zattrs'
     with open(zattr_file) as f:
        zattr = json.load(f)
     del zattr['multiscales']
@@ -203,7 +220,7 @@ def test_get_table(plate_2d: hcs_wrappers.FractalZarr):
     df2 = plate_2d.get_table('FOV_ROI_table', include_wells = ['B03'], as_AnnData = False)
     assert df.equals(df2)
 
-def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
+def test_get_image_ROI_3d(plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr.get_image_ROI()`."""
     img0a = plate_3d.get_image_ROI(well = None, pyramid_level = 2,
                                    upper_left_yx = None,
@@ -249,7 +266,7 @@ def test_get_image_rect_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert (img1b == img1a).all()
     assert (img1c == img1a).all()
 
-def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FractalZarr):
+def test_get_image_grid_ROIs_3d(plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr.get_image_grid_ROIs().`"""
     # exceptions
     with pytest.raises(Exception) as e_info:
@@ -300,6 +317,64 @@ def test_get_image_sampled_rects_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert len(coord_5) == 3
     assert all([isinstance(x, dask.array.Array) for x in img_5])
     assert all(x.shape == (2, 3, 27, 32) for x in img_5)
+
+def test_get_label_ROI_2d(plate_2d: hcs_wrappers.FractalZarr):
+    """Test `FractalZarr.get_label_ROI()`."""
+    msk0a = plate_2d.get_label_ROI(label_name='organoids',
+                                   well=None, pyramid_level=2,
+                                   upper_left_yx=None,
+                                   lower_right_yx=None,
+                                   size_yx=None,
+                                   as_NumPy=False)
+    msk0b = plate_2d.get_label_ROI(label_name='organoids',
+                                   well='B03', pyramid_level=2,
+                                   upper_left_yx=(0, 0),
+                                   lower_right_yx=(269, 319),
+                                   size_yx=None,
+                                   as_NumPy=True)
+    assert isinstance(msk0a, dask.array.Array)
+    assert isinstance(msk0b, np.ndarray)
+    assert msk0a.shape == (1, 270, 320)
+    assert (np.array(msk0a) == msk0b).all()
+    
+    with pytest.raises(Exception) as e_info:
+        plate_2d.get_label_ROI(label_name='organoids',
+                               well = 'B03', pyramid_level = 1,
+                               upper_left_yx = (11, 10),
+                               lower_right_yx = None, size_yx = None)
+
+    with pytest.raises(Exception) as e_info:
+        plate_2d.get_label_ROI(label_name='does-not-exist',
+                               well = 'B03', pyramid_level = 1,
+                               upper_left_yx = (11, 10),
+                               size_yx = (10, 10))
+
+    msk1a = plate_2d.get_label_ROI(label_name='organoids',
+                                   well = 'B03', pyramid_level = 1,
+                                   upper_left_yx = (11, 10),
+                                   lower_right_yx = (22, 20),
+                                   size_yx = None,
+                                   as_NumPy = True)
+    msk1b = plate_2d.get_label_ROI(label_name='organoids',
+                                   well = 'B03', pyramid_level = 1,
+                                   upper_left_yx = (11, 10),
+                                   lower_right_yx = None,
+                                   size_yx = (11, 10),
+                                   as_NumPy = True)
+    msk1c = plate_2d.get_label_ROI(label_name='organoids',
+                                   well = 'B03', pyramid_level = 1,
+                                   upper_left_yx = None,
+                                   lower_right_yx = (22, 20),
+                                   size_yx = (11, 10),
+                                   as_NumPy = True)
+    assert isinstance(msk1a, np.ndarray)
+    assert isinstance(msk1b, np.ndarray)
+    assert isinstance(msk1c, np.ndarray)
+    assert msk1a.shape == (1, 12, 11)
+    assert msk1b.shape == msk1a.shape
+    assert msk1c.shape == msk1a.shape
+    assert (msk1b == msk1a).all()
+    assert (msk1c == msk1a).all()
 
 def test_coordinate_conversions(plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr.convert_*` coordinate conversions."""
