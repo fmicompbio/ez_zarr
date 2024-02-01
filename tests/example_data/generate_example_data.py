@@ -198,10 +198,10 @@ for i in range(len(zarrurl)):
         group_labels = zarr.group(f"{zarrurl[i]}{component}/labels")
         for ind_level in range(num_levels):
             scale = 2**ind_level
-            y = da.coarsen(np.min, x, {2: scale, 3: scale}).rechunk(
-                (1, 1, size_y, size_x), balance=True
+            yl = da.coarsen(np.min, x[0], {1: scale, 2: scale}).rechunk(
+                (1, size_y, size_x), balance=True
             )
-            y.to_zarr(
+            yl.to_zarr(
                 zarrurl[i], component=f"{component}/labels/organoids/{ind_level}", dimension_separator="/"
             )
         with open(f"{zarrurl[i]}{component}labels/.zattrs", "w") as jsonfile:
