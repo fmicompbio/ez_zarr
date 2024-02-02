@@ -81,12 +81,12 @@ def test_constructor_3d(plate_3d: hcs_wrappers.FractalZarr):
     assert len(plate_3d.wells) == 1
     assert len(plate_3d.channels) == 2
     assert isinstance(plate_3d.channels[0], dict)
-    assert isinstance(plate_3d.multiscales, dict)
-    assert 'datasets' in plate_3d.multiscales
-    assert len(plate_3d.multiscales['datasets']) == 3
-    assert plate_3d.level_paths == list(range(3))
-    assert plate_3d.level_zyx_spacing == [[1.0, 0.1625, 0.1625], [1.0, 0.325, 0.325], [1.0, 0.65, 0.65]]
-    assert list(plate_3d.level_zyx_scalefactor) == [1., 2., 2.]
+    assert isinstance(plate_3d.multiscales_images, dict)
+    assert 'datasets' in plate_3d.multiscales_images['0']
+    assert len(plate_3d.multiscales_images['0']['datasets']) == 3
+    assert plate_3d.level_paths_images['0'] == list(range(3))
+    assert plate_3d.level_zyx_spacing_images['0'] == [[1.0, 0.1625, 0.1625], [1.0, 0.325, 0.325], [1.0, 0.65, 0.65]]
+    assert list(plate_3d.level_zyx_scalefactor['0']) == [1., 2., 2.]
     assert plate_3d.label_names == []
     assert plate_3d.table_names == ['FOV_ROI_table']
 
@@ -100,12 +100,12 @@ def test_constructor_2d(plate_2d: hcs_wrappers.FractalZarr):
     assert len(plate_2d.wells) == 1
     assert len(plate_2d.channels) == 2
     assert isinstance(plate_2d.channels[0], dict)
-    assert isinstance(plate_2d.multiscales, dict)
-    assert 'datasets' in plate_2d.multiscales
-    assert len(plate_2d.multiscales['datasets']) == 3
-    assert plate_2d.level_paths == list(range(3))
-    assert plate_2d.level_zyx_spacing == [[1.0, 0.1625, 0.1625], [1.0, 0.325, 0.325], [1.0, 0.65, 0.65]]
-    assert list(plate_2d.level_zyx_scalefactor) == [1., 2., 2.]
+    assert isinstance(plate_2d.multiscales_images, dict)
+    assert 'datasets' in plate_2d.multiscales_images['0']
+    assert len(plate_2d.multiscales_images['0']['datasets']) == 3
+    assert plate_2d.level_paths_images['0'] == list(range(3))
+    assert plate_2d.level_zyx_spacing_images['0'] == [[1.0, 0.1625, 0.1625], [1.0, 0.325, 0.325], [1.0, 0.65, 0.65]]
+    assert list(plate_2d.level_zyx_scalefactor['0']) == [1., 2., 2.]
     assert plate_2d.label_names == ['organoids']
     assert plate_2d.table_names == ['FOV_ROI_table']
 
