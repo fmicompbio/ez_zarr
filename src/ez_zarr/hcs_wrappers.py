@@ -66,6 +66,7 @@ class FractalZarr:
         self.rows: list[dict] = self.__top.attrs['plate']['rows']
         self.wells: list[dict] = self.__top.attrs['plate']['wells']
         # images
+        self.image_names: list[str] = self._load_image_names()
         self.channels: list[dict] = self._load_channel_info()
         self.multiscales: dict[str, Any] = self._load_multiscale_info_images()
         self.level_paths: list[str] = [x['path'] for x in self.multiscales['datasets']]
@@ -106,6 +107,13 @@ class FractalZarr:
             info[lab] = lab_group.attrs['multiscales'][0]
         return info
     
+    
+    def _load_image_names(self) -> list[str]:
+        """[internal] Load image names (available images)."""
+        well_path = self.wells[0]['path']
+        ims = [im for im in os.listdir(os.path.join(self.path, well_path)) if not im.startswith('.')]
+        return ims
+
     def _load_label_names(self) -> list[str]:
         """[internal] Load label names (available segmentations)."""
         well = self.wells[0]['path']
