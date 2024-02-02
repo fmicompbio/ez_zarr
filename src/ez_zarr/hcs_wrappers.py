@@ -742,7 +742,7 @@ class FractalZarr:
 
         # extract FOV table and scaling information
         fov_tab = self.get_table('FOV_ROI_table')
-        pyramid_spacing = self.level_zyx_spacing[pyramid_level]
+        pyramid_spacing = self.level_zyx_spacing_images['0'][pyramid_level]
         assert len(pyramid_spacing) == 3
         pyramid_spacing = pyramid_spacing[1:] # scale is (z, y, x), just keep y, x
 
