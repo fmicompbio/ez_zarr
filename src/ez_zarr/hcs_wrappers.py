@@ -635,6 +635,77 @@ class FractalZarr:
             msk = np.array(msk)
         return msk
 
+    def get_label_table_idx(self,
+                            label_name: str,
+                            table_name: str,
+                            table_idx: int,
+                            well: Optional[str] = None,
+                            pyramid_level: Optional[int] = None,
+                            as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+        """
+        Extract a region of interest from a label maks (segmentation) by table name and row index.
+
+        Bounding box coordinates will be automatically obtained from the table
+        `table_name` and row `row_idx` (zero-based row index).
+        All z planes are returned if there are several ones.
+
+        Parameters:
+            label_name (str): The name of the segmentation
+            table_name (str): The name of the table containing object coordinates in columns
+                `x_micrometer`, `y_micrometer`, `len_x_micrometer` and `len_y_micrometer`.
+            table_idx (int): The zero-based row index for the object to be extracted.
+            well (str): The well (e.g. 'B03') from which an image should be extracted.
+            pyramid_level (int): The pyramid level (resolution level), from which the image
+                should be extracted. If `None`, the lowest-resolution (highest) pyramid level
+                will be selected.
+            as_NumPy (bool): If `True`, return the image as 4D `numpy.ndarray` object (c,z,y,x).
+                Otherwise, return the (on-disk) `dask` array of the same dimensions.
+        
+        Returns:
+            The extracted label mask, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
+        
+        Examples:
+            Obtain the label mask in 'nuclei' of the first object in table `nuclei_ROI_table` in well 'A02':
+
+            >>> plateA.get_label_table_idx(label_name = 'nuclei',
+                                           table_name = 'nuclei_ROI_table',
+                                           table_idx = 0, well = 'A02')
+        """
+        # digest arguments
+        assert label_name in self.label_names
+        assert table_name in self.table_names
+        well = self._digest_well_argument(well, as_path=False)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+
+        # extract table
+        df = self.get_table(table_name=table_name, include_wells=well, as_AnnData=False)
+        required_columns = ['x_micrometer', 'y_micrometer', 'len_x_micrometer', 'len_y_micrometer']
+        assert all(column in set(df.columns) for column in required_columns), f"Missing columns: {set(required_columns) - set(df.columns)}"
+        assert table_idx < len(df)
+
+        # get bounding box coordinates
+        ul = self.convert_micrometer_to_pixel((0,
+                                               df['y_micrometer'][table_idx],
+                                               df['x_micrometer'][table_idx]),
+                                               pyramid_level=pyramid_level,
+                                               pyramid_ref=('label', label_name))
+        hw = self.convert_micrometer_to_pixel((0,
+                                               df['len_y_micrometer'][table_idx],
+                                               df['len_x_micrometer'][table_idx]),
+                                               pyramid_level=pyramid_level,
+                                               pyramid_ref=('label', label_name))
+
+
+        # load image
+        img = self.get_label_ROI(label_name=label_name,
+                                 well=well,
+                                 upper_left_yx=ul[1:],
+                                 size_yx=hw[1:],
+                                 pyramid_level=pyramid_level,
+                                 as_NumPy=as_NumPy)
+
+        return img
+
     def convert_micrometer_to_pixel(self,
                                     zyx: tuple[float],
                                     pyramid_level: Optional[int] = None,
