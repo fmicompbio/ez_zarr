@@ -131,13 +131,15 @@ class FractalZarr:
             return []
     
     # utility functions -------------------------------------------------------
-    def _digest_well_argument(self, well = None):
+    def _digest_well_argument(self, well = None, as_path = True):
         """[internal] Interpret a single `well` argument in the context of a given FractalZarr object."""
         if not well:
             # no well given -> pick first one
             return self.wells[0]['path']
-        else:
+        elif as_path:
             return os.path.join(well[:1].upper(), well[1:])
+        else:
+            return well
 
     def _digest_include_wells_argument(self, include_wells: list[str] = []) -> list[str]:
         """[internal] Interpret an `include_wells` argument in the context of a given FractalZarr object."""
