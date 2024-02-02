@@ -365,12 +365,12 @@ class FractalZarr:
         num_unknowns = sum([x == None for x in [upper_left_yx, lower_right_yx, size_yx]])
         if num_unknowns == 1:
             if size_yx:
-                assert all([x > 0 for x in size_yx])
+                assert all([x > 0 for x in size_yx]), 'size_yx values need to be positive'
                 if not upper_left_yx:
                     upper_left_yx = tuple(lower_right_yx[i] - size_yx[i] for i in range(2))
                 elif not lower_right_yx:
                     lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
-            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))])
+            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))]), 'upper_left_yx needs to be less than lower_right_yx'
             img = img[:,
                       :,
                       slice(upper_left_yx[0], lower_right_yx[0] + 1),
@@ -416,7 +416,7 @@ class FractalZarr:
             >>> plateA.get_image_table_idx(table_name='nuclei_ROI_table', table_idx=0, well='A02')
         """
         # digest arguments
-        assert table_name in self.table_names
+        assert table_name in self.table_names, f"Unknown table {table_name}, should be one of " + ', '.join(self.table_names)
         well = self._digest_well_argument(well, as_path=False)
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
 
@@ -424,7 +424,7 @@ class FractalZarr:
         df = self.get_table(table_name=table_name, include_wells=well, as_AnnData=False)
         required_columns = ['x_micrometer', 'y_micrometer', 'len_x_micrometer', 'len_y_micrometer']
         assert all(column in set(df.columns) for column in required_columns), f"Missing columns: {set(required_columns) - set(df.columns)}"
-        assert table_idx < len(df)
+        assert table_idx < len(df), f"table_idx ({table_idx}) needs to be less than " + str(len(df))
 
         # get bounding box coordinates
         ul = self.convert_micrometer_to_pixel((0,
@@ -504,7 +504,7 @@ class FractalZarr:
         well = self._digest_well_argument(well)
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
         lowres_level = self._digest_pyramid_level_argument(lowres_level)
-        assert num_select <= num_x * num_y
+        assert num_select <= num_x * num_y, f"num_select ({num_select}) needs to be less or equal to num_x * num_y" + str(num_x * num_y)
 
         # load image (convention: single field of view per well -> '0')
         img_path = os.path.join(self.path, well, '0', str(pyramid_level))
@@ -606,7 +606,7 @@ class FractalZarr:
         """
         # digest arguments
         well = self._digest_well_argument(well)
-        assert label_name in self.label_names
+        assert label_name in self.label_names, f"Unknown label_name {label_name}, should be one of " + ', '.join(self.label_names)
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
 
         # load image (convention: single field of view per well -> '0')
@@ -618,12 +618,12 @@ class FractalZarr:
         num_unknowns = sum([x == None for x in [upper_left_yx, lower_right_yx, size_yx]])
         if num_unknowns == 1:
             if size_yx:
-                assert all([x > 0 for x in size_yx])
+                assert all([x > 0 for x in size_yx]), 'size_yx values need to be positive'
                 if not upper_left_yx:
                     upper_left_yx = tuple(lower_right_yx[i] - size_yx[i] for i in range(2))
                 elif not lower_right_yx:
                     lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
-            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))])
+            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))]), 'upper_left_yx needs to be less than lower_right_yx'
             msk = msk[:,
                       slice(upper_left_yx[0], lower_right_yx[0] + 1),
                       slice(upper_left_yx[1], lower_right_yx[1] + 1)]
@@ -672,8 +672,8 @@ class FractalZarr:
                                            table_idx=0, well='A02')
         """
         # digest arguments
-        assert label_name in self.label_names
-        assert table_name in self.table_names
+        assert label_name in self.label_names, f"Unknown label_name {label_name}, should be one of " + ', '.join(self.label_names)
+        assert table_name in self.table_names, f"Unknown table_name {table_name}, should be one of " + ', '.join(self.table_names)
         well = self._digest_well_argument(well, as_path=False)
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
 
@@ -681,7 +681,7 @@ class FractalZarr:
         df = self.get_table(table_name=table_name, include_wells=well, as_AnnData=False)
         required_columns = ['x_micrometer', 'y_micrometer', 'len_x_micrometer', 'len_y_micrometer']
         assert all(column in set(df.columns) for column in required_columns), f"Missing columns: {set(required_columns) - set(df.columns)}"
-        assert table_idx < len(df)
+        assert table_idx < len(df), f"table_idx ({table_idx}) needs to be less than " + str(len(df))
 
         # get bounding box coordinates
         ul = self.convert_micrometer_to_pixel((0,
@@ -734,7 +734,7 @@ class FractalZarr:
             >>> z_px, y_px, x_px = plateA.convert_micrometer_to_pixel(zyx=(0,0,10), pyramid_level=0)
         """
         # digest arguments
-        assert isinstance(zyx, tuple)
+        assert isinstance(zyx, tuple), "zyx needs to be a tuple of the form (z,y,x)"
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
 
         # convert
