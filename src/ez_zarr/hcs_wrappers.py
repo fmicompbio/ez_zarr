@@ -68,13 +68,13 @@ class FractalZarr:
         # images
         self.image_names: list[str] = self._load_image_names()
         self.channels: list[dict] = self._load_channel_info()
-        self.multiscales: dict[str, Any] = self._load_multiscale_info_images()
+        self.multiscales_images: dict[str, Any] = self._load_multiscale_info('images')
         self.level_paths: list[str] = [x['path'] for x in self.multiscales['datasets']]
         self.level_zyx_spacing: list[list[float]] = [x['coordinateTransformations'][0]['scale'][1:] for x in self.multiscales['datasets']] # convention: unit is micrometer
         self.level_zyx_scalefactor: np.ndarray = np.divide(self.level_zyx_spacing[1], self.level_zyx_spacing[0])
         # labels
         self.label_names: list[str] = self._load_label_names()
-        self.multiscales_labels: dict[str, Any] = self._load_multiscale_info_labels()
+        self.multiscales_labels: dict[str, Any] = self._load_multiscale_info('labels')
         self.level_paths_labels: dict[str, list[str]] = {lab: [x['path'] for x in self.multiscales_labels[lab]['datasets']] for lab in self.label_names}
         self.level_zyx_spacing_labels: dict[str, list[list[float]]] = {lab: [x['coordinateTransformations'][0]['scale'] for x in self.multiscales_labels[lab]['datasets']] for lab in self.label_names} # convention: unit is micrometer
         # tables
@@ -88,23 +88,21 @@ class FractalZarr:
             raise ValueError(f"no channel info found in well {well}")
         return well_group.attrs['omero']['channels']
     
-    def _load_multiscale_info_images(self) -> dict[str, Any]:
-        """[internal] Load info about available scales (images)."""
-        well = self.wells[0]['path']
-        well_group = self.__top[os.path.join(well, '0')] # convention: single field of view per well
-        if not 'multiscales' in well_group.attrs:
-            raise ValueError(f"no multiscale info found in well {well}")
-        return well_group.attrs['multiscales'][0]
-    
-    def _load_multiscale_info_labels(self) -> dict[str, Any]:
-        """[internal] Load info about available scales (labels)."""
-        well = self.wells[0]['path']
+    def _load_multiscale_info(self, target: str) -> dict[str, Any]:
+        """[internal] Load info about available scales in target (images or labels)."""
+        well_path = self.wells[0]['path']
+        if target == 'images':
+            pre = ''
+            els = self.image_names
+        else:
+            pre = os.path.join(self.image_names[0], 'labels')
+            els = self.label_names
         info = {}
-        for lab in self.label_names:
-            lab_group = self.__top[os.path.join(well, '0', 'labels', lab)] # convention: single field of view per well
-            if not 'multiscales' in lab_group.attrs:
-                raise ValueError(f"no multiscale info found in well {well}, label {lab}")
-            info[lab] = lab_group.attrs['multiscales'][0]
+        for el in els:
+            el_group = self.__top[os.path.join(well_path, pre, el)]
+            if not 'multiscales' in el_group.attrs:
+                raise ValueError(f"no multiscale info found in {target} {el}")
+            info[el] = el_group.attrs['multiscales'][0]
         return info
     
     
