@@ -572,7 +572,8 @@ class FractalZarr:
 
     def convert_micrometer_to_pixel(self,
                                     zyx: tuple[float],
-                                    pyramid_level: Optional[int] = None) -> tuple[int]:
+                                    pyramid_level: Optional[int] = None,
+                                    pyramid_ref: tuple[str] = ('image', '0')) -> tuple[int]:
         """
         Convert micrometers to pixels for a given pyramid level.
 
@@ -582,6 +583,10 @@ class FractalZarr:
             pyramid_level (int): The pyramid level (resolution), to which the output
                 pixel coordinates will refer to.  If `None`, the lowest-resolution
                 (highest) pyramid level will be selected.
+            pyramid_ref (tuple(str, str)): reference to which the `pyramid_level` refers
+                to. It is given as a tuple with two `str` elements, the first being
+                either 'image' or 'label', and the second being the name of the
+                image or label. The default is ('image', '0').
         
         Returns:
             A tuple (z, y, x) with pixel coordinates.
@@ -597,7 +602,10 @@ class FractalZarr:
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
 
         # convert
-        pyramid_spacing = self.level_zyx_spacing[pyramid_level]
+        if pyramid_ref[0] == 'image':
+            pyramid_spacing = self.level_zyx_spacing_images[pyramid_ref[1]][pyramid_level]
+        else:
+            pyramid_spacing = self.level_zyx_spacing_labels[pyramid_ref[1]][pyramid_level]
         zyx_px = np.round(np.divide(zyx, pyramid_spacing)).astype(int)
 
         # return as tuple
@@ -605,7 +613,8 @@ class FractalZarr:
 
     def convert_pixel_to_micrometer(self,
                                     zyx: tuple[int],
-                                    pyramid_level: Optional[int] = None) -> tuple[float]:
+                                    pyramid_level: Optional[int] = None,
+                                    pyramid_ref: tuple[str] = ('image', '0')) -> tuple[float]:
         """
         Convert pixels to micrometers for a given pyramid level.
 
@@ -615,6 +624,10 @@ class FractalZarr:
             pyramid_level (int): The pyramid level (resolution), to which the input
                 pixel coordinates refer to. If `None`, the lowest-resolution
                 (highest) pyramid level will be selected.
+            pyramid_ref (tuple(str, str)): reference to which the `pyramid_level` refers
+                to. It is given as a tuple with two `str` elements, the first being
+                either 'image' or 'label', and the second being the name of the
+                image or label. The default is ('image', '0').
         
         Returns:
             A tuple (z, y, x) with micrometer coordinates.
@@ -628,7 +641,10 @@ class FractalZarr:
         pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
 
         # convert
-        pyramid_spacing = self.level_zyx_spacing[pyramid_level]
+        if pyramid_ref[0] == 'image':
+            pyramid_spacing = self.level_zyx_spacing_images[pyramid_ref[1]][pyramid_level]
+        else:
+            pyramid_spacing = self.level_zyx_spacing_labels[pyramid_ref[1]][pyramid_level]
         zyx_um = np.round(np.multiply(zyx, pyramid_spacing)).astype(float)
 
         # return as tuple
@@ -637,7 +653,9 @@ class FractalZarr:
     def convert_pixel_to_pixel(self,
                                zyx: tuple[int],
                                pyramid_level_from: Optional[int] = None,
-                               pyramid_level_to: Optional[int] = None) -> tuple[int]:
+                               pyramid_level_to: Optional[int] = None,
+                               pyramid_ref_from: tuple[str] = ('image', '0'),
+                               pyramid_ref_to: tuple[str] = ('image', '0')) -> tuple[int]:
         """
         Convert pixel coordinates between pyramid levels.
 
@@ -649,6 +667,14 @@ class FractalZarr:
             pyramid_level_to (int): The pyramid level (resolution), to which the output
                 pixel coordinates will refer to. If `None`, the lowest-resolution
                 (highest) pyramid level will be selected.
+            pyramid_ref_from (tuple(str, str)): reference to which the `pyramid_level_from` refers
+                to. It is given as a tuple with two `str` elements, the first being
+                either 'image' or 'label', and the second being the name of the
+                image or label. The default is ('image', '0').
+            pyramid_ref_to (tuple(str, str)): reference to which the `pyramid_level_to` refers
+                to. It is given as a tuple with two `str` elements, the first being
+                either 'image' or 'label', and the second being the name of the
+                image or label. The default is ('image', '0').
         
         Returns:
             A tuple (z, y, x) with pixel coordinates in the new pyramid level.
@@ -663,7 +689,16 @@ class FractalZarr:
         pyramid_level_to = self._digest_pyramid_level_argument(pyramid_level_to)
 
         # convert
-        zyx_scale = self.level_zyx_scalefactor**(pyramid_level_from - pyramid_level_to)
+        if pyramid_ref_from[0] == 'image':
+            pyramid_spacing_from = self.level_zyx_spacing_images[pyramid_ref_from[1]][pyramid_level_from]
+        else:
+            pyramid_spacing_from = self.level_zyx_spacing_labels[pyramid_ref_from[1]][pyramid_level_from]
+        if pyramid_ref_to[0] == 'image':
+            pyramid_spacing_to = self.level_zyx_spacing_images[pyramid_ref_to[1]][pyramid_level_to]
+        else:
+            pyramid_spacing_to = self.level_zyx_spacing_labels[pyramid_ref_to[1]][pyramid_level_to]
+
+        zyx_scale = np.divide(pyramid_spacing_from, pyramid_spacing_to)
         zyx_new = np.round(np.multiply(zyx, zyx_scale)).astype(int)
 
         # return as tuple
