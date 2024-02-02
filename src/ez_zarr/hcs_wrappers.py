@@ -316,11 +316,11 @@ class FractalZarr:
             return df_combined
 
     def get_image_ROI(self,
-                      well: Optional[str] = None,
-                      pyramid_level: Optional[int] = None,
                       upper_left_yx: Optional[tuple[int]] = None,
                       lower_right_yx: Optional[tuple[int]] = None,
                       size_yx: Optional[tuple[int]] = None,
+                      well: Optional[str] = None,
+                      pyramid_level: Optional[int] = None,
                       as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a region of interest from a well image by coordinates.
@@ -333,14 +333,14 @@ class FractalZarr:
         if there are several ones.
 
         Parameters:
-            well (str): The well (e.g. 'B03') from which an image should be extracted.
-            pyramid_level (int): The pyramid level (resolution level), from which the image
-                should be extracted. If `None`, the lowest-resolution (highest) pyramid level
-                will be selected.
             upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left (lower) coordinates
                 defining the region of interest.
             lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right (higher) coordinates defining the region of interest.
             size_yx (tuple): Tuple of (size_y, size_x) defining the size of the region of interest.
+            well (str): The well (e.g. 'B03') from which an image should be extracted.
+            pyramid_level (int): The pyramid level (resolution level), from which the image
+                should be extracted. If `None`, the lowest-resolution (highest) pyramid level
+                will be selected.
             as_NumPy (bool): If `True`, return the image as 4D `numpy.ndarray` object (c,z,y,x).
                 Otherwise, return the (on-disk) `dask` array of the same dimensions.
         
