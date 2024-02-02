@@ -31,7 +31,7 @@ class FractalZarr:
     """Represents a ome-zarr fileset."""
 
     # constructor and helper functions ----------------------------------------
-    def __init__(self, zarr_path: str, name: Optional[str] = None) -> None:
+    def __init__(self, zarr_path: str, name: Optional[str]=None) -> None:
         """
         Initializes an ome-zarr fileset (.zarr) from its path.
         Typically, the fileset represents a single assay plate, and 
@@ -58,7 +58,7 @@ class FractalZarr:
             self.name = name
         else:
             self.name = os.path.basename(self.path)
-        self.__top: zarr.Group = zarr.open_group(store = self.path, mode = 'r')
+        self.__top: zarr.Group = zarr.open_group(store=self.path, mode='r')
         if not 'plate' in self.__top.attrs:
             raise ValueError(f"{self.name} does not contain a zarr fileset with a 'plate'")
         self.acquisitions: list = self.__top.attrs['plate']['acquisitions']
@@ -131,7 +131,7 @@ class FractalZarr:
             return []
     
     # utility functions -------------------------------------------------------
-    def _digest_well_argument(self, well = None, as_path = True):
+    def _digest_well_argument(self, well=None, as_path=True):
         """[internal] Interpret a single `well` argument in the context of a given FractalZarr object."""
         if not well:
             # no well given -> pick first one
@@ -141,7 +141,7 @@ class FractalZarr:
         else:
             return well
 
-    def _digest_include_wells_argument(self, include_wells: Union[str, list[str]] = []) -> list[str]:
+    def _digest_include_wells_argument(self, include_wells: Union[str, list[str]]=[]) -> list[str]:
         """[internal] Interpret an `include_wells` argument in the context of a given FractalZarr object."""
         if isinstance(include_wells, str):
             include_wells = [include_wells]
@@ -153,7 +153,7 @@ class FractalZarr:
             include_wells = [self._digest_well_argument(w) for w in include_wells]
         return include_wells
 
-    def _digest_pyramid_level_argument(self, pyramid_level = None, pyramid_ref = None) -> int:
+    def _digest_pyramid_level_argument(self, pyramid_level=None, pyramid_ref=None) -> int:
         """
         [internal] Interpret a `pyramid_level` argument in the context of a given FractalZarr object.
 
@@ -182,7 +182,7 @@ class FractalZarr:
             pyramid_level = int(pyramid_level)
         return pyramid_level
     
-    def _calculate_regular_grid_coordsinates(self, y, x, num_y = 10, num_x = 10):
+    def _calculate_regular_grid_coordsinates(self, y, x, num_y=10, num_x=10):
         """
         [internal] Calculate the cell coordinates for a regular rectangular grid of total size (y, x)
         by splitting the dimensions into num_y and num_x cells.
@@ -232,7 +232,7 @@ class FractalZarr:
         """
         return self.path
 
-    def get_wells(self, simplify: bool = False) -> Union[list[dict[str, Any]], list[str]]:
+    def get_wells(self, simplify: bool=False) -> Union[list[dict[str, Any]], list[str]]:
         """Gets info on wells in the ome-zarr fileset.
 
         Parameters:
@@ -273,8 +273,8 @@ class FractalZarr:
     # query methods -----------------------------------------------------------
     def get_table(self,
                   table_name: str,
-                  include_wells: Union[str, list[str]] = [],
-                  as_AnnData: bool = False) -> Union[ad.AnnData, pd.DataFrame]:
+                  include_wells: Union[str, list[str]]=[],
+                  as_AnnData: bool=False) -> Union[ad.AnnData, pd.DataFrame]:
         """Extract table for wells in a ome-zarr fileset.
         
         Parameters:
@@ -312,16 +312,16 @@ class FractalZarr:
         else:
             df_combined = pd.concat([anndata_combined.obs['well'],
                                      anndata_combined.to_df()],
-                                     axis = 1)
+                                     axis=1)
             return df_combined
 
     def get_image_ROI(self,
-                      upper_left_yx: Optional[tuple[int]] = None,
-                      lower_right_yx: Optional[tuple[int]] = None,
-                      size_yx: Optional[tuple[int]] = None,
-                      well: Optional[str] = None,
-                      pyramid_level: Optional[int] = None,
-                      as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+                      upper_left_yx: Optional[tuple[int]]=None,
+                      lower_right_yx: Optional[tuple[int]]=None,
+                      size_yx: Optional[tuple[int]]=None,
+                      well: Optional[str]=None,
+                      pyramid_level: Optional[int]=None,
+                      as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a region of interest from a well image by coordinates.
 
@@ -350,7 +350,7 @@ class FractalZarr:
         Examples:
             Obtain the image of the lowest-resolution for the full well 'A02':
 
-            >>> plateA.get_image_ROI(well = 'A02')
+            >>> plateA.get_image_ROI(well='A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)
@@ -386,9 +386,9 @@ class FractalZarr:
     def get_image_table_idx(self,
                             table_name: str,
                             table_idx: int,
-                            well: Optional[str] = None,
-                            pyramid_level: Optional[int] = None,
-                            as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+                            well: Optional[str]=None,
+                            pyramid_level: Optional[int]=None,
+                            as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a region of interest from a well image by table name and row index.
 
@@ -413,7 +413,7 @@ class FractalZarr:
         Examples:
             Obtain the image of the first object in table `nuclei_ROI_table` in well 'A02':
 
-            >>> plateA.get_image_table_idx(table_name = 'nuclei_ROI_table', table_idx = 0, well = 'A02')
+            >>> plateA.get_image_table_idx(table_name='nuclei_ROI_table', table_idx=0, well='A02')
         """
         # digest arguments
         assert table_name in self.table_names
@@ -449,16 +449,16 @@ class FractalZarr:
         return img
 
     def get_image_grid_ROIs(self,
-                            well: Optional[str] = None,
-                            pyramid_level: Optional[int] = None,
-                            lowres_level: Optional[int] = None,
-                            num_y: int = 10,
-                            num_x: int = 10,
-                            num_select: int = 9,
-                            sample_method: str = 'sum',
-                            channel: int = 0,
-                            seed: int = 42,
-                            as_NumPy: bool = False) -> Union[tuple[list[tuple[int]], list[dask.array.Array]], tuple[list[tuple[int]], list[np.ndarray]]]:
+                            well: Optional[str]=None,
+                            pyramid_level: Optional[int]=None,
+                            lowres_level: Optional[int]=None,
+                            num_y: int=10,
+                            num_x: int=10,
+                            num_select: int=9,
+                            sample_method: str='sum',
+                            channel: int=0,
+                            seed: int=42,
+                            as_NumPy: bool=False) -> Union[tuple[list[tuple[int]], list[dask.array.Array]], tuple[list[tuple[int]], list[np.ndarray]]]:
         """
         Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
@@ -486,7 +486,7 @@ class FractalZarr:
                 - 'var': order grid cells decreasingly by the variance of `channel` (working on `lowres_level`)
                 - 'random': order grid cells randomly (use `seed`)
             channel (int): Selects the channel on which `sample_method` is calculated.
-            seed (int): Used in `random.seed()` to make sampling for `sample_method = 'random'` reproducible.
+            seed (int): Used in `random.seed()` to make sampling for `sample_method='random'` reproducible.
             as_NumPy (bool): If `True`, return the grid cell image as `numpy.ndarray` objects with
                 shapes (c,z,y,x). Otherwise, return the (on-disk) `dask` arrays of the same dimensions.
         
@@ -498,7 +498,7 @@ class FractalZarr:
         Examples:
             Obtain grid cells with highest signal sum in channel 0 from well 'A02':
 
-            >>> plateA.get_image_grid_ROIs(well = 'A02')
+            >>> plateA.get_image_grid_ROIs(well='A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)
@@ -515,13 +515,13 @@ class FractalZarr:
         # calculate grid coordinates as a list of (y_start, y_end, x_start, x_end)
         # (images are always of 4D shape c,z,y,x)
         ch, z, y, x = img.shape
-        grid = self._calculate_regular_grid_coordsinates(y = y, x = x,
-                                                         num_y = num_y,
-                                                         num_x = num_x)
+        grid = self._calculate_regular_grid_coordsinates(y=y, x=x,
+                                                         num_y=num_y,
+                                                         num_x=num_x)
         ch_lr, z_lr, y_lr, x_lr = img_lowres.shape
-        grid_lowres = self._calculate_regular_grid_coordsinates(y = y_lr, x = x_lr,
-                                                                num_y = num_y,
-                                                                num_x = num_x)
+        grid_lowres = self._calculate_regular_grid_coordsinates(y=y_lr, x=x_lr,
+                                                                num_y=num_y,
+                                                                num_x=num_x)
 
         # select and extract grid cells
         sel_coords = []
@@ -567,12 +567,12 @@ class FractalZarr:
 
     def get_label_ROI(self,
                       label_name: str,
-                      well: Optional[str] = None,
-                      pyramid_level: Optional[int] = None,
-                      upper_left_yx: Optional[tuple[int]] = None,
-                      lower_right_yx: Optional[tuple[int]] = None,
-                      size_yx: Optional[tuple[int]] = None,
-                      as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+                      well: Optional[str]=None,
+                      pyramid_level: Optional[int]=None,
+                      upper_left_yx: Optional[tuple[int]]=None,
+                      lower_right_yx: Optional[tuple[int]]=None,
+                      size_yx: Optional[tuple[int]]=None,
+                      as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a region of interest from a label mask (segmentation) by coordinates.
 
@@ -602,7 +602,7 @@ class FractalZarr:
         Examples:
             Obtain the label mask of the lowest-resolution for the full well 'A02':
 
-            >>> plateA.get_label_ROI(well = 'A02')
+            >>> plateA.get_label_ROI(well='A02')
         """
         # digest arguments
         well = self._digest_well_argument(well)
@@ -639,9 +639,9 @@ class FractalZarr:
                             label_name: str,
                             table_name: str,
                             table_idx: int,
-                            well: Optional[str] = None,
-                            pyramid_level: Optional[int] = None,
-                            as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+                            well: Optional[str]=None,
+                            pyramid_level: Optional[int]=None,
+                            as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a region of interest from a label maks (segmentation) by table name and row index.
 
@@ -667,9 +667,9 @@ class FractalZarr:
         Examples:
             Obtain the label mask in 'nuclei' of the first object in table `nuclei_ROI_table` in well 'A02':
 
-            >>> plateA.get_label_table_idx(label_name = 'nuclei',
-                                           table_name = 'nuclei_ROI_table',
-                                           table_idx = 0, well = 'A02')
+            >>> plateA.get_label_table_idx(label_name='nuclei',
+                                           table_name='nuclei_ROI_table',
+                                           table_idx=0, well='A02')
         """
         # digest arguments
         assert label_name in self.label_names
@@ -708,8 +708,8 @@ class FractalZarr:
 
     def convert_micrometer_to_pixel(self,
                                     zyx: tuple[float],
-                                    pyramid_level: Optional[int] = None,
-                                    pyramid_ref: tuple[str] = ('image', '0')) -> tuple[int]:
+                                    pyramid_level: Optional[int]=None,
+                                    pyramid_ref: tuple[str]=('image', '0')) -> tuple[int]:
         """
         Convert micrometers to pixels for a given pyramid level.
 
@@ -749,8 +749,8 @@ class FractalZarr:
 
     def convert_pixel_to_micrometer(self,
                                     zyx: tuple[int],
-                                    pyramid_level: Optional[int] = None,
-                                    pyramid_ref: tuple[str] = ('image', '0')) -> tuple[float]:
+                                    pyramid_level: Optional[int]=None,
+                                    pyramid_ref: tuple[str]=('image', '0')) -> tuple[float]:
         """
         Convert pixels to micrometers for a given pyramid level.
 
@@ -788,10 +788,10 @@ class FractalZarr:
 
     def convert_pixel_to_pixel(self,
                                zyx: tuple[int],
-                               pyramid_level_from: Optional[int] = None,
-                               pyramid_level_to: Optional[int] = None,
-                               pyramid_ref_from: tuple[str] = ('image', '0'),
-                               pyramid_ref_to: tuple[str] = ('image', '0')) -> tuple[int]:
+                               pyramid_level_from: Optional[int]=None,
+                               pyramid_level_to: Optional[int]=None,
+                               pyramid_ref_from: tuple[str]=('image', '0'),
+                               pyramid_ref_to: tuple[str]=('image', '0')) -> tuple[int]:
         """
         Convert pixel coordinates between pyramid levels.
 
@@ -843,9 +843,9 @@ class FractalZarr:
 
     # analysis methods --------------------------------------------------------
     def calc_average_FOV(self,
-                         include_wells: Union[str, list[str]] = [],
-                         pyramid_level: Optional[int] = None,
-                         channel: int = 0) -> np.ndarray:
+                         include_wells: Union[str, list[str]]=[],
+                         pyramid_level: Optional[int]=None,
+                         channel: int=0) -> np.ndarray:
         """
         Calculate the average field of view.
          
@@ -866,7 +866,7 @@ class FractalZarr:
             Calculate the averaged field of view for channel zero over all wells
             for pyramid level 1.
 
-            >>> avg_fov = plateA.calc_average_FOV(pyramid_level = 1, channel = 0)
+            >>> avg_fov = plateA.calc_average_FOV(pyramid_level=1, channel=0)
         """
         # check if required data is available
         if not 'FOV_ROI_table' in self.table_names:
@@ -927,7 +927,7 @@ class FractalZarrSet:
     """Represents a folder containing one or several ome-zarr fileset(s)."""
 
     # constructor and helper functions ----------------------------------------
-    def __init__(self, path: str, name = None) -> None:
+    def __init__(self, path: str, name=None) -> None:
         """
         Initializes a container for a folder containing one or several ome-zarr
         fileset(s) (.zarr). Typically, the object is used for a folder which
