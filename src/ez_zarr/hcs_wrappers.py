@@ -141,8 +141,10 @@ class FractalZarr:
         else:
             return well
 
-    def _digest_include_wells_argument(self, include_wells: list[str] = []) -> list[str]:
+    def _digest_include_wells_argument(self, include_wells: Union[str, list[str]] = []) -> list[str]:
         """[internal] Interpret an `include_wells` argument in the context of a given FractalZarr object."""
+        if isinstance(include_wells, str):
+            include_wells = [include_wells]
         if len(include_wells) == 0: 
             # no wells given -> include all wells
             include_wells = [x['path'] for x in self.wells]
