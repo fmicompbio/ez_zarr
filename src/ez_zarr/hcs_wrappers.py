@@ -273,13 +273,13 @@ class FractalZarr:
     # query methods -----------------------------------------------------------
     def get_table(self,
                   table_name: str,
-                  include_wells: list[str] = [],
+                  include_wells: Union[str, list[str]] = [],
                   as_AnnData: bool = False) -> Union[ad.AnnData, pd.DataFrame]:
         """Extract table for wells in a ome-zarr fileset.
         
         Parameters:
             table_name (str): The name of the table to extract.
-            include_wells (list): List of well names to include. If empty `[]`, all wells are included.
+            include_wells (str or list): List of well names to include. If empty `[]`, all wells are included.
             as_AnnData (bool): If `True`, the table is returned as an `AnnData` object, otherwise it is converted to a `pandas.DataFrame`.
         
         Returns:
@@ -672,7 +672,7 @@ class FractalZarr:
 
     # analysis methods --------------------------------------------------------
     def calc_average_FOV(self,
-                         include_wells: list[str] = [],
+                         include_wells: Union[str, list[str]] = [],
                          pyramid_level: Optional[int] = None,
                          channel: int = 0) -> np.ndarray:
         """
@@ -682,7 +682,7 @@ class FractalZarr:
         field of view for wells in `include_wells`, for `channel` at resolution `pyramid_level`.
 
         Parameters:
-            include_wells (list): List of well names to include. If empty `[]`, all wells are included.
+            include_wells (str or list): List of well names to include. If empty `[]`, all wells are included.
             pyramid_level (int): The pyramid level (resolution level), from which the image
                 should be extracted. If `None`, the lowest-resolution (highest) pyramid level
                 will be selected.
