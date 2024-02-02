@@ -383,6 +383,71 @@ class FractalZarr:
             img = np.array(img)
         return img
 
+    def get_image_table_idx(self,
+                            table_name: str,
+                            table_idx: int,
+                            well: Optional[str] = None,
+                            pyramid_level: Optional[int] = None,
+                            as_NumPy: bool = False) -> Union[dask.array.Array, np.ndarray]:
+        """
+        Extract a region of interest from a well image by table name and row index.
+
+        Bounding box coordinates will be automatically obtained from the table
+        `table_name` and row `row_idx` (zero-based row index).
+        All z planes are returned if there are several ones.
+
+        Parameters:
+            table_name (str): The name of the table containing object coordinates in columns
+                `x_micrometer`, `y_micrometer`, `len_x_micrometer` and `len_y_micrometer`.
+            table_idx (int): The zero-based row index for the object to be extracted.
+            well (str): The well (e.g. 'B03') from which an image should be extracted.
+            pyramid_level (int): The pyramid level (resolution level), from which the image
+                should be extracted. If `None`, the lowest-resolution (highest) pyramid level
+                will be selected.
+            as_NumPy (bool): If `True`, return the image as 4D `numpy.ndarray` object (c,z,y,x).
+                Otherwise, return the (on-disk) `dask` array of the same dimensions.
+        
+        Returns:
+            The extracted image, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
+        
+        Examples:
+            Obtain the image of the first object in table `nuclei_ROI_table` in well 'A02':
+
+            >>> plateA.get_image_table_idx(table_name = 'nuclei_ROI_table', table_idx = 0, well = 'A02')
+        """
+        # digest arguments
+        assert table_name in self.table_names
+        well = self._digest_well_argument(well, as_path=False)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+
+        # extract table
+        df = self.get_table(table_name=table_name, include_wells=well, as_AnnData=False)
+        required_columns = ['x_micrometer', 'y_micrometer', 'len_x_micrometer', 'len_y_micrometer']
+        assert all(column in set(df.columns) for column in required_columns), f"Missing columns: {set(required_columns) - set(df.columns)}"
+        assert table_idx < len(df)
+
+        # get bounding box coordinates
+        ul = self.convert_micrometer_to_pixel((0,
+                                               df['y_micrometer'][table_idx],
+                                               df['x_micrometer'][table_idx]),
+                                               pyramid_level=pyramid_level,
+                                               pyramid_ref=('image', '0'))
+        hw = self.convert_micrometer_to_pixel((0,
+                                               df['len_y_micrometer'][table_idx],
+                                               df['len_x_micrometer'][table_idx]),
+                                               pyramid_level=pyramid_level,
+                                               pyramid_ref=('image', '0'))
+
+
+        # load image
+        img = self.get_image_ROI(upper_left_yx=ul[1:],
+                                 size_yx=hw[1:],
+                                 well=well,
+                                 pyramid_level=pyramid_level,
+                                 as_NumPy=as_NumPy)
+
+        return img
+
     def get_image_grid_ROIs(self,
                             well: Optional[str] = None,
                             pyramid_level: Optional[int] = None,
