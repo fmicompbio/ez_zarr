@@ -69,9 +69,9 @@ class FractalZarr:
         self.image_names: list[str] = self._load_image_names()
         self.channels: list[dict] = self._load_channel_info()
         self.multiscales_images: dict[str, Any] = self._load_multiscale_info('images')
-        self.level_paths: list[str] = [x['path'] for x in self.multiscales['datasets']]
-        self.level_zyx_spacing: list[list[float]] = [x['coordinateTransformations'][0]['scale'][1:] for x in self.multiscales['datasets']] # convention: unit is micrometer
-        self.level_zyx_scalefactor: np.ndarray = np.divide(self.level_zyx_spacing[1], self.level_zyx_spacing[0])
+        self.level_paths_images: dict[str, list[str]] = {im: [x['path'] for x in self.multiscales_images[im]['datasets']] for im in self.image_names}
+        self.level_zyx_spacing_images: dict[str, list[list[float]]] = {im: [x['coordinateTransformations'][0]['scale'][1:] for x in self.multiscales_images[im]['datasets']] for im in self.image_names} # convention: unit is micrometer
+        self.level_zyx_scalefactor: dict[str, np.ndarray] = {im: np.divide(self.level_zyx_spacing_images[im][1], self.level_zyx_spacing_images[im][0]) for im in self.image_names}
         # labels
         self.label_names: list[str] = self._load_label_names()
         self.multiscales_labels: dict[str, Any] = self._load_multiscale_info('labels')
@@ -82,10 +82,10 @@ class FractalZarr:
 
     def _load_channel_info(self) -> list:
         """[internal] Load info about available channels."""
-        well = self.wells[0]['path']
-        well_group = self.__top[os.path.join(well, '0')] # convention: single field of view per well
+        well_path = self.wells[0]['path']
+        well_group = self.__top[os.path.join(well_path, self.image_names[0])]
         if not 'omero' in well_group.attrs or not 'channels' in well_group.attrs['omero']:
-            raise ValueError(f"no channel info found in well {well}")
+            raise ValueError(f"no channel info found in well {well_path}, image {self.image_names[0]}")
         return well_group.attrs['omero']['channels']
     
     def _load_multiscale_info(self, target: str) -> dict[str, Any]:
