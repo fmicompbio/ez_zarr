@@ -153,11 +153,30 @@ class FractalZarr:
             include_wells = [self._digest_well_argument(w) for w in include_wells]
         return include_wells
 
-    def _digest_pyramid_level_argument(self, pyramid_level = None) -> int:
-        """[internal] Interpret a `pyramid_level` argument in the context of a given FractalZarr object."""
+    def _digest_pyramid_level_argument(self, pyramid_level = None, pyramid_ref = None) -> int:
+        """
+        [internal] Interpret a `pyramid_level` argument in the context of a given FractalZarr object.
+
+        Parameters:
+            pyramid_level (int, str or None): pyramid level, coerced to str. If None, the
+                last pyramid level (typically the lowest-resolution one) will be returned.
+            pyramid_ref (tuple(str, str)): defines what `pyramid_level` refers to. If None,
+                the first image is used: `('image', '0')` (assuming that the name of the
+                first image is '0'). To select the 'nuclei' labels, the arugment would be
+                set to `('label', 'nuclei')`.
+
+        Returns:
+            Integer index of the pyramid level.
+        """
+        if pyramid_ref == None:
+            # no pyramid reference given -> pick the first image
+            pyramid_ref = ('image', self.image_names[0])
         if pyramid_level == None: 
             # no pyramid level given -> pick lowest resolution one
-            pyramid_level = int(self.level_paths[-1])
+            if pyramid_ref[0] == 'image':
+                pyramid_level = int(self.level_paths_images[pyramid_ref[1]][-1])
+            else:
+                pyramid_level = int(self.level_paths_labels[pyramid_ref[1]][-1])
         else:
             # make sure it is an integer
             pyramid_level = int(pyramid_level)
