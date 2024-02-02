@@ -110,7 +110,7 @@ plate.get_table_names()
 ```{python}
 # zyx pixel spacing in micrometers for pyramid levels
 # ... for images
-plate.level_zyx_spacing
+plate.level_zyx_spacing_images
 # ... for labels
 plate.level_zyx_spacing_labels
 ```
@@ -294,7 +294,8 @@ label = 'nuclei'
 img_pl = 2  # image pyramid level
 
 # find corresponding mask pyramid level
-pl_match = [plate.level_zyx_spacing[img_pl] == x for x in plate.level_zyx_spacing_labels[label]]
+img_name = plate.image_names[0]
+pl_match = [plate.level_zyx_spacing_images[img_name][img_pl] == x for x in plate.level_zyx_spacing_labels[label]]
 assert sum(pl_match) == 1
 msk_pl = pl_match.index(True)
 
@@ -348,25 +349,17 @@ for example the nucleus at index 106:
 # select which object to plot
 idx = 106 # index of the object in `nucl`
 
-# get upper left coordinates
-ul = plate.convert_micrometer_to_pixel(zyx=(0,
-                                            nucl['y_micrometer'][idx],
-                                            nucl['x_micrometer'][idx]),
-                                       pyramid_level=img_pl)
-# get width and height
-wh = plate.convert_micrometer_to_pixel(zyx=(0,
-                                            nucl['len_y_micrometer'][idx],
-                                            nucl['len_x_micrometer'][idx]),
-                                       pyramid_level=img_pl)
-
-img_nucl = plate.get_image_ROI(upper_left_yx=ul[1:],
-                               size_yx=wh[1:],
-                               pyramid_level=img_pl)
-msk_nucl = plate.get_label_ROI(label_name='nuclei',
-                               upper_left_yx=ul[1:],
-                               size_yx=wh[1:],
-                               pyramid_level=msk_pl,
-                               as_NumPy=True)
+img_nucl = plate.get_image_table_idx(table_name='nuclei_ROI_table',
+                                     table_idx=idx,
+                                     well=my_well,
+                                     pyramid_level=img_pl,
+                                     as_NumPy=True)
+msk_nucl = plate.get_label_table_idx(label_name='nuclei',
+                                     table_name='nuclei_ROI_table',
+                                     table_idx=idx,
+                                     well=my_well,
+                                     pyramid_level=msk_pl,
+                                     as_NumPy=True)
 assert img_nucl.shape[1:] == msk_nucl.shape
 
 # plot 
