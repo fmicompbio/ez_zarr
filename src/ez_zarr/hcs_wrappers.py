@@ -917,6 +917,176 @@ class FractalZarr:
         avg_fov /= n
         return(avg_fov)
 
+    # plotting methods -----------------------------------------------------------
+    def plot_plate(self,
+                   image_name: str='0',
+                   label_name: Optional[str]=None,
+                   label_alpha: float=0.3,
+                   pyramid_level: Optional[int]=None,
+                   channels: list[int]=[0],
+                   channel_colors: list[str]=['white'],
+                   channel_quantiles: list[list[float]]=[[0.01, 0.95]],
+                   z_projection_method: str='maximum',
+                   plate_layout: str='96well',
+                   fig_width_inch: float=24.0,
+                   fig_height_inch: float=16.0,
+                   fig_dpi: int=150):
+        """
+        Plot microtiter plate.
+         
+        Plot an overview of all wells in plate arrangement, for `channel` at
+        resolution `pyramid_level`.
+
+        Parameters:
+            image_name (str): The name of the image in each well to be plotted.
+                Default: '0'.
+            label_name (str): The name of the a segmentation mask to be plotted
+                semi-transparently over the images. If `None`, just the image
+                is plotted.
+            label_alpha (float): A scalar value between 0 (fully transparent)
+                and 1 (solid) defining the transparency of the label masks.
+            pyramid_level (int): The pyramid level (resolution level), from
+                which the image should be extracted. If `None`, the
+                lowest-resolution (highest) pyramid level will be selected.
+            channels (list[int]): The image channel(s) to be plotted.
+            channel_colors (list[str]): A list with python color strings
+                (e.g. 'red') defining the color for each channel in `channels`.
+            channel_quantiles (list[list[float]]): A list of 2-element lists
+                (e.g. [0.01, 0.95]) giving the quantile ranges for each channel
+                that should be mapped to colors. Values outside of this range will
+                be clipped.
+            z_projection_method (str): Method for combining multiple z planes.
+                For available methods, see ez_zarr.plotting.zproject
+                (default: 'maximum').
+            plate_layout (str): Defines the layout of the plate
+                (default: '96well').
+            fig_width_inch (float): Figure width (inch).
+            fig_height_inch (float): Figure height (inch).
+            fig_dpi (int): Figure resolution (dots per inch).
+
+        Examples:
+            Overview plot of a plate for image channel 1.
+
+            >>> plateA.plot_plate(channels=[1])
+        """
+        # digest arguments
+        assert image_name in self.image_names, (
+            f"Unknown image_name ({image_name}), should be one of "
+            ', '.join(self.image_names)
+        )
+        assert label_name == None or label_name in self.label_names, (
+            f"Unknown label_name ({label_name}), should be `None` or one of "
+            ', '.join(self.label_names)
+        )
+        img_pl = self._digest_pyramid_level_argument(pyramid_level=pyramid_level,
+                                                     pyramid_ref=('image', image_name))
+        assert all(ch < len(self.channels) for ch in channels), (
+            f"Invalid channels ({channels}), must be less than {len(self.channels)}"
+        )
+
+        # import optional modules
+        plotting = importlib.import_module('ez_zarr.plotting')
+        assert plate_layout in plotting.plate_layouts, (
+            f"Unknown plate_layout ({plate_layout}), should be one of "
+            ', '.join(list(plotting.plate_layouts.keys()))
+        )
+        plt = importlib.import_module('matplotlib.pyplot')
+        mcolors = importlib.import_module('matplotlib.colors')
+        
+        # plate layout
+        rows = plotting.plate_layouts[plate_layout]['rows']
+        columns = [str(i+1).zfill(2) for i in range(12)]
+
+        # available wells
+        wells = self.get_wells(simplify=True)
+
+        # get mask pyramid level corresponding to `img_pl`
+        if label_name != None:
+            pl_match = [self.level_zyx_spacing_images[image_name][img_pl] == x
+                        for x in self.level_zyx_spacing_labels[label_name]]
+            assert sum(pl_match) == 1, (
+                f"Could not find a label pyramid level corresponding to the "
+                f"selected image pyramid level ({img_pl})"
+            )
+            msk_pl = pl_match.index(True)
+
+            # create shuffled color map
+            shuffled_cmap = plotting.get_shuffled_cmap()
+
+        # get the maximal well y,x coordinates
+        well_tab = self.get_table('well_ROI_table')
+        max_yx = self.convert_micrometer_to_pixel(
+            zyx=(0,
+                 max(well_tab['len_y_micrometer']),
+                 max(well_tab['len_x_micrometer'])),
+            pyramid_level=img_pl)[1:]
+
+        # loop over wells
+        with plt.style.context('dark_background'):
+            fig = plt.figure(figsize=(fig_width_inch, fig_height_inch))
+            fig.set_dpi(fig_dpi)
+            for r in range(len(rows)):
+                for c in range(len(columns)):
+                    w = rows[r] + columns[c]
+                    plt.subplot(len(rows), len(columns), r * len(columns) + c + 1)
+
+                    if w in wells:
+                        # get well image
+                        img = self.get_image_ROI(well=w,
+                                                 pyramid_level=img_pl,
+                                                 as_NumPy=True)
+                        # combine z planes -> (ch,y,x)
+                        img = plotting.zproject(im=img,
+                                                method=z_projection_method,
+                                                axis=1,
+                                                keepdims=False)
+                        img_shape_before_padding = img.shape
+                        # pad image y,x to `max_yx` for ploting all to scale
+                        img = plotting.pad_image(im=img,
+                                                 output_shape=(img.shape[0],
+                                                               max_yx[0],
+                                                               max_yx[1]))
+                        # convert (ch,y,x) to rgb (x,y,3) and plot
+                        img_rgb = plotting.convert_to_rgb(im=img[channels],
+                                                          colors=channel_colors,
+                                                          quantiles=channel_quantiles)
+                        plt.imshow(img_rgb)
+
+                        # add segmentation mask on top
+                        if label_name != None:
+                            # get well label
+                            msk = self.get_label_ROI(label_name=label_name,
+                                                     well=w,
+                                                     pyramid_level=msk_pl,
+                                                     as_NumPy=True)
+                            # combine z planes -> (y,x)
+                            msk = plotting.zproject(im=msk,
+                                                    method='maximum', # always use 'maximum' for labels
+                                                    axis=0,
+                                                    keepdims=False)
+                            assert img_shape_before_padding[1:] == msk.shape, (
+                                f"label {label_name} shape {msk.shape} does not match "
+                                f"image shape {img_shape_before_padding} for well {w}"
+                            )
+                            # pad label y,x to `max_yx` for ploting all to scale
+                            msk = plotting.pad_image(im=msk,
+                                                     output_shape=max_yx)
+                            # plot label on top
+                            if np.max(msk) > 0:
+                                msk = msk.transpose(1, 0) # (y,x) -> (x,y)
+                                plt.imshow(msk,
+                                           interpolation='none',
+                                           cmap=shuffled_cmap,
+                                           alpha=np.multiply(label_alpha, msk > 0))
+                    else:
+                        # plot empty well
+                        plt.imshow(np.zeros((max_yx[1], max_yx[0])), cmap='gray')
+                    plt.xticks([]) # remove axis ticks
+                    plt.yticks([])
+                    plt.title(w)
+            fig.tight_layout()
+            plt.show()
+            plt.close()
 
 
 
