@@ -18,9 +18,9 @@ __author__ = 'Silvia Barbiero, Michael Stadler'
 import os
 import numpy as np
 import zarr
-import dask
-import anndata as ad
+import dask.array
 import pandas as pd
+import importlib
 import warnings
 import random
 from typing import Union, Optional, Any
@@ -274,7 +274,7 @@ class FractalZarr:
     def get_table(self,
                   table_name: str,
                   include_wells: Union[str, list[str]]=[],
-                  as_AnnData: bool=False) -> Union[ad.AnnData, pd.DataFrame]:
+                  as_AnnData: bool=False) -> Any:
         """Extract table for wells in a ome-zarr fileset.
         
         Parameters:
@@ -301,6 +301,7 @@ class FractalZarr:
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
+            ad = importlib.import_module('anndata')
             anndata_list = [ad.read_zarr(os.path.join(self.path, p)) for p in table_paths]
             # ... retain well information when combining anndata objects
             for ann, w in zip(anndata_list, include_wells):
