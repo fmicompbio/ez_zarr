@@ -130,3 +130,52 @@ def pad_image(im: Union[dask.array.Array, np.ndarray],
     im = np.pad(im, pad_width=pad_size, mode='constant', constant_values=0)
     return im
 
+def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
+                   colors: list[str]=['white'],
+                   quantiles: list[list[float]]=[[0.01, 0.99]]) -> np.ndarray:
+    """
+    Convert a (channels, y, x) array to an RGB array.
+    
+    Parameters:
+        im (dask.array or numpy.ndarray): Input image of shape (channels, y, x).
+        colors (list[str]): A list with python color strings (e.g. 'red')
+            corresponding with the color for each channel in `im`.
+        quantiles (list[list[float]]): A list of 2-element lists (e.g. [0.01, 0.99])
+            giving the percentile ranges (quantiles) for each channel of non-zero values that should be mapped to colors.
+            Values outside of this range will be clipped.
+
+    Returns:
+        An RGB image of shape (x, y, 3), where the third axis corresponds to
+            red, green and blue channels. The image is suitable for plotting with
+            matplotlib.pyplot.imshow.
+
+    Examples:
+        Convert an image `img` from (2, y, x) to (x, y, 3), using the
+        channels as yellow and blue intensities:
+
+        >>> img_rgb = convert_to_rgb(img, ['yellow', 'blue'])   
+    """
+    # digest arguments
+    assert len(im.shape) == 3, f"`im` has shape {im.shape} but must have three dimensions"
+    assert len(colors) == im.shape[0], "`colors` must be of the same length as the first axis in `im` (" + str(im.shape[0]) + ")"
+    assert len(quantiles) == len(colors), "`quantiles` must be of the same length as `colors` (" + str(len(colors)) + ")"
+
+    # clip and normalize each channel according to the quantiles (im: (ch,y,x))
+    nonzero = im > 0
+    for i in range(len(quantiles)):
+        qval = np.quantile(a=im[i][nonzero[i]],
+                           q=quantiles[i],
+                           overwrite_input=False)
+        im[i] = np.clip(im[i], qval[0], qval[1])
+        im[i] = (im[i] - qval[0]) / (qval[1] - qval[0])
+
+    # convert the color strings to RGB values
+    rgb_colors = np.array([mcolors.to_rgb(c) for c in colors])    
+
+    # multiply channels with colors and create weighted sum to (x,y,3)
+    rgb_im = np.einsum('cyx,cr->xyr', im, rgb_colors)
+
+    # clip the values to the range [0, 255] and convert to uint8 type
+    rgb_im = (rgb_im * 255.0).astype(np.uint8)
+
+    return rgb_im
