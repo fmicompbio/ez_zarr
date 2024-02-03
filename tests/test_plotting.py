@@ -25,19 +25,19 @@ def npa4d() -> np.ndarray:
 def test_zproject(npa3d: np.ndarray, npa4d: np.ndarray):
     """Test zproject."""
     with pytest.raises(Exception) as e_info:
-        zproject(data = npa3d, axis=1, method='error')
+        zproject(im=npa3d, axis=1, method='error')
 
-    r3d0max = zproject(data = npa3d, axis=0, method='maximum',
+    r3d0max = zproject(im=npa3d, axis=0, method='maximum',
                        keepdims=True, img_bit=16)
-    r3d0min = zproject(data = npa3d, axis=0, method='minimum',
+    r3d0min = zproject(im=npa3d, axis=0, method='minimum',
                     keepdims=True, img_bit=16)
-    r3d0sum = zproject(data = npa3d, axis=0, method='sum',
+    r3d0sum = zproject(im=npa3d, axis=0, method='sum',
                        keepdims=True, img_bit=16)
-    r3d0avg = zproject(data = npa3d, axis=0, method='average',
+    r3d0avg = zproject(im=npa3d, axis=0, method='average',
                        keepdims=True, img_bit=16)
-    r4d1sum_noclip = zproject(data = npa4d, axis=1, method='sum',
+    r4d1sum_noclip = zproject(im=npa4d, axis=1, method='sum',
                               keepdims=True, img_bit=32)
-    r4d1avg_reddim = zproject(data = npa4d, axis=1, method='average',
+    r4d1avg_reddim = zproject(im=npa4d, axis=1, method='average',
                               keepdims=False, img_bit=16)
     assert isinstance(r3d0max, np.ndarray)
     assert r3d0max.shape == (1,4,5)
