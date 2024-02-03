@@ -428,14 +428,15 @@ class FractalZarr:
         assert table_idx < len(df), f"table_idx ({table_idx}) needs to be less than " + str(len(df))
 
         # get bounding box coordinates
+        df1 = df.iloc[table_idx]
         ul = self.convert_micrometer_to_pixel((0,
-                                               df['y_micrometer'][table_idx],
-                                               df['x_micrometer'][table_idx]),
+                                               df1['y_micrometer'],
+                                               df1['x_micrometer']),
                                                pyramid_level=pyramid_level,
                                                pyramid_ref=('image', '0'))
         hw = self.convert_micrometer_to_pixel((0,
-                                               df['len_y_micrometer'][table_idx],
-                                               df['len_x_micrometer'][table_idx]),
+                                               df1['len_y_micrometer'],
+                                               df1['len_x_micrometer']),
                                                pyramid_level=pyramid_level,
                                                pyramid_ref=('image', '0'))
 
@@ -685,14 +686,15 @@ class FractalZarr:
         assert table_idx < len(df), f"table_idx ({table_idx}) needs to be less than " + str(len(df))
 
         # get bounding box coordinates
+        df1 = df.iloc[table_idx]
         ul = self.convert_micrometer_to_pixel((0,
-                                               df['y_micrometer'][table_idx],
-                                               df['x_micrometer'][table_idx]),
+                                               df1['y_micrometer'],
+                                               df1['x_micrometer']),
                                                pyramid_level=pyramid_level,
                                                pyramid_ref=('label', label_name))
         hw = self.convert_micrometer_to_pixel((0,
-                                               df['len_y_micrometer'][table_idx],
-                                               df['len_x_micrometer'][table_idx]),
+                                               df1['len_y_micrometer'],
+                                               df1['len_x_micrometer']),
                                                pyramid_level=pyramid_level,
                                                pyramid_ref=('label', label_name))
 
