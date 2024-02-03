@@ -93,3 +93,40 @@ def zproject(im: Union[dask.array.Array, np.ndarray],
         im = np.clip(im, 0, max_value)
 
     return im
+
+def pad_image(im: Union[dask.array.Array, np.ndarray],
+              output_shape: tuple,
+              constant_value: int=0) -> np.ndarray:
+    """
+    Pad an image by adding pixels of `constant_value` symmetrically around it
+    to make it shape `output_shape`.
+
+    Parameters:
+        im (dask.array or numpy.ndarray): Input image.
+        output_shape (tuple[int]): Desired output shape after padding (must be greater
+            or equal to im.shape).
+        constant_value (int): Value for added pixels.
+    
+    Returns:
+        np.ndarray with padded image of shape `output_shape`.
+    
+    Examples:
+        Make the image `im` (100, 100) in shape:
+
+        >>> pad_image(im, (100, 100))
+    """
+    # digest arguments
+    assert len(im.shape) == len(output_shape), f"output_shape {output_shape} should be of length {len(im.shape)}"
+    assert all([im.shape[i] <= output_shape[i] for i in range(len(output_shape))]), f"output_shape {output_shape} must be greater or equal to image shape {im.shape}"
+    assert isinstance(constant_value, int)
+
+    # calculate padding size
+    pad_total = np.subtract(output_shape, im.shape)
+    pad_before = [int(x) for x in pad_total / 2]
+    pad_after = pad_total - pad_before
+    pad_size = tuple([(pad_before[i], pad_after[i]) for i in range(len(pad_total))])
+    
+    # add padding
+    im = np.pad(im, pad_width=pad_size, mode='constant', constant_values=0)
+    return im
+
