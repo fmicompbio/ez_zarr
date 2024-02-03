@@ -9,6 +9,9 @@ __author__ = 'Silvia Barbiero, Michael Stadler'
 import dask.array
 import numpy as np
 from typing import Union, Optional
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+
 # global variables ------------------------------------------------------------
 plate_layouts = {
     '6well': {'rows': ['A','B'],
@@ -21,6 +24,28 @@ plate_layouts = {
                          'I','J','K','L','M','N','O','P'],
                 'columns': [str(i+1).zfill(2) for i in range(24)]},
 }
+
+def get_shuffled_cmap(cmap_name: str='hsv', seed: int=42) -> mcolors.ListedColormap:
+    """
+    Create shuffled color map.
+
+    Parameters:
+        cmap_name (str): The name of the color map (passed to `cmap` argument
+            of matplotlib.colormaps.get_cmap).
+        seed (int): Used to seed the random number generator with
+            numpy.random.seed.
+    
+    Examples:
+        Obtain a matplotlib.colors.ListedColormap with randomized color ordering:
+
+        >>> cm = plotting.get_shuffled_cmap()
+    """
+    cmap = plt.colormaps.get_cmap(cmap_name)
+    all_colors = cmap(np.linspace(0, 1, cmap.N))
+    np.random.seed(seed)
+    np.random.shuffle(all_colors)
+    shuffled_cmap = mcolors.ListedColormap(all_colors)
+    return shuffled_cmap
 
              axis: Optional[int]=1,
              method: Optional[str]='maximum',
