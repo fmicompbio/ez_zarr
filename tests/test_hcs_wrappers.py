@@ -1,16 +1,15 @@
 # for testing, run the following from the project folder:
 #     pip install -e .
-#     pytest
-#     pytest --cov --color=yes --cov-report=term-missing
+#     pytest --color=yes -v --cov=./ --cov-report=term-missing
 
+import pytest
 import anndata as ad
 import json
 import pandas as pd
-import pytest
 import shutil
 import zarr
 import numpy as np
-import dask
+import dask.array
 
 from ez_zarr import hcs_wrappers
 
