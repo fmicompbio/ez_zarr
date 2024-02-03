@@ -9,9 +9,19 @@ __author__ = 'Silvia Barbiero, Michael Stadler'
 import dask.array
 import numpy as np
 from typing import Union, Optional
+# global variables ------------------------------------------------------------
+plate_layouts = {
+    '6well': {'rows': ['A','B'],
+              'columns': [str(i+1).zfill(2) for i in range(3)]},
+    '24well': {'rows': ['A','B','C','D'],
+               'columns': [str(i+1).zfill(2) for i in range(6)]},
+    '96well': {'rows': ['A','B','C','D','E','F','G','H'],
+               'columns': [str(i+1).zfill(2) for i in range(12)]},
+    '384well': {'rows': ['A','B','C','D','E','F','G','H',
+                         'I','J','K','L','M','N','O','P'],
+                'columns': [str(i+1).zfill(2) for i in range(24)]},
+}
 
-
-def zproject(data: Union[dask.array.Array, np.ndarray],
              axis: Optional[int]=1,
              method: Optional[str]='maximum',
              keepdims: Optional[bool]=True,
