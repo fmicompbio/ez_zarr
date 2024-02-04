@@ -10,6 +10,9 @@ import shutil
 import zarr
 import numpy as np
 import dask.array
+import matplotlib
+from matplotlib import pyplot as plt
+import warnings
 
 from ez_zarr import hcs_wrappers
 
@@ -494,6 +497,23 @@ def test_calc_average_FOV(tmpdir: str, plate_3d: hcs_wrappers.FractalZarr):
     assert avg0.shape == (3, 540, 640)
     assert avg1.shape == (3, 270, 320)
     assert avg2.shape == (3, 135, 160)
+
+def test_plot_plate(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
+    """Test plot_plate."""
+    ### TODO: add table 'well_ROI_table' to plate_2d
+    matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
+        plate_2d.plot_plate(image_name='0',
+                            label_name='organoids',
+                            pyramid_level=None,
+                            channels=[0],
+                            channel_colors=['white'],
+                            channel_quantiles=[[0.01, 0.99]],
+                            z_projection_method='maximum',
+                            plate_layout='6well')
+    plt.savefig(tmpdir.join('output.png'))
+    assert True # check if the plotting ran through
 
 # hcs_wrappers.FractalZarrSet -------------------------------------------------
 def test_constructor_set(plate_set1: hcs_wrappers.FractalZarrSet,
