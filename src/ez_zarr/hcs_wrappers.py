@@ -991,7 +991,6 @@ class FractalZarr:
             ', '.join(list(plotting.plate_layouts.keys()))
         )
         plt = importlib.import_module('matplotlib.pyplot')
-        mcolors = importlib.import_module('matplotlib.colors')
         
         # plate layout
         rows = plotting.plate_layouts[plate_layout]['rows']
