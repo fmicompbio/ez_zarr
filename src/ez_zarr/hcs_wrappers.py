@@ -994,7 +994,7 @@ class FractalZarr:
         
         # plate layout
         rows = plotting.plate_layouts[plate_layout]['rows']
-        columns = [str(i+1).zfill(2) for i in range(12)]
+        columns = plotting.plate_layouts[plate_layout]['columns']
 
         # available wells
         wells = self.get_wells(simplify=True)
