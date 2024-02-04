@@ -2,11 +2,13 @@
 #     pip install -e .
 #     pytest --color=yes -v --cov=./ --cov-report=term-missing
 
-from ez_zarr.plotting import zproject
+from ez_zarr.plotting import zproject, get_shuffled_cmap, pad_image, convert_to_rgb
 
 import pytest
 import numpy as np
-import dask.array
+# import dask.array
+import matplotlib.colors as mcolors
+
 
 # fixtures --------------------------------------------------------------------
 @pytest.fixture
@@ -20,6 +22,12 @@ def npa4d() -> np.ndarray:
     """A 4D `numpy.array` with shape (2,3,4,5)"""
     np.random.seed(42)
     return np.random.randint(0, 2**16, size=(2, 3, 4, 5))
+
+# global variables ------------------------------------------------------------
+def test_get_shuffled_cmap():
+    """Test get_shuffled_cmap."""
+    cm = get_shuffled_cmap()
+    assert isinstance(cm, mcolors.ListedColormap)
 
 # helper functions ------------------------------------------------------------
 def test_zproject(npa3d: np.ndarray, npa4d: np.ndarray):
@@ -52,3 +60,21 @@ def test_zproject(npa3d: np.ndarray, npa4d: np.ndarray):
     assert (r3d0avg == np.mean(npa3d, axis=0, keepdims=True)).all()
     assert (r4d1sum_noclip == np.sum(npa4d, axis=1, keepdims=True)).all()
     assert (r4d1avg_reddim == np.mean(npa4d, axis=1, keepdims=False)).all()
+
+def test_pad_image(npa3d: np.ndarray):
+    """Test pad_image."""
+    pad = (0, 20, 30)
+    out = tuple(pad[i] + npa3d.shape[i] for i in range(3))
+    impad = pad_image(im = npa3d, output_shape=out)
+    assert impad.shape == out
+    assert (impad[:, slice(10, 10 + npa3d.shape[1]), slice(15, 15 + npa3d.shape[2])] == npa3d).all()
+
+def test_convert_to_rgb(npa3d: np.ndarray):
+    """Test convert_to_rgb."""
+    rgb = convert_to_rgb(im=npa3d[[0,1]],
+                         colors=['yellow', 'red'],
+                         quantiles=[[0.01, 0.5], [0.01, 0.5]])
+    assert isinstance(rgb, np.ndarray)
+    assert rgb.shape == (npa3d.shape[2], npa3d.shape[1], 3)
+    assert rgb.dtype == np.uint8
+    assert np.max(rgb) == 255
