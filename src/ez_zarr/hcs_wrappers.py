@@ -1013,16 +1013,8 @@ class FractalZarr:
             shuffled_cmap = plotting.get_shuffled_cmap()
 
         # get the maximal well y,x coordinates
-        well_tab = self.get_table('well_ROI_table')
-        if well_tab != None:
-            max_yx = self.convert_micrometer_to_pixel(
-                zyx=(0,
-                    max(well_tab['len_y_micrometer']),
-                    max(well_tab['len_x_micrometer'])),
-                pyramid_level=img_pl)[1:]
-        else:
-            well_dims = [self.get_image_ROI(well=w, pyramid_level=img_pl).shape[2:] for w in wells]
-            max_yx = np.max(np.stack(well_dims), axis=0)
+        well_dims = [self.get_image_ROI(well=w, pyramid_level=img_pl).shape[2:] for w in wells]
+        max_yx = np.max(np.stack(well_dims), axis=0)
 
         # loop over wells
         with plt.style.context('dark_background'):

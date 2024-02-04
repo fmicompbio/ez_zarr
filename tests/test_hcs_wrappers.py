@@ -500,7 +500,6 @@ def test_calc_average_FOV(tmpdir: str, plate_3d: hcs_wrappers.FractalZarr):
 
 def test_plot_plate(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
     """Test plot_plate."""
-    ### TODO: add table 'well_ROI_table' to plate_2d
     matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
     with warnings.catch_warnings():
         warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
