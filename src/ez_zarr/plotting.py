@@ -175,6 +175,9 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
     # multiply channels with colors and create weighted sum to (x,y,3)
     rgb_im = np.einsum('cyx,cr->xyr', im, rgb_colors)
 
+    # clip to [0,1]
+    rgb_im = np.clip(rgb_im, 0, 1)
+
     # clip the values to the range [0, 255] and convert to uint8 type
     rgb_im = (rgb_im * 255.0).astype(np.uint8)
 
