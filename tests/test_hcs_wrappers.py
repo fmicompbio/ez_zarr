@@ -508,7 +508,7 @@ def test_plot_plate(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
                             pyramid_level=None,
                             channels=[0],
                             channel_colors=['white'],
-                            channel_quantiles=[[0.01, 0.99]],
+                            channel_ranges=[[0.01, 0.99]],
                             z_projection_method='maximum',
                             plate_layout='6well')
     plt.savefig(tmpdir.join('output.png'))

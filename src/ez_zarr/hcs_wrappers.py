@@ -925,7 +925,7 @@ class FractalZarr:
                    pyramid_level: Optional[int]=None,
                    channels: list[int]=[0],
                    channel_colors: list[str]=['white'],
-                   channel_quantiles: list[list[float]]=[[0.01, 0.95]],
+                   channel_ranges: list[list[float]]=[[0.01, 0.95]],
                    z_projection_method: str='maximum',
                    plate_layout: str='96well',
                    fig_width_inch: float=24.0,
@@ -951,10 +951,13 @@ class FractalZarr:
             channels (list[int]): The image channel(s) to be plotted.
             channel_colors (list[str]): A list with python color strings
                 (e.g. 'red') defining the color for each channel in `channels`.
-            channel_quantiles (list[list[float]]): A list of 2-element lists
-                (e.g. [0.01, 0.95]) giving the quantile ranges for each channel
-                that should be mapped to colors. Values outside of this range will
-                be clipped.
+            channel_ranges (list[list[float]]): A list of 2-element lists
+                (e.g. [0.01, 0.95]) giving the value ranges that should be
+                mapped to colors for each channel. If the given numerical values
+                are less or equal to 1.0, they are interpreted as quantiles and
+                the corresponding intensity values are calculated on the channel
+                non-zero values, otherwise they are directly used as intensities.
+                Values outside of this range will be clipped.
             z_projection_method (str): Method for combining multiple z planes.
                 For available methods, see ez_zarr.plotting.zproject
                 (default: 'maximum').
@@ -1044,7 +1047,7 @@ class FractalZarr:
                         # convert (ch,y,x) to rgb (x,y,3) and plot
                         img_rgb = plotting.convert_to_rgb(im=img[channels],
                                                           colors=channel_colors,
-                                                          quantiles=channel_quantiles)
+                                                          ranges=channel_ranges)
                         plt.imshow(img_rgb)
 
                         # add segmentation mask on top
