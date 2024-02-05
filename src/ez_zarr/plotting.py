@@ -131,16 +131,16 @@ def pad_image(im: Union[dask.array.Array, np.ndarray],
     return im
 
 def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
-                   colors: list[str]=['white'],
-                   ranges: list[list[float]]=[[0.01, 0.99]]) -> np.ndarray:
+                   channel_colors: list[str]=['white'],
+                   channel_ranges: list[list[float]]=[[0.01, 0.99]]) -> np.ndarray:
     """
     Convert a (channels, y, x) array to an RGB array.
     
     Parameters:
         im (dask.array or numpy.ndarray): Input image of shape (channels, y, x).
-        colors (list[str]): A list with python color strings (e.g. 'red')
+        channel_colors (list[str]): A list with python color strings (e.g. 'red')
             corresponding with the color for each channel in `im`.
-        ranges (list[list[float]]): A list of 2-element lists (e.g. [0.01, 0.99])
+        channel_ranges (list[list[float]]): A list of 2-element lists (e.g. [0.01, 0.99])
             giving the value ranges that should be mapped to colors for each
             channel. If the given numerical values are less or equal to 1.0,
             they are interpreted as quantiles and the corresponding intensity
@@ -161,26 +161,30 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
     """
     # digest arguments
     assert len(im.shape) == 3, f"`im` has shape {im.shape} but must have three dimensions"
-    assert len(colors) == im.shape[0], "`colors` must be of the same length as the first axis in `im` (" + str(im.shape[0]) + ")"
-    assert len(ranges) == len(colors), "`ranges` must be of the same length as `colors` (" + str(len(colors)) + ")"
+    assert len(channel_colors) == im.shape[0], (
+        f"`channel_colors` must be of the same length as the first axis in `im` ({im.shape[0]})"
+    )
+    assert len(channel_ranges) == len(channel_colors), (
+        f"`channel_ranges` must be of the same length as `channel_colors` ({len(channel_colors)})"
+    )
 
-    # clip and normalize each channel according to the ranges (im: (ch,y,x))
+    # clip and normalize each channel according to the channel_ranges (im: (ch,y,x))
     ranges_used = []
-    for i in range(len(ranges)):
-        if max(ranges[i]) <= 1.0:
+    for i in range(len(channel_ranges)):
+        if max(channel_ranges[i]) <= 1.0:
             # ranges are given as quantiles -> calculate corresponding intensities
             nonzero = im[i] > 0
-            rng = np.quantile(a=im[i][nonzero], q=ranges[i], overwrite_input=False)
+            rng = np.quantile(a=im[i][nonzero], q=channel_ranges[i], overwrite_input=False)
         else:
-            rng = ranges[i]
+            rng = channel_ranges[i]
         ranges_used.append(rng)
         im[i] = np.clip(im[i], rng[0], rng[1])
         im[i] = (im[i] - rng[0]) / (rng[1] - rng[0])
 
     # convert the color strings to RGB values
-    rgb_colors = np.array([mcolors.to_rgb(c) for c in colors])    
+    rgb_colors = np.array([mcolors.to_rgb(c) for c in channel_colors])    
 
-    # multiply channels with colors and create weighted sum to (x,y,3)
+    # multiply channels with channel_colors and create weighted sum to (x,y,3)
     rgb_im = np.einsum('cyx,cr->xyr', im, rgb_colors)
 
     # clip to [0,1], map to [0, 255] and convert to uint8 type

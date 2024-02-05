@@ -967,7 +967,7 @@ class FractalZarr:
             fig_width_inch (float): Figure width (inch).
             fig_height_inch (float): Figure height (inch).
             fig_dpi (int): Figure resolution (dots per inch).
-            fig_style (str): Style passed to matplotlib.pyplot.style.context
+            fig_style (str): Style passed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
 
         Examples:
@@ -1049,8 +1049,8 @@ class FractalZarr:
                                                                max_yx[1]))
                         # convert (ch,y,x) to rgb (x,y,3) and plot
                         img_rgb = plotting.convert_to_rgb(im=img[channels],
-                                                          colors=channel_colors,
-                                                          ranges=channel_ranges)
+                                                          channel_colors=channel_colors,
+                                                          channel_ranges=channel_ranges)
                         plt.imshow(img_rgb)
 
                         # add segmentation mask on top
