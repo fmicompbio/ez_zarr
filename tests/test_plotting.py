@@ -73,8 +73,8 @@ def test_convert_to_rgb(npa3d: np.ndarray):
     """Test convert_to_rgb."""
     rng = np.quantile(npa3d[1], [0.01, 0.5])
     rgb = convert_to_rgb(im=npa3d[[0,1]],
-                         colors=['yellow', 'red'],
-                         ranges=[[0.01, 0.5], rng])
+                         channel_colors=['yellow', 'red'],
+                         channel_ranges=[[0.01, 0.5], rng])
     assert isinstance(rgb, np.ndarray)
     assert rgb.shape == (npa3d.shape[2], npa3d.shape[1], 3)
     assert rgb.dtype == np.uint8
