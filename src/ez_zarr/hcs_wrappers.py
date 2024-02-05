@@ -930,7 +930,8 @@ class FractalZarr:
                    plate_layout: str='96well',
                    fig_width_inch: float=24.0,
                    fig_height_inch: float=16.0,
-                   fig_dpi: int=150):
+                   fig_dpi: int=150,
+                   fig_style: str='dark_background'):
         """
         Plot microtiter plate.
          
@@ -966,6 +967,8 @@ class FractalZarr:
             fig_width_inch (float): Figure width (inch).
             fig_height_inch (float): Figure height (inch).
             fig_dpi (int): Figure resolution (dots per inch).
+            fig_style (str): Style passed to matplotlib.pyplot.style.context
+                (default: 'dark_background')
 
         Examples:
             Overview plot of a plate for image channel 1.
@@ -1020,7 +1023,7 @@ class FractalZarr:
         max_yx = np.max(np.stack(well_dims), axis=0)
 
         # loop over wells
-        with plt.style.context('dark_background'):
+        with plt.style.context(fig_style):
             fig = plt.figure(figsize=(fig_width_inch, fig_height_inch))
             fig.set_dpi(fig_dpi)
             for r in range(len(rows)):
