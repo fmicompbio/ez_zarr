@@ -11,6 +11,7 @@ import numpy as np
 from typing import Union, Optional
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.patches as patches
 
 # global variables ------------------------------------------------------------
 plate_layouts = {
@@ -205,6 +206,9 @@ def plot_image(im: np.ndarray,
                pad_value: int=0,
                show_axis_ticks: bool=False,
                title: Optional[str]=None,
+               scalebar_pixel: int=0,
+               scalebar_color: str='white',
+               scalebar_position: str='bottomright',
                call_show: bool=True,
                fig_width_inch: float=24.0,
                fig_height_inch: float=16.0,
@@ -255,6 +259,11 @@ def plot_image(im: np.ndarray,
                 x and y axes.
             title (str): String to add as a title on top of the image. If `None`
                 (the default), no title will be added.
+            scalebar_pixel (int): If non-zero, draw a scalebar at the lower right
+                corner of the image of size `scalebar_pixel`.
+            scalebar_color (str): Scalebar color.
+            scalebar_position (str): position of the scale bar, one of 'topleft',
+                'topright', 'bottomleft' or 'bottomright'
             call_show (bool): If true, the call to `matplotlib.pyplot.imshow` is
                 embedded between `matplotlib.pyplot.figure` and
                 `matplotlib.pyplot.show`/`matplotlib.pyplot.close` calls.
@@ -328,7 +337,33 @@ def plot_image(im: np.ndarray,
                 plt.xticks([]) # remove axis ticks
                 plt.yticks([])
             if title != None:
-                plt.title(title)            
+                plt.title(title)
+            if scalebar_pixel != 0:
+                # patches.Rectangle((x, y), width, height, edgecolor, facecolor)
+                img_xy = im_rgb.shape[0:2]
+                d_xy = [round(img_xy[i] * 0.05) for i in range(2)]
+                # remark: plt.imshow plots the x-axis (y-axis) vertically (horizontally)
+                #         --> scalebar_pixel is in y direction
+                scalebar_height = round(img_xy[0] * 0.01)
+                if scalebar_position == 'bottomright':
+                    pos_xy = (img_xy[1] - d_xy[1] - scalebar_pixel,
+                              img_xy[0] - d_xy[0])
+                elif scalebar_position == 'bottomleft':
+                    pos_xy = (d_xy[1],
+                              img_xy[0] - d_xy[0])
+                elif scalebar_position == 'topleft':
+                    pos_xy = (d_xy[1],
+                              d_xy[0] - scalebar_height)
+                elif scalebar_position == 'topright':
+                    pos_xy = (img_xy[1] - d_xy[1] - scalebar_pixel,
+                              d_xy[0] - scalebar_height)
+                else:
+                    raise ValueError(f"Unknown scalebar_position ({scalebar_position}), should be one of 'bottomright', 'bottomleft', 'topright', or 'topleft'")
+                rect = patches.Rectangle(pos_xy, scalebar_pixel, scalebar_height,
+                                         edgecolor=scalebar_color,
+                                         facecolor=scalebar_color)
+                ax = plt.gca() # get current axes
+                ax.add_patch(rect) # add the patch to the axes
 
         # create the plot
         if call_show:
