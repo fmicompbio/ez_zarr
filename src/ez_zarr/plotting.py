@@ -201,6 +201,8 @@ def plot_image(im: np.ndarray,
                channel_colors: list[str]=['white'],
                channel_ranges: list[list[float]]=[[0.01, 0.95]],
                z_projection_method: str='maximum',
+               pad_to_yx: list[int]=[0, 0],
+               pad_value: int=0,
                show_axis_ticks: bool=False,
                title: Optional[str]=None,
                call_show: bool=True,
@@ -246,6 +248,9 @@ def plot_image(im: np.ndarray,
             z_projection_method (str): Method for combining multiple z planes.
                 For available methods, see ez_zarr.plotting.zproject
                 (default: 'maximum').
+            pad_to_yx (list[int]): If the image or label mask are smaller, pad
+                them by `pad_value` to this total y and x size. 
+            pad_value (int): value to use for contant-value image padding.
             show_axis_ticks (bool): If `True`, show the ticks and labels of the
                 x and y axes.
             title (str): String to add as a title on top of the image. If `None`
@@ -290,10 +295,21 @@ def plot_image(im: np.ndarray,
             # im: (ch,z,y,x) -> (ch,y,x))
             im = zproject(im=im, method=z_projection_method,
                           axis=1, keepdims=False)
-            # msk: (z,y,x) -> (y,x)
-            msk = zproject(im=msk, method='maximum', # always use 'maximum' for labels
-                           axis=0, keepdims=False)
+            if not msk is None:
+                # msk: (z,y,x) -> (y,x)
+                msk = zproject(im=msk, method='maximum', # always use 'maximum' for labels
+                            axis=0, keepdims=False)
 
+        # pad if necessary
+        if any([v > 0 for v in pad_to_yx]) and (im.shape[1] <= pad_to_yx[0] and im.shape[2] <= pad_to_yx[1]):
+            im = pad_image(im=im,
+                           output_shape=[nch, pad_to_yx[0], pad_to_yx[1]],
+                           constant_value=pad_value)
+            if not msk is None:
+                msk = pad_image(im=msk,
+                                output_shape=pad_to_yx,
+                                constant_value=pad_value)
+        
         # convert (ch,y,x) to rgb (x,y,3) and plot
         im_rgb = convert_to_rgb(im=im[channels],
                                 channel_colors=channel_colors,
@@ -307,7 +323,7 @@ def plot_image(im: np.ndarray,
                 plt.imshow(mskt,
                            interpolation='none',
                            cmap=get_shuffled_cmap(),
-                           alpha=np.multiply(msk_alpha, msk > 0))
+                           alpha=np.multiply(msk_alpha, mskt > 0))
             if not show_axis_ticks:
                 plt.xticks([]) # remove axis ticks
                 plt.yticks([])
