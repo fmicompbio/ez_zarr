@@ -930,7 +930,7 @@ class FractalZarr:
                    plate_layout: str='96well',
                    fig_width_inch: float=24.0,
                    fig_height_inch: float=16.0,
-                   fig_dpi: int=150,
+                   fig_dpi: int=200,
                    fig_style: str='dark_background'):
         """
         Plot microtiter plate.
@@ -1015,8 +1015,8 @@ class FractalZarr:
             )
             msk_pl = pl_match.index(True)
 
-            # create shuffled color map
-            shuffled_cmap = plotting.get_shuffled_cmap()
+            # # create shuffled color map
+            # shuffled_cmap = plotting.get_shuffled_cmap()
 
         # get the maximal well y,x coordinates
         well_dims = [self.get_image_ROI(well=w, pyramid_level=img_pl).shape[2:] for w in wells]
@@ -1036,22 +1036,7 @@ class FractalZarr:
                         img = self.get_image_ROI(well=w,
                                                  pyramid_level=img_pl,
                                                  as_NumPy=True)
-                        # combine z planes -> (ch,y,x)
-                        img = plotting.zproject(im=img,
-                                                method=z_projection_method,
-                                                axis=1,
-                                                keepdims=False)
                         img_shape_before_padding = img.shape
-                        # pad image y,x to `max_yx` for ploting all to scale
-                        img = plotting.pad_image(im=img,
-                                                 output_shape=(img.shape[0],
-                                                               max_yx[0],
-                                                               max_yx[1]))
-                        # convert (ch,y,x) to rgb (x,y,3) and plot
-                        img_rgb = plotting.convert_to_rgb(im=img[channels],
-                                                          channel_colors=channel_colors,
-                                                          channel_ranges=channel_ranges)
-                        plt.imshow(img_rgb)
 
                         # add segmentation mask on top
                         if label_name != None:
@@ -1060,31 +1045,31 @@ class FractalZarr:
                                                      well=w,
                                                      pyramid_level=msk_pl,
                                                      as_NumPy=True)
-                            # combine z planes -> (y,x)
-                            msk = plotting.zproject(im=msk,
-                                                    method='maximum', # always use 'maximum' for labels
-                                                    axis=0,
-                                                    keepdims=False)
                             assert img_shape_before_padding[1:] == msk.shape, (
                                 f"label {label_name} shape {msk.shape} does not match "
                                 f"image shape {img_shape_before_padding} for well {w}"
                             )
-                            # pad label y,x to `max_yx` for ploting all to scale
-                            msk = plotting.pad_image(im=msk,
-                                                     output_shape=max_yx)
-                            # plot label on top
-                            if np.max(msk) > 0:
-                                msk = msk.transpose(1, 0) # (y,x) -> (x,y)
-                                plt.imshow(msk,
-                                           interpolation='none',
-                                           cmap=shuffled_cmap,
-                                           alpha=np.multiply(label_alpha, msk > 0))
+                        else:
+                            msk = None
+
+                        # plot well
+                        plotting.plot_image(im=img,
+                                            msk=msk,
+                                            msk_alpha=label_alpha,
+                                            channels=channels,
+                                            channel_colors=channel_colors,
+                                            channel_ranges=channel_ranges,
+                                            z_projection_method=z_projection_method,
+                                            pad_to_yx=max_yx,
+                                            show_axis_ticks=False,
+                                            title=w,
+                                            call_show=False)
                     else:
                         # plot empty well
                         plt.imshow(np.zeros((max_yx[1], max_yx[0])), cmap='gray')
-                    plt.xticks([]) # remove axis ticks
-                    plt.yticks([])
-                    plt.title(w)
+                        plt.xticks([]) # remove axis ticks
+                        plt.yticks([])
+                        plt.title(w)
             fig.tight_layout()
             plt.show()
             plt.close()
