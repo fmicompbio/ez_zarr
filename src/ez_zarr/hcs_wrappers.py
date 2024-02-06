@@ -918,6 +918,147 @@ class FractalZarr:
         return(avg_fov)
 
     # plotting methods -----------------------------------------------------------
+    def plot_well(self,
+                  well: str,
+                  image_name: str='0',
+                  label_name: Optional[str]=None,
+                  label_alpha: float=0.3,
+                  pyramid_level: Optional[int]=None,
+                  channels: list[int]=[0],
+                  channel_colors: list[str]=['white'],
+                  channel_ranges: list[list[float]]=[[0.01, 0.95]],
+                  z_projection_method: str='maximum',
+                  show_axis_ticks: bool=True,
+                  scalebar_micrometer: int=0,
+                  scalebar_color: str='white',
+                  scalebar_position: str='bottomright',
+                  fig_width_inch: float=8.0,
+                  fig_height_inch: float=8.0,
+                  fig_dpi: int=200,
+                  fig_style: str='dark_background'):
+        """
+        Plot microtiter plate.
+         
+        Plot an overview of all wells in plate arrangement, for `channel` at
+        resolution `pyramid_level`.
+
+        Parameters:
+            well (str): The well (e.g. 'B03') to be plotted.
+            image_name (str): The name of the image in each well to be plotted.
+                Default: '0'.
+            label_name (str): The name of the a segmentation mask to be plotted
+                semi-transparently over the images. If `None`, just the image
+                is plotted.
+            label_alpha (float): A scalar value between 0 (fully transparent)
+                and 1 (solid) defining the transparency of the label masks.
+            pyramid_level (int): The pyramid level (resolution level), from
+                which the image should be extracted. If `None`, the
+                lowest-resolution (highest) pyramid level will be selected.
+            channels (list[int]): The image channel(s) to be plotted.
+            channel_colors (list[str]): A list with python color strings
+                (e.g. 'red') defining the color for each channel in `channels`.
+            channel_ranges (list[list[float]]): A list of 2-element lists
+                (e.g. [0.01, 0.95]) giving the value ranges that should be
+                mapped to colors for each channel. If the given numerical values
+                are less or equal to 1.0, they are interpreted as quantiles and
+                the corresponding intensity values are calculated on the channel
+                non-zero values, otherwise they are directly used as intensities.
+                Values outside of this range will be clipped.
+            z_projection_method (str): Method for combining multiple z planes.
+                For available methods, see ez_zarr.plotting.zproject
+                (default: 'maximum').
+            show_axis_ticks (bool): If `True`, show the ticks and labels of the
+                x and y axes.
+            scalebar_micrometer (int): If non-zero, add a scale bar corresonding
+                to `scalebar_micrometer` to the bottom right.
+            plate_layout (str): Defines the layout of the plate
+                (default: '96well').
+            fig_width_inch (float): Figure width (inch).
+            fig_height_inch (float): Figure height (inch).
+            fig_dpi (int): Figure resolution (dots per inch).
+            fig_style (str): Style passed to `matplotlib.pyplot.style.context`
+                (default: 'dark_background')
+
+        Examples:
+            Overview plot of a plate for image channel 1.
+
+            >>> plateA.plot_plate(channels=[1])
+        """
+        # digest arguments
+        well = self._digest_well_argument(well, as_path=False)
+        assert image_name in self.image_names, (
+            f"Unknown image_name ({image_name}), should be one of "
+            ', '.join(self.image_names)
+        )
+        assert label_name == None or label_name in self.label_names, (
+            f"Unknown label_name ({label_name}), should be `None` or one of "
+            ', '.join(self.label_names)
+        )
+        img_pl = self._digest_pyramid_level_argument(pyramid_level=pyramid_level,
+                                                     pyramid_ref=('image', image_name))
+        assert all(ch < len(self.channels) for ch in channels), (
+            f"Invalid channels ({channels}), must be less than {len(self.channels)}"
+        )
+
+        # import optional modules
+        plotting = importlib.import_module('ez_zarr.plotting')
+        plt = importlib.import_module('matplotlib.pyplot')
+        
+        # get mask pyramid level corresponding to `img_pl`
+        if label_name != None:
+            pl_match = [self.level_zyx_spacing_images[image_name][img_pl] == x
+                        for x in self.level_zyx_spacing_labels[label_name]]
+            assert sum(pl_match) == 1, (
+                f"Could not find a label pyramid level corresponding to the "
+                f"selected image pyramid level ({img_pl})"
+            )
+            msk_pl = pl_match.index(True)
+
+        # get well image
+        img = self.get_image_ROI(well=well,
+                                    pyramid_level=img_pl,
+                                    as_NumPy=True)
+
+        if label_name != None:
+            msk = self.get_label_ROI(label_name=label_name,
+                                        well=well,
+                                        pyramid_level=msk_pl,
+                                        as_NumPy=True)
+            assert img.shape[1:] == msk.shape, (
+                f"label {label_name} shape {msk.shape} does not match "
+                f"image shape {img.shape} for well {well}"
+            )
+        else:
+            msk = None
+
+        # calculate scalebar length in pixel
+        if scalebar_micrometer != 0:
+            # remark: plt.imshow plots the x-axis (y-axis) vertically (horizontally)
+            #         --> width of scalebar is in y direction
+            scalebar_pixel = self.convert_micrometer_to_pixel(zyx = (0, scalebar_micrometer, 0),
+                                                               pyramid_level=img_pl)[1]
+        else:
+            scalebar_pixel = 0
+
+        # plot well
+        plotting.plot_image(im=img,
+                            msk=msk,
+                            msk_alpha=label_alpha,
+                            channels=channels,
+                            channel_colors=channel_colors,
+                            channel_ranges=channel_ranges,
+                            z_projection_method=z_projection_method,
+                            show_axis_ticks=show_axis_ticks,
+                            title=well,
+                            scalebar_pixel=scalebar_pixel,
+                            scalebar_color=scalebar_color,
+                            scalebar_position=scalebar_position,
+                            call_show=True,
+                            fig_width_inch=fig_width_inch,
+                            fig_height_inch=fig_height_inch,
+                            fig_dpi=fig_dpi,
+                            fig_style=fig_style)
+
     def plot_plate(self,
                    image_name: str='0',
                    label_name: Optional[str]=None,
@@ -1014,9 +1155,6 @@ class FractalZarr:
                 f"selected image pyramid level ({img_pl})"
             )
             msk_pl = pl_match.index(True)
-
-            # # create shuffled color map
-            # shuffled_cmap = plotting.get_shuffled_cmap()
 
         # get the maximal well y,x coordinates
         well_dims = [self.get_image_ROI(well=w, pyramid_level=img_pl).shape[2:] for w in wells]

@@ -504,6 +504,14 @@ def test_plot_plate(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
         plate_2d.plot_plate(image_name='0',
+                            label_name=None,
+                            pyramid_level=None,
+                            channels=[0],
+                            channel_colors=['white'],
+                            channel_ranges=[[0.01, 0.99]],
+                            z_projection_method='maximum',
+                            plate_layout='6well')
+        plate_2d.plot_plate(image_name='0',
                             label_name='organoids',
                             pyramid_level=None,
                             channels=[0],
@@ -511,6 +519,31 @@ def test_plot_plate(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
                             channel_ranges=[[0.01, 0.99]],
                             z_projection_method='maximum',
                             plate_layout='6well')
+    plt.savefig(tmpdir.join('output.png'))
+    assert True # check if the plotting ran through
+
+def test_plot_well(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
+    """Test plot_plate."""
+    matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
+        plate_2d.plot_well(well='B03',
+                           image_name='0',
+                           label_name=None,
+                           pyramid_level=None,
+                           channels=[0],
+                           channel_colors=['white'],
+                           channel_ranges=[[0.01, 0.99]],
+                           z_projection_method='maximum',
+                           scalebar_micrometer=50)
+        plate_2d.plot_well(well='B03',
+                           image_name='0',
+                           label_name='organoids',
+                           pyramid_level=None,
+                           channels=[0],
+                           channel_colors=['white'],
+                           channel_ranges=[[0.01, 0.99]],
+                           z_projection_method='maximum')
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
 
