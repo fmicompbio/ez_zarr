@@ -84,14 +84,26 @@ def test_convert_to_rgb(npa3d: np.ndarray):
 
 def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
     """Test plot_image."""
+    with pytest.raises(Exception) as e_info:
+        plot_image(im=npa4d, msk=None,
+                channels=[1],
+                channel_colors=['white'],
+                channel_ranges=[[0.01, 0.99]],
+                title='test', call_show=False,
+                scalebar_pixel=100,
+                scalebar_position='error')
+
     matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
     with warnings.catch_warnings():
         warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
-        plot_image(im=npa4d, msk=npa3d,
-                   channels=[1],
-                   channel_colors=['white'],
-                   channel_ranges=[[0.01, 0.99]],
-                   title='test', call_show=False)
+        for pos in ['topleft', 'bottomleft', 'topright', 'bottomright']:
+            plot_image(im=npa4d, msk=None,
+                    channels=[1],
+                    channel_colors=['white'],
+                    channel_ranges=[[0.01, 0.99]],
+                    title='test', call_show=False,
+                    scalebar_pixel=100,
+                    scalebar_position=pos)
         plot_image(im=npa4d, msk=npa3d,
                    channels=[1],
                    channel_colors=['white'],
