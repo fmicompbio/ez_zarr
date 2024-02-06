@@ -971,8 +971,6 @@ class FractalZarr:
                 x and y axes.
             scalebar_micrometer (int): If non-zero, add a scale bar corresonding
                 to `scalebar_micrometer` to the bottom right.
-            plate_layout (str): Defines the layout of the plate
-                (default: '96well').
             fig_width_inch (float): Figure width (inch).
             fig_height_inch (float): Figure height (inch).
             fig_dpi (int): Figure resolution (dots per inch).
@@ -980,9 +978,9 @@ class FractalZarr:
                 (default: 'dark_background')
 
         Examples:
-            Overview plot of a plate for image channel 1.
+            Overview plot of a well 'B03'.
 
-            >>> plateA.plot_plate(channels=[1])
+            >>> plateA.plot_well(well='B03')
         """
         # digest arguments
         well = self._digest_well_argument(well, as_path=False)
