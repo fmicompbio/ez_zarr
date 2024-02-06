@@ -2,12 +2,14 @@
 #     pip install -e .
 #     pytest --color=yes -v --cov=./ --cov-report=term-missing
 
-from ez_zarr.plotting import zproject, get_shuffled_cmap, pad_image, convert_to_rgb
-
 import pytest
 import numpy as np
-# import dask.array
+import matplotlib
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import warnings
+
+from ez_zarr.plotting import zproject, get_shuffled_cmap, pad_image, convert_to_rgb, plot_image
 
 
 # fixtures --------------------------------------------------------------------
@@ -79,3 +81,22 @@ def test_convert_to_rgb(npa3d: np.ndarray):
     assert rgb.shape == (npa3d.shape[2], npa3d.shape[1], 3)
     assert rgb.dtype == np.uint8
     assert np.max(rgb) == 255
+
+def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
+    """Test plot_image."""
+    matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
+        plot_image(im=npa4d, msk=npa3d,
+                   channels=[1],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]],
+                   title='test', call_show=False)
+        plot_image(im=npa4d, msk=npa3d,
+                   channels=[1],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]],
+                   title='test', call_show=True)
+    plt.savefig(tmpdir.join('output.png'))
+    assert True # check if the plotting ran through
+

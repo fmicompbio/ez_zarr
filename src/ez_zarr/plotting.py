@@ -192,3 +192,135 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
     rgb_im = (rgb_im * 255.0).astype(np.uint8)
 
     return rgb_im
+
+# helper functions to plot image arrays ---------------------------------------
+def plot_image(im: np.ndarray,
+               msk: Optional[np.ndarray]=None,
+               msk_alpha: float=0.3,
+               channels: list[int]=[0],
+               channel_colors: list[str]=['white'],
+               channel_ranges: list[list[float]]=[[0.01, 0.95]],
+               z_projection_method: str='maximum',
+               show_axis_ticks: bool=False,
+               title: Optional[str]=None,
+               call_show: bool=True,
+               fig_width_inch: float=24.0,
+               fig_height_inch: float=16.0,
+               fig_dpi: int=150,
+               fig_style: str='dark_background'):
+        """
+        Plot an image array, optionally overlaid with a segmentation mask.
+         
+        Plot an image (provided as an array with shape (ch,z,y,x) or (ch,y,x))
+        by summarizing multiple z planes using `z_projection_method` (if needed),
+        mapping channels values (in the range of `channel_ranges`) to colors
+        (given by `channel_colors`), converting it to an RGB array of shape
+        (x,y,3) and plotting it using `matplotlib.pyplot.imshow`.
+        If `msk` is provided, it is assumed to contain a compatible segmentation
+        mask and will be plotted transparently (controlled by `msk_alpha`)
+        on top of the image.
+
+        Parameters:
+            im (numpy.ndarray): An array with four (ch,z,y,x) or three (ch,y,x)
+                dimensions with image intensities.
+            msk (numpy.ndarray): An optional cooresponding mask array with
+                shape `im.shape[1:]`. If given, label values will be mapped
+                to discrete colors and plotted transparently on top of the image.
+            msk_alpha (float): A scalar value between 0 (fully transparent)
+                and 1 (solid) defining the transparency of the mask.
+            channels (list[int]): The image channel(s) to be plotted. For example,
+                to plot the first and third channel of a 4-channel image with
+                shape (4,1,500,600), you can use `channels=[0, 2]`.
+            channel_colors (list[str]): A list with python color strings
+                (e.g. 'red') defining the color for each channel in `channels`.
+                For example, to map the selected `channels=[0, 2]` to
+                cyan and magenta, respectively, you can use
+                `channel_colors=['cyan', 'magenta']`.
+            channel_ranges (list[list[float]]): A list of 2-element lists
+                (e.g. [0.01, 0.95]) giving the the value ranges that should
+                be mapped to colors for each channel. If the given numerical
+                values are less or equal to 1.0, they are interpreted as quantiles
+                and the corresponding intensity values are calculated on the
+                channel non-zero values, otherwise they are directly used as
+                intensities. Values outside of this range will be clipped.
+            z_projection_method (str): Method for combining multiple z planes.
+                For available methods, see ez_zarr.plotting.zproject
+                (default: 'maximum').
+            show_axis_ticks (bool): If `True`, show the ticks and labels of the
+                x and y axes.
+            title (str): String to add as a title on top of the image. If `None`
+                (the default), no title will be added.
+            call_show (bool): If true, the call to `matplotlib.pyplot.imshow` is
+                embedded between `matplotlib.pyplot.figure` and
+                `matplotlib.pyplot.show`/`matplotlib.pyplot.close` calls.
+                This is the default behaviour and typically used when an indiviual
+                image should be plotted and displayed. It can be set to `False`
+                if multiple images should be plotted and their arrangement
+                is controlled outside of `plotting.plot_image`. The parameters
+                `fig_width_inch`, `fig_height_inch`, `fig_dpi` and `fig_style`
+                are ignored in that case.
+            fig_width_inch (float): Figure width (inch).
+            fig_height_inch (float): Figure height (inch).
+            fig_dpi (int): Figure resolution (dots per inch).
+            fig_style (str): Style passed to `matplotlib.pyplot.style.context`
+                (default: 'dark_background')
+
+        Examples:
+            Plot the first channel of `img` in gray-scale.
+
+            >>> plot_image(img, channels=[0], channel_colors=['white'])
+        """
+        # digest arguments
+        ndim = len(im.shape)
+        assert ndim == 3 or ndim == 4, (
+            f"Unsupported image dimension ({im.shape}), ",
+            "should be either (ch,z,y,x) or (ch,y,x)"
+        )
+        assert msk is None or msk.shape == im.shape[1:], (
+            f"`msk` dimension ({msk.shape}) is not compatible with `im` "
+            f"dimension, should be ({im.shape[1:]})"
+        )
+        nch = im.shape[0]
+        assert all([ch <= nch for ch in channels]), (
+            f"Invalid `channels` parameter, must be less or equal to {nch}"
+        )
+
+        # combine z planes if needed
+        if ndim == 4:
+            # im: (ch,z,y,x) -> (ch,y,x))
+            im = zproject(im=im, method=z_projection_method,
+                          axis=1, keepdims=False)
+            # msk: (z,y,x) -> (y,x)
+            msk = zproject(im=msk, method='maximum', # always use 'maximum' for labels
+                           axis=0, keepdims=False)
+
+        # convert (ch,y,x) to rgb (x,y,3) and plot
+        im_rgb = convert_to_rgb(im=im[channels],
+                                channel_colors=channel_colors,
+                                channel_ranges=channel_ranges)
+
+        # define nested function with main plotting code
+        def _do_plot():
+            plt.imshow(im_rgb)
+            if not msk is None and np.max(msk) > 0:
+                mskt = msk.transpose(1, 0) # (y,x) -> (x,y)
+                plt.imshow(mskt,
+                           interpolation='none',
+                           cmap=get_shuffled_cmap(),
+                           alpha=np.multiply(msk_alpha, msk > 0))
+            if not show_axis_ticks:
+                plt.xticks([]) # remove axis ticks
+                plt.yticks([])
+            if title != None:
+                plt.title(title)            
+
+        # create the plot
+        if call_show:
+            with plt.style.context(fig_style):
+                fig = plt.figure(figsize=(fig_width_inch, fig_height_inch))
+                fig.set_dpi(fig_dpi)
+                _do_plot()
+                plt.show()
+                plt.close()
+        else:
+            _do_plot()
