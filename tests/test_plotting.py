@@ -4,6 +4,7 @@
 
 import pytest
 import numpy as np
+import dask.array
 import matplotlib
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -78,7 +79,15 @@ def test_convert_to_rgb(npa3d: np.ndarray):
                          channel_colors=['yellow', 'red'],
                          channel_ranges=[[0.01, 0.5], rng])
     assert isinstance(rgb, np.ndarray)
-    assert rgb.shape == (npa3d.shape[2], npa3d.shape[1], 3)
+    assert rgb.shape == (npa3d.shape[1], npa3d.shape[2], 3)
+    assert rgb.dtype == np.uint8
+    assert np.max(rgb) == 255
+    da = dask.array.from_array(npa3d)
+    rgb = convert_to_rgb(im=da[[0,1]],
+                         channel_colors=['yellow', 'red'],
+                         channel_ranges=[[0.01, 0.5], rng])
+    assert isinstance(rgb, np.ndarray)
+    assert rgb.shape == (npa3d.shape[1], npa3d.shape[2], 3)
     assert rgb.dtype == np.uint8
     assert np.max(rgb) == 255
 

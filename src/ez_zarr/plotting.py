@@ -136,8 +136,10 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
                    channel_colors: list[str]=['white'],
                    channel_ranges: list[list[float]]=[[0.01, 0.99]]) -> np.ndarray:
     """
-    Convert a (channels, y, x) array to an RGB array.
+    Convert a (channels, y, x) array to an RGB array of shape (y, x, 3).
     
+    This function will return a copy of `im` in order not to affect the input.
+
     Parameters:
         im (dask.array or numpy.ndarray): Input image of shape (channels, y, x).
         channel_colors (list[str]): A list with python color strings (e.g. 'red')
@@ -151,12 +153,13 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
             be clipped.
 
     Returns:
-        An RGB image of shape (x, y, 3), where the third axis corresponds to
+        An RGB image of shape (y, x, 3), where the third axis corresponds to
             red, green and blue channels. The image is suitable for plotting with
-            matplotlib.pyplot.imshow.
+            `matplotlib.pyplot.imshow` and oriented such that is results in the
+            same orentiation as when directly plotting a single channel.
 
     Examples:
-        Convert an image `img` from (2, y, x) to (x, y, 3), using the
+        Convert an image `img` from (2, y, x) to (y, x, 3), using the
         channels as yellow and blue intensities:
 
         >>> img_rgb = convert_to_rgb(img, ['yellow', 'blue'])   
@@ -191,8 +194,8 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
     # convert the color strings to RGB values
     rgb_colors = np.array([mcolors.to_rgb(c) for c in channel_colors])    
 
-    # multiply channels with channel_colors and create weighted sum to (x,y,3)
-    rgb_im = np.einsum('cyx,cr->xyr', im, rgb_colors)
+    # multiply channels with channel_colors and create weighted sum to (y,x,3)
+    rgb_im = np.einsum('cyx,cr->yxr', im, rgb_colors)
 
     # clip to [0,1], map to [0, 255] and convert to uint8 type
     rgb_im = np.clip(rgb_im, 0, 1)
@@ -325,7 +328,7 @@ def plot_image(im: np.ndarray,
                                 output_shape=pad_to_yx,
                                 constant_value=pad_value)
         
-        # convert (ch,y,x) to rgb (x,y,3) and plot
+        # convert (ch,y,x) to rgb (y,x,3) and plot
         im_rgb = convert_to_rgb(im=im[channels],
                                 channel_colors=channel_colors,
                                 channel_ranges=channel_ranges)
@@ -334,38 +337,35 @@ def plot_image(im: np.ndarray,
         def _do_plot():
             plt.imshow(im_rgb)
             if not msk is None and np.max(msk) > 0:
-                mskt = msk.transpose(1, 0) # (y,x) -> (x,y)
-                plt.imshow(mskt,
+                plt.imshow(msk,
                            interpolation='none',
                            cmap=get_shuffled_cmap(),
-                           alpha=np.multiply(msk_alpha, mskt > 0))
+                           alpha=np.multiply(msk_alpha, msk > 0))
             if not show_axis_ticks:
                 plt.xticks([]) # remove axis ticks
                 plt.yticks([])
             if title != None:
                 plt.title(title)
             if scalebar_pixel != 0:
-                # patches.Rectangle((x, y), width, height, edgecolor, facecolor)
-                img_xy = im_rgb.shape[0:2]
-                d_xy = [round(img_xy[i] * 0.05) for i in range(2)]
-                # remark: plt.imshow plots the x-axis (y-axis) vertically (horizontally)
-                #         --> scalebar_pixel is in y direction
-                scalebar_height = round(img_xy[0] * 0.01)
+                img_yx = im_rgb.shape[0:2]
+                d = min([round(img_yx[i] * 0.05) for i in range(2)]) # 5% margin
+                scalebar_height = round(img_yx[0] * 0.01)
                 if scalebar_position == 'bottomright':
-                    pos_xy = (img_xy[1] - d_xy[1] - scalebar_pixel,
-                              img_xy[0] - d_xy[0])
+                    pos_xy = (img_yx[1] - d - scalebar_pixel,
+                              img_yx[0] - d)
                 elif scalebar_position == 'bottomleft':
-                    pos_xy = (d_xy[1],
-                              img_xy[0] - d_xy[0])
+                    pos_xy = (d,
+                              img_yx[0] - d)
                 elif scalebar_position == 'topleft':
-                    pos_xy = (d_xy[1],
-                              d_xy[0] - scalebar_height)
+                    pos_xy = (d,
+                              d - scalebar_height)
                 elif scalebar_position == 'topright':
-                    pos_xy = (img_xy[1] - d_xy[1] - scalebar_pixel,
-                              d_xy[0] - scalebar_height)
+                    pos_xy = (img_yx[1] - d - scalebar_pixel,
+                              d - scalebar_height)
                 else:
                     raise ValueError(f"Unknown scalebar_position ({scalebar_position}), should be one of 'bottomright', 'bottomleft', 'topright', or 'topleft'")
-                rect = patches.Rectangle(pos_xy, scalebar_pixel, scalebar_height,
+                rect = patches.Rectangle(xy=pos_xy, width=scalebar_pixel,
+                                         height=scalebar_height,
                                          edgecolor=scalebar_color,
                                          facecolor=scalebar_color)
                 ax = plt.gca() # get current axes

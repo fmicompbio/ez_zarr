@@ -104,8 +104,7 @@ class FractalZarr:
                 raise ValueError(f"no multiscale info found in {target} {el}")
             info[el] = el_group.attrs['multiscales'][0]
         return info
-    
-    
+       
     def _load_image_names(self) -> list[str]:
         """[internal] Load image names (available images)."""
         well_path = self.wells[0]['path']
@@ -1029,12 +1028,10 @@ class FractalZarr:
         else:
             msk = None
 
-        # calculate scalebar length in pixel
+        # calculate scalebar length in pixel in x direction
         if scalebar_micrometer != 0:
-            # remark: plt.imshow plots the x-axis (y-axis) vertically (horizontally)
-            #         --> width of scalebar is in y direction
-            scalebar_pixel = self.convert_micrometer_to_pixel(zyx = (0, scalebar_micrometer, 0),
-                                                               pyramid_level=img_pl)[1]
+            scalebar_pixel = self.convert_micrometer_to_pixel(zyx = (0, 0, scalebar_micrometer),
+                                                               pyramid_level=img_pl)[2]
         else:
             scalebar_pixel = 0
 
@@ -1202,7 +1199,7 @@ class FractalZarr:
                                             call_show=False)
                     else:
                         # plot empty well
-                        plt.imshow(np.zeros((max_yx[1], max_yx[0])), cmap='gray')
+                        plt.imshow(np.zeros(max_yx), cmap='gray')
                         plt.xticks([]) # remove axis ticks
                         plt.yticks([])
                         plt.title(w)
