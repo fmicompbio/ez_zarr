@@ -503,6 +503,7 @@ def test_plot_plate(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
     matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
     with warnings.catch_warnings():
         warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
+        # without mask
         plate_2d.plot_plate(image_name='0',
                             label_name=None,
                             pyramid_level=None,
@@ -511,6 +512,7 @@ def test_plot_plate(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
                             channel_ranges=[[0.01, 0.99]],
                             z_projection_method='maximum',
                             plate_layout='6well')
+        # with mask
         plate_2d.plot_plate(image_name='0',
                             label_name='organoids',
                             pyramid_level=None,
@@ -519,6 +521,13 @@ def test_plot_plate(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
                             channel_ranges=[[0.01, 0.99]],
                             z_projection_method='maximum',
                             plate_layout='6well')
+        # fig_style='brightfield'
+        plate_2d.plot_plate(image_name='0',
+                            label_name='organoids',
+                            pyramid_level=None,
+                            fig_style='brightfield',
+                            plate_layout='6well')
+
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
 

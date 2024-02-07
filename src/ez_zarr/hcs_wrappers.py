@@ -976,7 +976,11 @@ class FractalZarr:
             fig_width_inch (float): Figure width (inch).
             fig_height_inch (float): Figure height (inch).
             fig_dpi (int): Figure resolution (dots per inch).
-            fig_style (str): Style passed to `matplotlib.pyplot.style.context`
+            fig_style (str): Style for the figure. Supported are 'brightfield', which
+                is a special mode for single-channel brightfield microscopic images
+                (it will automatically set `channels=[0]`, `channel_colors=['white']`
+                `z_projection_method='minimum' and `fig_style='default'`), and any
+                other styles that can bepassed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
 
         Examples:
@@ -1108,7 +1112,11 @@ class FractalZarr:
             fig_width_inch (float): Figure width (inch).
             fig_height_inch (float): Figure height (inch).
             fig_dpi (int): Figure resolution (dots per inch).
-            fig_style (str): Style passed to `matplotlib.pyplot.style.context`
+            fig_style (str): Style for the figure. Supported are 'brightfield', which
+                is a special mode for single-channel brightfield microscopic images
+                (it will automatically set `channels=[0]`, `channel_colors=['white']`
+                `z_projection_method='minimum' and `fig_style='default'`), and any
+                other styles that can bepassed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
 
         Examples:
@@ -1160,6 +1168,16 @@ class FractalZarr:
         well_dims = [self.get_image_ROI(well=w, pyramid_level=img_pl).shape[2:] for w in wells]
         max_yx = np.max(np.stack(well_dims), axis=0)
 
+        # adjust parameters for brightfield images
+        if fig_style == 'brightfield':
+            channels = [0]
+            channel_colors = ['white']
+            z_projection_method = 'minimum'
+            fig_style = 'default'
+            empty_well = np.ones(max_yx)
+        else:
+            empty_well = np.zeros(max_yx)
+
         # loop over wells
         with plt.style.context(fig_style):
             fig = plt.figure(figsize=(fig_width_inch, fig_height_inch))
@@ -1204,7 +1222,7 @@ class FractalZarr:
                                             call_show=False)
                     else:
                         # plot empty well
-                        plt.imshow(np.zeros(max_yx), cmap='gray')
+                        plt.imshow(empty_well, cmap='gray', vmin=0, vmax=1)
                         plt.xticks([]) # remove axis ticks
                         plt.yticks([])
                         plt.title(w)

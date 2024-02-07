@@ -105,6 +105,7 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
     matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
     with warnings.catch_warnings():
         warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
+        # scalebar_position
         for pos in ['topleft', 'bottomleft', 'topright', 'bottomright']:
             plot_image(im=npa4d, msk=None,
                     channels=[1],
@@ -113,11 +114,16 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
                     title='test', call_show=False,
                     scalebar_pixel=100,
                     scalebar_position=pos)
+        # image with masks
         plot_image(im=npa4d, msk=npa3d,
                    channels=[1],
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]],
                    title='test', call_show=True)
+        # brightfield image
+        plot_image(im=npa4d[slice(0,1)],
+                   call_show=True,
+                   fig_style='brightfield')
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
 
