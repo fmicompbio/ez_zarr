@@ -6,9 +6,10 @@ __author__ = 'Silvia Barbiero, Michael Stadler'
 
 
 # imports ---------------------------------------------------------------------
+from typing import Union, Optional
+from copy import deepcopy
 import dask.array
 import numpy as np
-from typing import Union, Optional
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.patches as patches
@@ -168,6 +169,11 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
     assert len(channel_ranges) == len(channel_colors), (
         f"`channel_ranges` must be of the same length as `channel_colors` ({len(channel_colors)})"
     )
+
+    # make a copy of the input argument
+    if isinstance(im, dask.array.Array):
+        im = im.compute()
+    im = deepcopy(im).astype(np.float64)
 
     # clip and normalize each channel according to the channel_ranges (im: (ch,y,x))
     ranges_used = []
