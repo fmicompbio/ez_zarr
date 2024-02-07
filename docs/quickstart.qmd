@@ -67,7 +67,7 @@ from matplotlib.colors import ListedColormap
 import numpy as np
 from skimage import color
 
-from ez_zarr import hcs_wrappers
+from ez_zarr import hcs_wrappers, plotting
 ```
 
 ## Open OME-Zarr file set
@@ -149,7 +149,11 @@ print(my_well)
 
 img = plate.get_image_ROI()
 print(img.shape) # (ch, z, y, x)
+```
 
+Such an image array could be easily plotted using `matplotlib.pyplot.imshow`:
+```{python}
+#| eval: false
 with plt.style.context('dark_background'):
     fig = plt.figure(figsize=(4, 4))
     fig.set_dpi(100)
@@ -159,6 +163,27 @@ with plt.style.context('dark_background'):
     plt.show()
     plt.close()
 ```
+
+With `plot_well()`, `ez_zarr` provides a conventien function for this use case that
+automatically extracts the well image and plots it:
+```{python}
+plate.plot_well(well=my_well,
+                channels=[0],
+                channel_colors=['white'],
+                channel_ranges=[[100, 600]],
+                title=plate.name + ' ' + my_well,
+                scalebar_micrometer=100,
+                scalebar_color='yellow',
+                scalebar_position='topleft',
+                fig_width_inch=5,
+                fig_height_inch=4,
+                fig_dpi=100)
+```
+
+`plot_well()` and also `plot_plate()` use internally `ez_zarr.plotting.plot_image()`
+which is a convenient wrapper around `matplotlib.pyplot.imshow`.
+`plot_image()` can also be used directly if you want to work directly with image arrays
+(for examples, see section "Working with segmentation masks" below).
 
 ## Get salient regions at higher resolution
 `get_image_grid_ROIs()` allows you to split the well image into a rectangular
@@ -285,7 +310,7 @@ with plt.style.context('dark_background'):
     plt.close()
 ```
 
-## Extract segmentation
+## Working with segmentation masks
 When segmentation masks (labels) are available, we can also extract them.
 For example, we can plot the labels with transparency on top of the image:
 ```{python}
@@ -306,26 +331,10 @@ msk = plate.get_label_ROI(label_name=label, well=my_well, pyramid_level=msk_pl,
                           upper_left_yx=(200, 160), lower_right_yx=(480, 360))
 assert img[0].shape == msk.shape
 
-# create shuffled color map
-cmap = plt.colormaps.get_cmap('hsv')
-all_colors = cmap(np.linspace(0, 1, cmap.N))
-np.random.seed(42)
-np.random.shuffle(all_colors)
-shuffled_cmap = ListedColormap(all_colors)
-
-with plt.style.context('dark_background'):
-    fig = plt.figure(figsize=(6,6))
-    fig.set_dpi(100)
-
-    plt.imshow(img[0,0], cmap='gray', vmin=100, vmax=600)
-    plt.imshow(msk[0], interpolation='none', cmap=shuffled_cmap,
-               alpha=np.multiply(0.2, msk[0] > 0))
-    plt.title(plate.name + ' ' + my_well)
-    plt.xticks([])
-    plt.yticks([])
-
-    plt.show()
-    plt.close()
+# plot image and mask
+plotting.plot_image(im=img, msk=msk, msk_alpha=0.3,
+                    channels=[0], channel_colors=['white'], channel_ranges=[[100,600]],
+                    fig_width_inch=6, fig_height_inch=6, fig_dpi=100)
 ```
 
 Using the tables, we can get the bounding box coordinates in micrometers from
@@ -363,28 +372,13 @@ msk_nucl = plate.get_label_table_idx(label_name='nuclei',
 assert img_nucl.shape[1:] == msk_nucl.shape
 
 # plot 
-with plt.style.context('dark_background'):
-    fig = plt.figure(figsize=(8, 4))
-    fig.set_dpi(100)
-
-    # ... channel for segmentation mask
-    plt.subplot(1, 2, 1)
-    plt.title('Zoom-in image (DAPI)')
-    plt.imshow(img_nucl[0,0], vmin=100, vmax=600, cmap='gray')
-    plt.axis('off')
-    
-    # ... threshold mask
-    plt.subplot(1, 2, 2)
-    plt.title('Mask (nuclei)')
-    plt.imshow(color.label2rgb(msk_nucl[0]))
-    plt.axis('off')
-
-    plt.show()
-    plt.close()
+plotting.plot_image(im=img_nucl, msk=msk_nucl, msk_alpha=0.3,
+                    channels=[0], channel_colors=['white'], channel_ranges=[[100,600]],
+                    fig_width_inch=4, fig_height_inch=4, fig_dpi=100)
 ```
 
 
-## Calculate on the image data
+## Calculations on the image data
 To save memory, images are stored on disk and only loaded when needed (for implementation details see the [`dask` Array documentation](https://docs.dask.org/en/stable/array.html)).
 
 This can be demonstrated by `type(img)`. To force loading of the data, you can call `.compute()`:
@@ -402,26 +396,8 @@ img_mask = img[0,0]>300
 img_mask = img_mask.compute()
 
 # plot 
-with plt.style.context('dark_background'):
-    fig = plt.figure(figsize=(12, 6))
-    fig.set_dpi(100)
-
-    # ... channel for segmentation mask
-    plt.subplot(1, 4, 1)
-    plt.title('Zoom-in image (DAPI)')
-    plt.imshow(img[0,0], vmin=100, vmax=600, cmap='gray')
-    plt.axis('off')
-    
-    # ... threshold mask
-    plt.subplot(1, 4, 2)
-    plt.title('Mask (threshold on DAPI)')
-    # define a custom colormap for segmentation
-    my_cmap = plt.cm.colors.ListedColormap(['black', 'red'])
-    plt.imshow(img_mask, cmap=my_cmap)
-    plt.axis('off')
-
-    plt.show()
-    plt.close()
+plotting.plot_image(im=img[:,0], msk=img_mask, msk_alpha=0.5,
+                    fig_width_inch=6, fig_height_inch=6, fig_dpi=100)
 ```
 
 This is of course not a recommended way to segment this image, but rather meant
