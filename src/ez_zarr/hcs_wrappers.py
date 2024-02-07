@@ -928,6 +928,7 @@ class FractalZarr:
                   channel_ranges: list[list[float]]=[[0.01, 0.95]],
                   z_projection_method: str='maximum',
                   show_axis_ticks: bool=True,
+                  title: Optional[str]=None,
                   scalebar_micrometer: int=0,
                   scalebar_color: str='white',
                   scalebar_position: str='bottomright',
@@ -968,6 +969,8 @@ class FractalZarr:
                 (default: 'maximum').
             show_axis_ticks (bool): If `True`, show the ticks and labels of the
                 x and y axes.
+            title (str): String scalar to add as title. If `None`, `well` will
+                be used as `title`.
             scalebar_micrometer (int): If non-zero, add a scale bar corresonding
                 to `scalebar_micrometer` to the bottom right.
             fig_width_inch (float): Figure width (inch).
@@ -1036,6 +1039,8 @@ class FractalZarr:
             scalebar_pixel = 0
 
         # plot well
+        if title is None:
+            title = well
         plotting.plot_image(im=img,
                             msk=msk,
                             msk_alpha=label_alpha,
@@ -1044,7 +1049,7 @@ class FractalZarr:
                             channel_ranges=channel_ranges,
                             z_projection_method=z_projection_method,
                             show_axis_ticks=show_axis_ticks,
-                            title=well,
+                            title=title,
                             scalebar_pixel=scalebar_pixel,
                             scalebar_color=scalebar_color,
                             scalebar_position=scalebar_position,
