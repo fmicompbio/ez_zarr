@@ -288,8 +288,8 @@ def plot_image(im: np.ndarray,
             fig_style (str): Style for the figure. Supported are 'brightfield', which
                 is a special mode for single-channel brightfield microscopic images
                 (it will automatically set `channels=[0]`, `channel_colors=['white']`
-                `z_projection_method='minimum' and `fig_style='default'`), and any
-                other styles that can bepassed to `matplotlib.pyplot.style.context`
+                `z_projection_method='minimum'`, `pad_value=1` and `fig_style='default'`),
+                and any other styles that can be passed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
 
         Examples:
@@ -314,9 +314,9 @@ def plot_image(im: np.ndarray,
 
         # adjust parameters for brightfield images
         if fig_style == 'brightfield':
-            assert nch == 1, f"fig_style is set to 'brightfield', but image has multiple channels ({nch})"
             channels = [0]
             channel_colors = ['white']
+            pad_value = 1
             z_projection_method = 'minimum'
             fig_style = 'default'
 
