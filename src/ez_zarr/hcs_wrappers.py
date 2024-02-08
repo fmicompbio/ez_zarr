@@ -1244,7 +1244,7 @@ class FractalZarr:
                                             channel_ranges=channel_ranges,
                                             z_projection_method=z_projection_method,
                                             pad_to_yx=max_yx,
-                                            axis_style='none',
+                                            axis_style='frame',
                                             title=w,
                                             call_show=False)
                     else:

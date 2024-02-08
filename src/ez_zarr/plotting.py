@@ -267,7 +267,8 @@ def plot_image(im: np.ndarray,
                 them by `pad_value` to this total y and x size. 
             pad_value (int): value to use for contant-value image padding.
             axis_style (str): A string scalar defining how to draw the axis. Should
-                be one of 'none' (no axis, the default), 'pixel' (show pixel labels)
+                be one of 'none' (no axis, the default), 'pixel' (show pixel labels),
+                'frame' (show just a frame around the plot without ticks)
                 or 'micrometer' (show micrometer labels). If `axis_style='micrometer'`,
                 `spacing_yx` is used to convert pixel to micrometer.
             spacing_yx (list[float]): The spacing of pixels in y and x direction,
@@ -367,12 +368,17 @@ def plot_image(im: np.ndarray,
                 plt.axis('off')
             elif axis_style == 'pixel':
                 pass
+            elif axis_style == 'frame':
+                plt.xticks([]) # remove axis ticks
+                plt.yticks([])
             elif axis_style == 'micrometer':
                 ax = plt.gca() # get current axes
                 yticks = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y * spacing_yx[0]))
                 xticks = ticker.FuncFormatter(lambda x, pos: '{0:g}'.format(x * spacing_yx[1]))
                 ax.yaxis.set_major_formatter(yticks)
                 ax.xaxis.set_major_formatter(xticks)
+            else:
+                raise ValueError(f"Unknown `axis_style` ({axis_style}), should be one of 'none', 'pixel', 'frame' or 'micrometer'")
             if title != None:
                 plt.title(title)
             if scalebar_pixel != 0:
