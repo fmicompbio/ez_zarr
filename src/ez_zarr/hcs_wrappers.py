@@ -930,7 +930,7 @@ class FractalZarr:
                   channel_colors: list[str]=['white'],
                   channel_ranges: list[list[float]]=[[0.01, 0.95]],
                   z_projection_method: str='maximum',
-                  show_axis_ticks: bool=True,
+                  axis_style: str='pixel',
                   title: Optional[str]=None,
                   scalebar_micrometer: int=0,
                   scalebar_color: str='white',
@@ -976,8 +976,10 @@ class FractalZarr:
             z_projection_method (str): Method for combining multiple z planes.
                 For available methods, see ez_zarr.plotting.zproject
                 (default: 'maximum').
-            show_axis_ticks (bool): If `True`, show the ticks and labels of the
-                x and y axes.
+            axis_style (str): A string scalar defining how to draw the axis. Should
+                be one of 'none' (no axis), 'pixel' (show pixel labels, the default)
+                or 'micrometer' (show micrometer labels). If `axis_style='micrometer'`,
+                `spacing_yx` is used to convert pixel to micrometer.
             title (str): String scalar to add as title. If `None`, `well` will
                 be used as `title`.
             scalebar_micrometer (int): If non-zero, add a scale bar corresonding
@@ -1015,7 +1017,6 @@ class FractalZarr:
 
         # import optional modules
         plotting = importlib.import_module('ez_zarr.plotting')
-        plt = importlib.import_module('matplotlib.pyplot')
         
         # get mask pyramid level corresponding to `img_pl`
         if label_name != None:
@@ -1067,7 +1068,8 @@ class FractalZarr:
                             channel_colors=channel_colors,
                             channel_ranges=channel_ranges,
                             z_projection_method=z_projection_method,
-                            show_axis_ticks=show_axis_ticks,
+                            axis_style=axis_style,
+                            spacing_yx=self.level_zyx_spacing_images[image_name][img_pl][1:],
                             title=title,
                             scalebar_pixel=scalebar_pixel,
                             scalebar_color=scalebar_color,
@@ -1232,7 +1234,7 @@ class FractalZarr:
                                             channel_ranges=channel_ranges,
                                             z_projection_method=z_projection_method,
                                             pad_to_yx=max_yx,
-                                            show_axis_ticks=False,
+                                            axis_style='none',
                                             title=w,
                                             call_show=False)
                     else:

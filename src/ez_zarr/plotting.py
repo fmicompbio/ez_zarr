@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.patches as patches
+import matplotlib.ticker as ticker
 
 # global variables ------------------------------------------------------------
 plate_layouts = {
@@ -213,7 +214,8 @@ def plot_image(im: np.ndarray,
                z_projection_method: str='maximum',
                pad_to_yx: list[int]=[0, 0],
                pad_value: int=0,
-               show_axis_ticks: bool=False,
+               axis_style: str='none',
+               spacing_yx: Optional[list[float]]=None,
                title: Optional[str]=None,
                scalebar_pixel: int=0,
                scalebar_color: str='white',
@@ -264,8 +266,13 @@ def plot_image(im: np.ndarray,
             pad_to_yx (list[int]): If the image or label mask are smaller, pad
                 them by `pad_value` to this total y and x size. 
             pad_value (int): value to use for contant-value image padding.
-            show_axis_ticks (bool): If `True`, show the ticks and labels of the
-                x and y axes.
+            axis_style (str): A string scalar defining how to draw the axis. Should
+                be one of 'none' (no axis, the default), 'pixel' (show pixel labels)
+                or 'micrometer' (show micrometer labels). If `axis_style='micrometer'`,
+                `spacing_yx` is used to convert pixel to micrometer.
+            spacing_yx (list[float]): The spacing of pixels in y and x direction,
+                in micrometer, used to convert pixels to micrometer when
+                `axis_style='micrometer'`.
             title (str): String to add as a title on top of the image. If `None`
                 (the default), no title will be added.
             scalebar_pixel (int): If non-zero, draw a scalebar at the lower right
@@ -311,6 +318,9 @@ def plot_image(im: np.ndarray,
         assert all([ch <= nch for ch in channels]), (
             f"Invalid `channels` parameter, must be less or equal to {nch}"
         )
+        assert axis_style != 'micrometer' or spacing_yx != None, (
+            f"For `axis_style='micrometer', the parameter `spacing_yx` needs to be provided."
+        )
 
         # adjust parameters for brightfield images
         if fig_style == 'brightfield':
@@ -353,9 +363,16 @@ def plot_image(im: np.ndarray,
                            interpolation='none',
                            cmap=get_shuffled_cmap(),
                            alpha=np.multiply(msk_alpha, msk > 0))
-            if not show_axis_ticks:
-                plt.xticks([]) # remove axis ticks
-                plt.yticks([])
+            if axis_style == 'none':
+                plt.axis('off')
+            elif axis_style == 'pixel':
+                pass
+            elif axis_style == 'micrometer':
+                ax = plt.gca() # get current axes
+                yticks = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y * spacing_yx[0]))
+                xticks = ticker.FuncFormatter(lambda x, pos: '{0:g}'.format(x * spacing_yx[1]))
+                ax.yaxis.set_major_formatter(yticks)
+                ax.xaxis.set_major_formatter(xticks)
             if title != None:
                 plt.title(title)
             if scalebar_pixel != 0:
