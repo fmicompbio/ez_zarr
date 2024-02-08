@@ -919,6 +919,9 @@ class FractalZarr:
     # plotting methods -----------------------------------------------------------
     def plot_well(self,
                   well: str,
+                  upper_left_yx: Optional[tuple[int]]=None,
+                  lower_right_yx: Optional[tuple[int]]=None,
+                  size_yx: Optional[tuple[int]]=None,
                   image_name: str='0',
                   label_name: Optional[str]=None,
                   label_alpha: float=0.3,
@@ -944,6 +947,12 @@ class FractalZarr:
 
         Parameters:
             well (str): The well (e.g. 'B03') to be plotted.
+            upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left
+                (lower) coordinates defining the region of interest.
+            lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right
+                (higher) coordinates defining the region of interest.
+            size_yx (tuple): Tuple of (size_y, size_x) defining the size of the
+                region of interest.
             image_name (str): The name of the image in each well to be plotted.
                 Default: '0'.
             label_name (str): The name of the a segmentation mask to be plotted
@@ -1020,14 +1029,20 @@ class FractalZarr:
 
         # get well image
         img = self.get_image_ROI(well=well,
-                                    pyramid_level=img_pl,
-                                    as_NumPy=True)
+                                 upper_left_yx=upper_left_yx,
+                                 lower_right_yx=lower_right_yx,
+                                 size_yx=size_yx,
+                                 pyramid_level=img_pl,
+                                 as_NumPy=True)
 
         if label_name != None:
             msk = self.get_label_ROI(label_name=label_name,
-                                        well=well,
-                                        pyramid_level=msk_pl,
-                                        as_NumPy=True)
+                                     well=well,
+                                     upper_left_yx=upper_left_yx,
+                                     lower_right_yx=lower_right_yx,
+                                     size_yx=size_yx,
+                                     pyramid_level=msk_pl,
+                                     as_NumPy=True)
             assert img.shape[1:] == msk.shape, (
                 f"label {label_name} shape {msk.shape} does not match "
                 f"image shape {img.shape} for well {well}"
