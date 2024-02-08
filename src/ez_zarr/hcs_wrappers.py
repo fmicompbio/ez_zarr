@@ -217,7 +217,7 @@ class FractalZarr:
         npl = len(self.multiscales_images[self.image_names[0]]['datasets'])
         segnames = ', '.join(self.label_names)
         tabnames = ', '.join(self.table_names)
-        return f"FractalZarr {self.name}\n  path: {self.path}\n  n_wells: {nwells}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_zyx_scalefactor: {self.level_zyx_scalefactor}\n  full_resolution_zyx_spacing: {self.level_zyx_spacing_images[self.image_names[0]][0]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
+        return f"FractalZarr {self.name}\n  path: {self.path}\n  n_wells: {nwells}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_zyx_scalefactor: {self.level_zyx_scalefactor}\n  full_resolution_zyx_spacing (µm): {self.level_zyx_spacing_images[self.image_names[0]][0]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
     
     def __repr__(self):
         return str(self)
