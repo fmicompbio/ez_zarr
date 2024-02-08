@@ -1090,6 +1090,7 @@ class FractalZarr:
                    channel_ranges: list[list[float]]=[[0.01, 0.95]],
                    z_projection_method: str='maximum',
                    plate_layout: str='96well',
+                   fig_title: Optional[str]=None,
                    fig_width_inch: float=24.0,
                    fig_height_inch: float=16.0,
                    fig_dpi: int=200,
@@ -1126,6 +1127,9 @@ class FractalZarr:
                 (default: 'maximum').
             plate_layout (str): Defines the layout of the plate
                 (default: '96well').
+            fig_title (str): String scalar to use as overall figure title
+                (default: the `.name` attribute of the object). Use `fig_title=''`
+                to not add any title to the plot.
             fig_width_inch (float): Figure width (inch).
             fig_height_inch (float): Figure height (inch).
             fig_dpi (int): Figure resolution (dots per inch).
@@ -1195,10 +1199,16 @@ class FractalZarr:
         else:
             empty_well = np.zeros(max_yx)
 
+        # define figure title
+        if fig_title is None:
+            fig_title = self.name
+
         # loop over wells
         with plt.style.context(fig_style):
             fig = plt.figure(figsize=(fig_width_inch, fig_height_inch))
             fig.set_dpi(fig_dpi)
+            if fig_title != '':
+                fig.suptitle(fig_title, size='xx-large') # default title size: 'large'
             for r in range(len(rows)):
                 for c in range(len(columns)):
                     w = rows[r] + columns[c]
