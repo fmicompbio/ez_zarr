@@ -1,7 +1,7 @@
 """Helpful functions for plotting and working with image arrays."""
 
 __all__ = ['zproject']
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 __author__ = 'Silvia Barbiero, Michael Stadler'
 
 
