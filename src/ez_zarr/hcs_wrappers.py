@@ -320,6 +320,7 @@ class FractalZarr:
                       lower_right_yx: Optional[tuple[int]]=None,
                       size_yx: Optional[tuple[int]]=None,
                       well: Optional[str]=None,
+                      image_name: str='0',
                       pyramid_level: Optional[int]=None,
                       as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
         """
@@ -338,6 +339,7 @@ class FractalZarr:
             lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right (higher) coordinates defining the region of interest.
             size_yx (tuple): Tuple of (size_y, size_x) defining the size of the region of interest.
             well (str): The well (e.g. 'B03') from which an image should be extracted.
+            image_name (str): The name of the image in `well` to extract from. Default: '0'.
             pyramid_level (int): The pyramid level (resolution level), from which the image
                 should be extracted. If `None`, the lowest-resolution (highest) pyramid level
                 will be selected.
@@ -354,10 +356,10 @@ class FractalZarr:
         """
         # digest arguments
         well = self._digest_well_argument(well)
-        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, ('image', image_name))
 
-        # load image (convention: single field of view per well -> '0')
-        img_path = os.path.join(self.path, well, '0', str(pyramid_level))
+        # load image
+        img_path = os.path.join(self.path, well, image_name, str(pyramid_level))
         img = dask.array.from_zarr(img_path)
 
         # calculate corner coordinates and subset if needed
@@ -568,6 +570,7 @@ class FractalZarr:
     def get_label_ROI(self,
                       label_name: str,
                       well: Optional[str]=None,
+                      image_name: str='0',
                       pyramid_level: Optional[int]=None,
                       upper_left_yx: Optional[tuple[int]]=None,
                       lower_right_yx: Optional[tuple[int]]=None,
@@ -586,6 +589,7 @@ class FractalZarr:
         Parameters:
             label_name (str): The name of the segmentation
             well (str): The well (e.g. 'B03') from which an image should be extracted.
+            image_name (str): The name of the image in `well` to extract labels from. Default: '0'.
             pyramid_level (int): The pyramid level (resolution level), from which the image
                 should be extracted. If `None`, the lowest-resolution (highest) pyramid level
                 will be selected.
@@ -607,10 +611,10 @@ class FractalZarr:
         # digest arguments
         well = self._digest_well_argument(well)
         assert label_name in self.label_names, f"Unknown label_name {label_name}, should be one of " + ', '.join(self.label_names)
-        pyramid_level = self._digest_pyramid_level_argument(pyramid_level)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, ('image', image_name))
 
-        # load image (convention: single field of view per well -> '0')
-        msk_path = os.path.join(self.path, well, '0', 'labels', label_name, str(pyramid_level))
+        # load image
+        msk_path = os.path.join(self.path, well, image_name, 'labels', label_name, str(pyramid_level))
         msk = dask.array.from_zarr(msk_path)
 
         # calculate corner coordinates and subset if needed
