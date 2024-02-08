@@ -262,8 +262,9 @@ def test_get_image_ROI_3d(plate_3d: hcs_wrappers.FractalZarr):
                                lower_right_yx=None, size_yx=None)
 
     img1a = plate_3d.get_image_ROI(well='B03', pyramid_level=1,
-                                   upper_left_yx=(11, 10),
-                                   lower_right_yx=(22, 20),
+                                   pyramid_level_coord=0,
+                                   upper_left_yx=(22, 20),
+                                   lower_right_yx=(44, 40),
                                    size_yx=None,
                                    as_NumPy=True)
     img1b = plate_3d.get_image_ROI(well='B03', pyramid_level=1,
@@ -380,8 +381,9 @@ def test_get_label_ROI_2d(plate_2d: hcs_wrappers.FractalZarr):
 
     msk1a = plate_2d.get_label_ROI(label_name='organoids',
                                    well='B03', pyramid_level=1,
-                                   upper_left_yx=(11, 10),
-                                   lower_right_yx=(22, 20),
+                                   pyramid_level_coord=0,
+                                   upper_left_yx=(22, 20),
+                                   lower_right_yx=(44, 40),
                                    size_yx=None,
                                    as_NumPy=True)
     msk1b = plate_2d.get_label_ROI(label_name='organoids',

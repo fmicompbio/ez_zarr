@@ -322,6 +322,7 @@ class FractalZarr:
                       well: Optional[str]=None,
                       image_name: str='0',
                       pyramid_level: Optional[int]=None,
+                      pyramid_level_coord: Optional[int]=None,
                       as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
         """
         Extract a region of interest from a well image by coordinates.
@@ -343,6 +344,9 @@ class FractalZarr:
             pyramid_level (int): The pyramid level (resolution level), from which the image
                 should be extracted. If `None`, the lowest-resolution (highest) pyramid level
                 will be selected.
+            pyramid_level_coord (int): An optional integer scalar giving the image pyramid level
+                to which the coordinates (`upper_left_yx`, `lower_right_yx` and `size_yx`)
+                refer to. By default, this is `None`, which will use `pyramid_level`.
             as_NumPy (bool): If `True`, return the image as 4D `numpy.ndarray` object (c,z,y,x).
                 Otherwise, return the (on-disk) `dask` array of the same dimensions.
         
@@ -373,6 +377,19 @@ class FractalZarr:
                 elif not lower_right_yx:
                     lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
             assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))]), 'upper_left_yx needs to be less than lower_right_yx'
+
+            # convert coordinates if needed
+            if pyramid_level_coord != None and pyramid_level != pyramid_level_coord:
+                upper_left_yx = self.convert_pixel_to_pixel(zyx=((0,) + upper_left_yx),
+                                                            pyramid_level_from=pyramid_level_coord,
+                                                            pyramid_level_to=pyramid_level,
+                                                            pyramid_ref_from=('image', image_name),
+                                                            pyramid_ref_to=('image', image_name))[1:]
+                lower_right_yx = self.convert_pixel_to_pixel(zyx=((0,) + lower_right_yx),
+                                                             pyramid_level_from=pyramid_level_coord,
+                                                             pyramid_level_to=pyramid_level,
+                                                             pyramid_ref_from=('image', image_name),
+                                                             pyramid_ref_to=('image', image_name))[1:]
             img = img[:,
                       :,
                       slice(upper_left_yx[0], lower_right_yx[0] + 1),
@@ -572,6 +589,7 @@ class FractalZarr:
                       well: Optional[str]=None,
                       image_name: str='0',
                       pyramid_level: Optional[int]=None,
+                      pyramid_level_coord: Optional[int]=None,
                       upper_left_yx: Optional[tuple[int]]=None,
                       lower_right_yx: Optional[tuple[int]]=None,
                       size_yx: Optional[tuple[int]]=None,
@@ -593,6 +611,9 @@ class FractalZarr:
             pyramid_level (int): The pyramid level (resolution level), from which the image
                 should be extracted. If `None`, the lowest-resolution (highest) pyramid level
                 will be selected.
+            pyramid_level_coord (int): An optional integer scalar giving the image pyramid level
+                to which the coordinates (`upper_left_yx`, `lower_right_yx` and `size_yx`)
+                refer to. By default, this is `None`, which will use `pyramid_level`.
             upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left (lower) coordinates
                 defining the region of interest.
             lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right (higher) coordinates defining the region of interest.
@@ -628,6 +649,18 @@ class FractalZarr:
                 elif not lower_right_yx:
                     lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
             assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))]), 'upper_left_yx needs to be less than lower_right_yx'
+            # convert coordinates if needed
+            if pyramid_level_coord != None and pyramid_level != pyramid_level_coord:
+                upper_left_yx = self.convert_pixel_to_pixel(zyx=((0,) + upper_left_yx),
+                                                            pyramid_level_from=pyramid_level_coord,
+                                                            pyramid_level_to=pyramid_level,
+                                                            pyramid_ref_from=('image', image_name),
+                                                            pyramid_ref_to=('image', image_name))[1:]
+                lower_right_yx = self.convert_pixel_to_pixel(zyx=((0,) + lower_right_yx),
+                                                             pyramid_level_from=pyramid_level_coord,
+                                                             pyramid_level_to=pyramid_level,
+                                                             pyramid_ref_from=('image', image_name),
+                                                             pyramid_ref_to=('image', image_name))[1:]
             msk = msk[:,
                       slice(upper_left_yx[0], lower_right_yx[0] + 1),
                       slice(upper_left_yx[1], lower_right_yx[1] + 1)]
