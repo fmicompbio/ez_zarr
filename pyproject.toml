@@ -9,9 +9,14 @@ name = "ez_zarr"
 version = "0.1.3"
 description = "Give easy, high-level access to ome-zarr filesets."
 readme = { file = "README.md", content-type = "text/markdown" }
-authors = [{ name = "Silvia Barbiero", email = "silvia.barbiero@fmi.ch" },
-           { name = "Michael Stadler", email = "michael.stadler@fmi.ch" }]
-maintainers = [{ name = "Michael Stadler", email = "michael.stadler@fmi.ch" }]
+authors = [
+    { name = "Silvia Barbiero", email = "silvia.barbiero@fmi.ch" },
+    { name = "Charlotte Soneson", email = "charlotte.soneson@fmi.ch" },
+    { name = "Michael Stadler", email = "michael.stadler@fmi.ch" }
+]
+maintainers = [
+    { name = "Michael Stadler", email = "michael.stadler@fmi.ch" }
+]
 license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -24,6 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 keywords = ["ome_zarr", "image analysis", "Fractal"]
 dependencies = [
