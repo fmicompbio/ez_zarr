@@ -43,7 +43,10 @@ extra_css:
 
 nav: # Setting up the navigation. Te below list will be tabs on left panel
   - Home: 'index.md'
-  - Documentation: 'hcs_wrappers.md'
+  - Documentation:
+    - Classes: 'hcs_wrappers.md'
+    - Plotting: 'plotting.md'
   - Unit tests: 'testing.md'
-  - Quickstart (html): 'quickstart.md'
-  - Quickstart (ipynb): 'quickstart.ipynb'
+  - Quickstart:
+    - html version: 'quickstart.md'
+    - ipynb version (download): 'quickstart.ipynb'

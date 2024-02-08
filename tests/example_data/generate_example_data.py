@@ -4,6 +4,7 @@
 
 import json
 import os
+from copy import deepcopy
 import shutil
 
 import dask.array as da
@@ -125,6 +126,32 @@ for i in range(len(zarrurl)):
     with open(f"{zarrurl[i]}{component}.zattrs", "w") as jsonfile:
         json.dump(zattrs, jsonfile, indent=4)
 
+    label_org_zattrs = {
+        "multiscales": [
+            {
+                "axes": axes,
+                "datasets": [
+                    {
+                        "path": level,
+                        cT: [
+                            {
+                                "type": "scale",
+                                "scale": [
+                                    pxl_z,
+                                    pxl_y * cxy**level,
+                                    pxl_x * cxy**level,
+                                ],
+                            }
+                        ],
+                    }
+                    for level in range(num_levels)
+                ],
+                "version": "0.4",
+            }
+        ],
+    }
+
+
     df_nrow = num_X[i] * num_Y[i] * num_Z[i]
     df = pd.DataFrame(np.zeros((df_nrow, 8)), dtype=int)
     df.index = [str(j) for j in range(df_nrow)]
@@ -171,12 +198,14 @@ for i in range(len(zarrurl)):
         group_labels = zarr.group(f"{zarrurl[i]}{component}/labels")
         for ind_level in range(num_levels):
             scale = 2**ind_level
-            y = da.coarsen(np.min, x, {2: scale, 3: scale}).rechunk(
-                (1, 1, size_y, size_x), balance=True
+            yl = da.coarsen(np.min, x[0], {1: scale, 2: scale}).rechunk(
+                (1, size_y, size_x), balance=True
             )
-            y.to_zarr(
+            yl.to_zarr(
                 zarrurl[i], component=f"{component}/labels/organoids/{ind_level}", dimension_separator="/"
             )
         with open(f"{zarrurl[i]}{component}labels/.zattrs", "w") as jsonfile:
             json.dump(label_zattrs, jsonfile, indent=4)
+        with open(f"{zarrurl[i]}{component}labels/organoids/.zattrs", "w") as jsonfile:
+            json.dump(label_org_zattrs, jsonfile, indent=4)
 

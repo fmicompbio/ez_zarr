@@ -32,7 +32,7 @@ plate_3d
 #   n_wells: 1
 #   n_channels: 2 (some-label-1, some-label-2)
 #   n_pyramid_levels: 3
-#   pyramid_zyx_scalefactor: [1. 2. 2.]
+#   pyramid_zyx_scalefactor: {'0': array([1. 2. 2.])}
 #   full_resolution_zyx_spacing: [1.0, 0.1625, 0.1625]
 #   segmentations: 
 #   tables (measurements): FOV_ROI_table
