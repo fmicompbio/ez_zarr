@@ -547,7 +547,8 @@ def test_plot_well(plate_2d: hcs_wrappers.FractalZarr, tmpdir: str):
                            channel_colors=['white'],
                            channel_ranges=[[0.01, 0.99]],
                            z_projection_method='maximum',
-                           scalebar_micrometer=50)
+                           scalebar_micrometer=50,
+                           scalebar_label=True)
         plate_2d.plot_well(well='B03',
                            image_name='0',
                            label_name='organoids',

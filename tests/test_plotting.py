@@ -121,7 +121,8 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
                     channel_ranges=[[0.01, 0.99]],
                     title='test', call_show=False,
                     scalebar_pixel=100,
-                    scalebar_position=pos)
+                    scalebar_position=pos,
+                    scalebar_label='test')
         # axis_style
         for st in ['none', 'pixel', 'frame', 'micrometer']:
             plot_image(im=npa4d, msk=None,

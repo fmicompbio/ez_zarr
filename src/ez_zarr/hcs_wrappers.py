@@ -973,6 +973,7 @@ class FractalZarr:
                   scalebar_micrometer: int=0,
                   scalebar_color: str='white',
                   scalebar_position: str='bottomright',
+                  scalebar_label: bool=False,
                   fig_width_inch: float=8.0,
                   fig_height_inch: float=8.0,
                   fig_dpi: int=200,
@@ -1025,6 +1026,7 @@ class FractalZarr:
                 be used as `title`.
             scalebar_micrometer (int): If non-zero, add a scale bar corresonding
                 to `scalebar_micrometer` to the bottom right.
+            scalebar_label (bool): If `True`, add micrometer label to scale bar.
             fig_width_inch (float): Figure width (inch).
             fig_height_inch (float): Figure height (inch).
             fig_dpi (int): Figure resolution (dots per inch).
@@ -1104,6 +1106,10 @@ class FractalZarr:
         # plot well
         if title is None:
             title = well
+        if scalebar_label:
+            scalebar_label = str(scalebar_micrometer) + ' µm'
+        else:
+            scalebar_label = None
         plotting.plot_image(im=img,
                             msk=msk,
                             msk_alpha=label_alpha,
@@ -1117,6 +1123,7 @@ class FractalZarr:
                             scalebar_pixel=scalebar_pixel,
                             scalebar_color=scalebar_color,
                             scalebar_position=scalebar_position,
+                            scalebar_label=scalebar_label,
                             call_show=True,
                             fig_width_inch=fig_width_inch,
                             fig_height_inch=fig_height_inch,
