@@ -220,6 +220,7 @@ def plot_image(im: np.ndarray,
                scalebar_pixel: int=0,
                scalebar_color: str='white',
                scalebar_position: str='bottomright',
+               scalebar_label: Optional[str]=None,
                call_show: bool=True,
                fig_width_inch: float=24.0,
                fig_height_inch: float=16.0,
@@ -281,6 +282,8 @@ def plot_image(im: np.ndarray,
             scalebar_color (str): Scalebar color.
             scalebar_position (str): position of the scale bar, one of 'topleft',
                 'topright', 'bottomleft' or 'bottomright'
+            scalebar_label (str): If not `None` (default), a string scalar to show
+                as a label for the scale bar.
             call_show (bool): If true, the call to `matplotlib.pyplot.imshow` is
                 embedded between `matplotlib.pyplot.figure` and
                 `matplotlib.pyplot.show`/`matplotlib.pyplot.close` calls.
@@ -386,17 +389,21 @@ def plot_image(im: np.ndarray,
                 d = min([round(img_yx[i] * 0.05) for i in range(2)]) # 5% margin
                 scalebar_height = round(img_yx[0] * 0.01)
                 if scalebar_position == 'bottomright':
-                    pos_xy = (img_yx[1] - d - scalebar_pixel,
-                              img_yx[0] - d)
+                    pos_xy = (img_yx[1] - d - scalebar_pixel, img_yx[0] - d)
+                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] - scalebar_height + d/6)
+                    va_text = 'bottom'
                 elif scalebar_position == 'bottomleft':
-                    pos_xy = (d,
-                              img_yx[0] - d)
+                    pos_xy = (d, img_yx[0] - d)
+                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] - scalebar_height + d/6)
+                    va_text = 'bottom'
                 elif scalebar_position == 'topleft':
-                    pos_xy = (d,
-                              d - scalebar_height)
+                    pos_xy = (d, d + scalebar_height)
+                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] + 0.75*d)
+                    va_text = 'top'
                 elif scalebar_position == 'topright':
-                    pos_xy = (img_yx[1] - d - scalebar_pixel,
-                              d - scalebar_height)
+                    pos_xy = (img_yx[1] - d - scalebar_pixel, d - scalebar_height)
+                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] + 0.75*d)
+                    va_text = 'top'
                 else:
                     raise ValueError(f"Unknown scalebar_position ({scalebar_position}), should be one of 'bottomright', 'bottomleft', 'topright', or 'topleft'")
                 rect = patches.Rectangle(xy=pos_xy, width=scalebar_pixel,
@@ -405,6 +412,9 @@ def plot_image(im: np.ndarray,
                                          facecolor=scalebar_color)
                 ax = plt.gca() # get current axes
                 ax.add_patch(rect) # add the patch to the axes
+                if scalebar_label != None:
+                    plt.text(x=pos_text_xy[0], y=pos_text_xy[1], s=scalebar_label,
+                             color=scalebar_color, ha='center', va=va_text)
 
         # create the plot
         if call_show:

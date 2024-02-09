@@ -963,6 +963,7 @@ class FractalZarr:
                   label_name: Optional[str]=None,
                   label_alpha: float=0.3,
                   pyramid_level: Optional[int]=None,
+                  pyramid_level_coord: Optional[int]=None,                  
                   channels: list[int]=[0],
                   channel_colors: list[str]=['white'],
                   channel_ranges: list[list[float]]=[[0.01, 0.95]],
@@ -972,6 +973,7 @@ class FractalZarr:
                   scalebar_micrometer: int=0,
                   scalebar_color: str='white',
                   scalebar_position: str='bottomright',
+                  scalebar_label: bool=False,
                   fig_width_inch: float=8.0,
                   fig_height_inch: float=8.0,
                   fig_dpi: int=200,
@@ -1000,6 +1002,9 @@ class FractalZarr:
             pyramid_level (int): The pyramid level (resolution level), from
                 which the image should be extracted. If `None`, the
                 lowest-resolution (highest) pyramid level will be selected.
+            pyramid_level_coord (int): An optional integer scalar giving the image pyramid level
+                to which the coordinates (`upper_left_yx`, `lower_right_yx` and `size_yx`)
+                refer to. By default, this is `None`, which will use `pyramid_level`.
             channels (list[int]): The image channel(s) to be plotted.
             channel_colors (list[str]): A list with python color strings
                 (e.g. 'red') defining the color for each channel in `channels`.
@@ -1021,6 +1026,7 @@ class FractalZarr:
                 be used as `title`.
             scalebar_micrometer (int): If non-zero, add a scale bar corresonding
                 to `scalebar_micrometer` to the bottom right.
+            scalebar_label (bool): If `True`, add micrometer label to scale bar.
             fig_width_inch (float): Figure width (inch).
             fig_height_inch (float): Figure height (inch).
             fig_dpi (int): Figure resolution (dots per inch).
@@ -1071,6 +1077,7 @@ class FractalZarr:
                                  lower_right_yx=lower_right_yx,
                                  size_yx=size_yx,
                                  pyramid_level=img_pl,
+                                 pyramid_level_coord=pyramid_level_coord,
                                  as_NumPy=True)
 
         if label_name != None:
@@ -1080,6 +1087,7 @@ class FractalZarr:
                                      lower_right_yx=lower_right_yx,
                                      size_yx=size_yx,
                                      pyramid_level=msk_pl,
+                                     pyramid_level_coord=pyramid_level_coord,
                                      as_NumPy=True)
             assert img.shape[1:] == msk.shape, (
                 f"label {label_name} shape {msk.shape} does not match "
@@ -1098,6 +1106,10 @@ class FractalZarr:
         # plot well
         if title is None:
             title = well
+        if scalebar_label:
+            scalebar_label = str(scalebar_micrometer) + ' µm'
+        else:
+            scalebar_label = None
         plotting.plot_image(im=img,
                             msk=msk,
                             msk_alpha=label_alpha,
@@ -1111,6 +1123,7 @@ class FractalZarr:
                             scalebar_pixel=scalebar_pixel,
                             scalebar_color=scalebar_color,
                             scalebar_position=scalebar_position,
+                            scalebar_label=scalebar_label,
                             call_show=True,
                             fig_width_inch=fig_width_inch,
                             fig_height_inch=fig_height_inch,
