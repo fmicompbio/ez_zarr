@@ -117,6 +117,8 @@ plate.get_table_names()
 # zyx pixel spacing in micrometers for pyramid levels
 # ... for images
 plate.level_zyx_spacing_images
+```
+```{python}
 # ... for labels
 plate.level_zyx_spacing_labels
 ```
@@ -160,10 +162,9 @@ img = plate.get_image_ROI()
 print(img.shape) # (ch, z, y, x)
 ```
 
-Such an image array could be easily plotted using `matplotlib.pyplot.imshow`:
+Such an image array can be easily plotted using `matplotlib.pyplot.imshow`:
 
 ```{python}
-#| eval: false
 with plt.style.context('dark_background'):
     fig = plt.figure(figsize=(4, 4))
     fig.set_dpi(100)
@@ -254,9 +255,9 @@ If we want to get the same image region at a higher resolution
 (for example `pyramid_level=1`), we need to adjust these coordinates.
 For this, we have two options:
 
-1. Convert the coordinates manually using the `convert_pixel_to_pixel()` function.
-   We then use these new coordinates with `get_image_ROI()` to extract
-   the same region from the higher resolution pyramid level:
+- Convert the coordinates manually using the `convert_pixel_to_pixel()` function.
+  We then use these new coordinates with `get_image_ROI()` to extract
+  the same region from the higher resolution pyramid level:
 
 ```{python}
 # convert coordinates manually from lowest-resolution (None, here: 4)
@@ -274,7 +275,6 @@ img = plate.get_image_ROI(well=my_well,
                           upper_left_yx=new_upper_left[1:],
                           lower_right_yx=new_lower_right[1:],
                           pyramid_level=1)
-print(img.shape)
 
 with plt.style.context('dark_background'):
     fig = plt.figure(figsize=(4, 4))
@@ -286,12 +286,12 @@ with plt.style.context('dark_background'):
     plt.close()
 ```
 
-2. Convert the coordinates automatically inside `plot_well()`.
-   The function `plot_well()` is flexible and can also plot just a sub-region
-   of a well, defined by coordinates. The parameter `pyramid_level_coord` can
-   be used to define the reference pyramid level that these coordinates refer
-   to. This can be a different pyramid level than the one from which the image
-   is extracted (defined by `pyramid_level`):
+- Convert the coordinates automatically inside `plot_well()`.
+  The function `plot_well()` is flexible and can also plot just a sub-region
+  of a well, defined by coordinates. The parameter `pyramid_level_coord` can
+  be used to define the reference pyramid level that these coordinates refer
+  to. This can be a different pyramid level than the one from which the image
+  is extracted (defined by `pyramid_level`):
 
 ```{python}
 plate.plot_well(well=my_well,
@@ -415,11 +415,16 @@ plotting.plot_image(im=img_nucl, msk=msk_nucl, msk_alpha=0.3,
 
 To save memory, images are stored on disk and only loaded when needed (for implementation details see the [`dask` Array documentation](https://docs.dask.org/en/stable/array.html)).
 
-This can be demonstrated by `type(img)`. To force loading of the data, you can call `.compute()`:
+This can be demonstrated by `type(img)`:
 
 ```{python}
-print(type(img)) # note that the image is an 'on-disk' array
-print(type(img.compute())) # ... and can be loaded into memory using .compute()
+type(img) # note that the image is an 'on-disk' array
+```
+
+To force loading of the data into memory, you can call `.compute()`:
+
+```{python}
+type(img.compute()) # .compute() triggers loading it into memory
 ```
 
 In general, you can use `dask` arrays like `numpy` arrays.
