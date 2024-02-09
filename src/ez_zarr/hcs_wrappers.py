@@ -1034,7 +1034,7 @@ class FractalZarr:
                 is a special mode for single-channel brightfield microscopic images
                 (it will automatically set `channels=[0]`, `channel_colors=['white']`
                 `z_projection_method='minimum' and `fig_style='default'`), and any
-                other styles that can bepassed to `matplotlib.pyplot.style.context`
+                other styles that can be passed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
 
         Examples:
@@ -1187,7 +1187,7 @@ class FractalZarr:
                 is a special mode for single-channel brightfield microscopic images
                 (it will automatically set `channels=[0]`, `channel_colors=['white']`
                 `z_projection_method='minimum' and `fig_style='default'`), and any
-                other styles that can bepassed to `matplotlib.pyplot.style.context`
+                other styles that can be passed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
 
         Examples:
