@@ -977,7 +977,8 @@ class FractalZarr:
                   fig_width_inch: float=8.0,
                   fig_height_inch: float=8.0,
                   fig_dpi: int=200,
-                  fig_style: str='dark_background'):
+                  fig_style: str='dark_background',
+                  **kwargs):
         """
         Plot microtiter plate.
          
@@ -1036,6 +1037,7 @@ class FractalZarr:
                 `z_projection_method='minimum' and `fig_style='default'`), and any
                 other styles that can bepassed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
+            **kwargs: Additional keyword arguments to be passed to `plotting.plot_image`.
 
         Examples:
             Overview plot of a well 'B03'.
@@ -1124,11 +1126,11 @@ class FractalZarr:
                             scalebar_color=scalebar_color,
                             scalebar_position=scalebar_position,
                             scalebar_label=scalebar_label,
-                            call_show=True,
                             fig_width_inch=fig_width_inch,
                             fig_height_inch=fig_height_inch,
                             fig_dpi=fig_dpi,
-                            fig_style=fig_style)
+                            fig_style=fig_style,
+                            **kwargs)
 
     def plot_plate(self,
                    image_name: str='0',
