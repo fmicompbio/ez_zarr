@@ -12,14 +12,14 @@ The goal is that users can write simple scripts working with plates, wells and f
 
 # Installation
 
-`ez_zarr` is hosted on GitHub at [github.com/fmicompbio/ez_zarr](https://github.com/fmicompbio/ez_zarr) and the documentation of can be found at [fmicompbio.github.io/ez_zarr](https://fmicompbio.github.io/ez_zarr/).
+`ez_zarr` is hosted on GitHub at [github.com/fmicompbio/ez_zarr](https://github.com/fmicompbio/ez_zarr) and the documentation can be found at [fmicompbio.github.io/ez_zarr](https://fmicompbio.github.io/ez_zarr/).
 
 The release version of `ez_zarr` can be installed using:
 ```{.bash}
 pip install ez-zarr
 ```
 
-The current (development) `ez_zarr` can be installed from github.com using:
+The current (development) version of `ez_zarr` can be installed from github.com using:
 ```{.bash}
 pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
 ```
@@ -83,11 +83,11 @@ plate = hcs_wrappers.FractalZarr(zarr_directory, name = 'cardio-d14')
 plate
 ```
 
-`plate` represents a maximum intensity projection of an acquisition with 1 wells and 1 channel.
+`plate` represents a maximum intensity projection of an acquisition with 1 well and 1 channel.
 
 There are 5 `pyramid_levels` available (0 to 4), meaning that in addition to the full resolution data (level 0), we have four more levels that provide the data in 2-fold lower resolutions (see `pyramid_zyx_scalefactor`), for example for faster plotting.
 
-This OME-Zarr fileset also contains a segmentation (`nuclei`), for which measurements ahve been extracted and saved in table `nuclei`. In addition, there are some further tables, such as `FOV_ROI_table`, which contains the coordinates of the fields of view, or `nuclei_ROI_table`, which contains the bounding box coordinates for the segmented nuclei.
+This OME-Zarr fileset also contains a segmentation (`nuclei`), for which measurements have been extracted and saved in the table `nuclei`. In addition, there are some further tables, such as `FOV_ROI_table`, which contains the coordinates of the fields of view, or `nuclei_ROI_table`, which contains the bounding box coordinates for the segmented nuclei.
 
 ## Get information from `plate`
 
@@ -125,7 +125,7 @@ plate.level_zyx_spacing_labels
 
 ## Extract a table from the OME-Zarr fileset
 
-The tables are stored within the fileset as describe in the [Fractal documentation](https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/).
+The tables are stored within the fileset as described in the [Fractal documentation](https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/).
 
 As mentioned the goal of `ez_zarr` is to abstract the internal structure and make it simple to obtain these tables, if necessary accumulated over many wells, as a `pandas.DataFrame` :
 ```{python}
