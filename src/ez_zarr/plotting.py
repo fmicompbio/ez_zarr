@@ -294,8 +294,8 @@ def plot_image(im: np.ndarray,
                 image should be plotted and displayed. It can be set to `False`
                 if multiple images should be plotted and their arrangement
                 is controlled outside of `plotting.plot_image`. The parameters
-                `fig_width_inch`, `fig_height_inch`, `fig_dpi` and `fig_style`
-                are ignored in that case.
+                `fig_width_inch`, `fig_height_inch` and `fig_dpi` are ignored
+                in that case.
             fig_width_inch (float): Figure width (in inches).
             fig_height_inch (float): Figure height (in inches).
             fig_dpi (int): Figure resolution (dots per inch).
