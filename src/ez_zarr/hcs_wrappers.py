@@ -974,6 +974,7 @@ class FractalZarr:
                   scalebar_color: str='white',
                   scalebar_position: str='bottomright',
                   scalebar_label: bool=False,
+                  call_show: bool=True,
                   fig_width_inch: float=8.0,
                   fig_height_inch: float=8.0,
                   fig_dpi: int=200,
@@ -1027,6 +1028,15 @@ class FractalZarr:
             scalebar_micrometer (int): If non-zero, add a scale bar corresponding
                 to `scalebar_micrometer` to the bottom right.
             scalebar_label (bool): If `True`, add micrometer label to scale bar.
+            call_show (bool): If `True`, the call to `matplotlib.pyplot.imshow` is
+                embedded between `matplotlib.pyplot.figure` and
+                `matplotlib.pyplot.show`/`matplotlib.pyplot.close` calls.
+                This is the default behaviour and typically used when an individual
+                image should be plotted and displayed. It can be set to `False`
+                if multiple images should be plotted and their arrangement
+                is controlled outside of `plotting.plot_image`. The parameters
+                `fig_width_inch`, `fig_height_inch` and `fig_dpi` are ignored
+                in that case.
             fig_width_inch (float): Figure width (in inches).
             fig_height_inch (float): Figure height (in inches).
             fig_dpi (int): Figure resolution (dots per inch).
@@ -1124,7 +1134,7 @@ class FractalZarr:
                             scalebar_color=scalebar_color,
                             scalebar_position=scalebar_position,
                             scalebar_label=scalebar_label,
-                            call_show=True,
+                            call_show=call_show,
                             fig_width_inch=fig_width_inch,
                             fig_height_inch=fig_height_inch,
                             fig_dpi=fig_dpi,
