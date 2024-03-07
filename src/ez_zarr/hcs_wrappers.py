@@ -4,8 +4,8 @@ Represent an OME-Zarr fileset as a class to give high-level
 access to its contents.
 
 Classes:
-    FractalZarr: Contains a single .zarr fileset, typically a plate.
-    FractalZarrSet: Contains one or several .zarr filesets, typically a plate
+    FractalZarr: Contains a single `.zarr` fileset, typically a plate.
+    FractalZarrSet: Contains one or several `.zarr` filesets, typically a plate
         (4 dimensional data) and a maximum-intensity projection derived from it.
 """
 
@@ -1321,7 +1321,7 @@ class FractalZarrSet:
         """
         Initializes a container for a folder containing one or several OME-Zarr
         fileset(s) (.zarr). Typically, the object is used for a folder which
-        contains exactly two related .zarr objects, one corresponding to the
+        contains exactly two related `.zarr` objects, one corresponding to the
         four-dimensional (c,z,y,x) plate dataset, and a second one corresponding to
         a three-dimensional maximum intensity projection derived from it.
 
@@ -1330,13 +1330,13 @@ class FractalZarrSet:
             name (str): Optional name for the experiment.
         
         Examples:
-            Get an object corresponding to a set of .zarrs.
+            Get an object corresponding to a set of `.zarr`s.
 
             >>> from ez_zarr import hcs_wrappers
             >>> plate_set = hcs_wrappers.FractalZarrSet('path/to/zarrs')
             >>> plate_set
 
-            This will print information on the .zarrs.
+            This will print information on the `.zarr`s.
         """
         if not os.path.isdir(path):
             raise ValueError(f'`{path}` does not exist')
@@ -1348,7 +1348,7 @@ class FractalZarrSet:
             self.name = name
         self.zarr_paths: list[str] = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
         if len(self.zarr_paths) == 0:
-            raise ValueError(f'no .zarr filesets found in `{path}`')
+            raise ValueError(f'no `.zarr` filesets found in `{path}`')
         self.zarr: list[FractalZarr] = [FractalZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
         self.zarr_names: list[str] = [x.name for x in self.zarr]
         self.zarr_mip_idx: Optional[int] = None
