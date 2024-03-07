@@ -1,11 +1,11 @@
-"""Wrap ome-zarr filesets in a class.
+"""Wrap OME-Zarr filesets in a class.
 
-Represent an ome-zarr fileset as a class to give high-level
+Represent an OME-Zarr fileset as a class to give high-level
 access to its contents.
 
 Classes:
-    FractalZarr: Contains a single .zarr fileset, typically a plate.
-    FractalZarrSet: Contains one or several .zarr filesets, typically a plate
+    FractalZarr: Contains a single `.zarr` fileset, typically a plate.
+    FractalZarrSet: Contains one or several `.zarr` filesets, typically a plate
         (4 dimensional data) and a maximum-intensity projection derived from it.
 """
 
@@ -28,14 +28,14 @@ from typing import Union, Optional, Any
 
 # FractalZarr class ---------------------------------------------------------------
 class FractalZarr:
-    """Represents a ome-zarr fileset."""
+    """Represents an OME-Zarr fileset."""
 
     # constructor and helper functions ----------------------------------------
     def __init__(self, zarr_path: str, name: Optional[str]=None) -> None:
         """
-        Initializes an ome-zarr fileset (.zarr) from its path.
+        Initializes an OME-Zarr fileset (.zarr) from its path.
         Typically, the fileset represents a single assay plate, and 
-        we assume that the structures (pyramid levels, labels, table, etc.)
+        we assume that the structures (pyramid levels, labels, tables, etc.)
         are consistent across wells.
 
         Parameters:
@@ -49,7 +49,7 @@ class FractalZarr:
             >>> plateA = hcs_wrappers.FractalZarr('path/to/plate.zarr')
             >>> plateA
 
-            This will print information on the plate.
+            This will print information about the plate.
         """
 
         self.path: str = zarr_path
@@ -224,15 +224,15 @@ class FractalZarr:
     
     # accessors ---------------------------------------------------------------
     def get_path(self) -> str:
-        """Gets the path of the ome-zarr fileset.
+        """Get the path of an OME-Zarr fileset.
         
         Returns:
-            The path to the ome-zarr fileset.
+            The path to the OME-Zarr fileset.
         """
         return self.path
 
     def get_wells(self, simplify: bool=False) -> Union[list[dict[str, Any]], list[str]]:
-        """Gets info on wells in the ome-zarr fileset.
+        """Get info on wells in an OME-Zarr fileset.
 
         Parameters:
             simplify (bool): If `True`, the well names are returned in human readable form (e.g. 'B03').
@@ -246,7 +246,7 @@ class FractalZarr:
             return self.wells
 
     def get_channels(self) -> list:
-        """Gets info on channels in the ome-zarr fileset.
+        """Get info on channels in an OME-Zarr fileset.
         
         Returns:
             A list of dicts with information on channels.
@@ -254,7 +254,7 @@ class FractalZarr:
         return self.channels
     
     def get_label_names(self) -> list:
-        """Gets list of label names in the ome-zarr fileset.
+        """Get list of label names in an OME-Zarr fileset.
         
         Returns:
             A list of label names (str) available in the plate.
@@ -262,7 +262,7 @@ class FractalZarr:
         return self.label_names
 
     def get_table_names(self) -> list:
-        """Gets list of table names in the ome-zarr fileset.
+        """Get list of table names in an OME-Zarr fileset.
         
         Returns:
             A list of table names (str) available in the plate.
@@ -274,7 +274,7 @@ class FractalZarr:
                   table_name: str,
                   include_wells: Union[str, list[str]]=[],
                   as_AnnData: bool=False) -> Any:
-        """Extract table for wells in a ome-zarr fileset.
+        """Extract table for wells in an OME-Zarr fileset.
         
         Parameters:
             table_name (str): The name of the table to extract.
@@ -327,7 +327,7 @@ class FractalZarr:
         """
         Extract a region of interest from a well image by coordinates.
 
-        None or at least two of `upper_left_yx`, `lower_right_yx` and `size_yx` need to be given.
+        None or exactly two of `upper_left_yx`, `lower_right_yx` and `size_yx` need to be given.
         If none are given, it will return the full image (the whole well).
         Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
         (origin on the top-left, zero-based coordinates), and each of them is
@@ -395,7 +395,7 @@ class FractalZarr:
                       slice(upper_left_yx[0], lower_right_yx[0] + 1),
                       slice(upper_left_yx[1], lower_right_yx[1] + 1)]
         elif num_unknowns != 3:
-            raise ValueError("Either none or two of `upper_left_yx`, `lower_rigth` and `size_yx` have to be given")
+            raise ValueError("Either none or two of `upper_left_yx`, `lower_right_yx` and `size_yx` have to be given")
 
         # convert if needed and return
         if as_NumPy:
@@ -481,8 +481,8 @@ class FractalZarr:
         """
         Split a well image into a regular grid and extract a subset of grid cells (all z planes if several).
 
-        `num_y` and `num_x` define the grid by specifying the number of cell in y and x.
-        `num_select` picks that many from the total number of grid cells and returns them as a list.
+        `num_y` and `num_x` define the grid by specifying the number of cells in y and x.
+        `num_select` grid cells are picked from the total number and returned as a list.
         All returned grid cells are guaranteed to be of equal size, but a few pixels from the image
         may not be included in grid cells of the last row or column if the image shape
         is not divisible by `num_y` or `num_x`.
@@ -510,9 +510,9 @@ class FractalZarr:
                 shapes (c,z,y,x). Otherwise, return the (on-disk) `dask` arrays of the same dimensions.
         
         Returns:
-            A tuple of two lists (coord_list, img_list), each with `num_select` elements
-            corresponding to the coordinates and images of selected grid cells.
-            The coordinates are tuples of the form  (y_start, y_end, x_start, x_end).
+            A tuple of two lists (coord_list, img_list), each with `num_select` elements 
+                corresponding to the coordinates and images of selected grid cells. 
+                The coordinates are tuples of the form  (y_start, y_end, x_start, x_end).
 
         Examples:
             Obtain grid cells with highest signal sum in channel 0 from well 'A02':
@@ -597,7 +597,7 @@ class FractalZarr:
         """
         Extract a region of interest from a label mask (segmentation) by coordinates.
 
-        None or at least two of `upper_left_yx`, `lower_right_yx` and `size_yx` need to be given.
+        None or exactly two of `upper_left_yx`, `lower_right_yx` and `size_yx` need to be given.
         If none are given, it will return the full image (the whole well).
         Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
         (origin on the top-left, zero-based coordinates), and each of them is
@@ -625,7 +625,7 @@ class FractalZarr:
             The extracted label mask, either as a `dask.array.Array` on-disk array, or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
         
         Examples:
-            Obtain the label mask of the lowest-resolution for the full well 'A02':
+            Obtain the label mask of the lowest-resolution pyramid level for the full well 'A02':
 
             >>> plateA.get_label_ROI(well='A02')
         """
@@ -665,7 +665,7 @@ class FractalZarr:
                       slice(upper_left_yx[0], lower_right_yx[0] + 1),
                       slice(upper_left_yx[1], lower_right_yx[1] + 1)]
         elif num_unknowns != 3:
-            raise ValueError("Either none or two of `upper_left_yx`, `lower_rigth` and `size_yx` have to be given")
+            raise ValueError("Either none or two of `upper_left_yx`, `lower_right_yx` and `size_yx` have to be given")
 
         # convert if needed and return
         if as_NumPy:
@@ -680,7 +680,7 @@ class FractalZarr:
                             pyramid_level: Optional[int]=None,
                             as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
         """
-        Extract a region of interest from a label maks (segmentation) by table name and row index.
+        Extract a region of interest from a label mask (segmentation) by table name and row index.
 
         Bounding box coordinates will be automatically obtained from the table
         `table_name` and row `row_idx` (zero-based row index).
@@ -753,10 +753,10 @@ class FractalZarr:
         Parameters:
             zyx (tuple): The micrometer coordinates in the form (z, y, x) to be converted
                 to pixels.
-            pyramid_level (int): The pyramid level (resolution), to which the output
+            pyramid_level (int): The pyramid level (resolution), which the output
                 pixel coordinates will refer to.  If `None`, the lowest-resolution
                 (highest) pyramid level will be selected.
-            pyramid_ref (tuple(str, str)): reference to which the `pyramid_level` refers
+            pyramid_ref (tuple(str, str)): The reference that the `pyramid_level` refers
                 to. It is given as a tuple with two `str` elements, the first being
                 either 'image' or 'label', and the second being the name of the
                 image or label. The default is ('image', '0').
@@ -794,10 +794,10 @@ class FractalZarr:
         Parameters:
             zyx (tuple): The pixel coordinates in the form (z, y, x) to be converted
                 to micrometers.
-            pyramid_level (int): The pyramid level (resolution), to which the input
+            pyramid_level (int): The pyramid level (resolution), which the input
                 pixel coordinates refer to. If `None`, the lowest-resolution
                 (highest) pyramid level will be selected.
-            pyramid_ref (tuple(str, str)): reference to which the `pyramid_level` refers
+            pyramid_ref (tuple(str, str)): The reference that the `pyramid_level` refers
                 to. It is given as a tuple with two `str` elements, the first being
                 either 'image' or 'label', and the second being the name of the
                 image or label. The default is ('image', '0').
@@ -834,17 +834,17 @@ class FractalZarr:
 
         Parameters:
             zyx (tuple): The pixel coordinates in the form (z, y, x) to be converted.
-            pyramid_level_from (int): The pyramid level (resolution), to which the input
+            pyramid_level_from (int): The pyramid level (resolution), which the input
                 pixel coordinates refer to. If `None`, the lowest-resolution
                 (highest) pyramid level will be selected.
-            pyramid_level_to (int): The pyramid level (resolution), to which the output
+            pyramid_level_to (int): The pyramid level (resolution), which the output
                 pixel coordinates will refer to. If `None`, the lowest-resolution
                 (highest) pyramid level will be selected.
-            pyramid_ref_from (tuple(str, str)): reference to which the `pyramid_level_from` refers
+            pyramid_ref_from (tuple(str, str)): The reference that the `pyramid_level_from` refers
                 to. It is given as a tuple with two `str` elements, the first being
                 either 'image' or 'label', and the second being the name of the
                 image or label. The default is ('image', '0').
-            pyramid_ref_to (tuple(str, str)): reference to which the `pyramid_level_to` refers
+            pyramid_ref_to (tuple(str, str)): The reference that the `pyramid_level_to` refers
                 to. It is given as a tuple with two `str` elements, the first being
                 either 'image' or 'label', and the second being the name of the
                 image or label. The default is ('image', '0').
@@ -886,7 +886,7 @@ class FractalZarr:
         """
         Calculate the average field of view.
          
-        Using the coordinates stored in table 'FOV_ROI_table', calculate the averge
+        Using the coordinates stored in table 'FOV_ROI_table', calculate the averaged
         field of view for wells in `include_wells`, for `channel` at resolution `pyramid_level`.
 
         Parameters:
@@ -963,7 +963,7 @@ class FractalZarr:
                   label_name: Optional[str]=None,
                   label_alpha: float=0.3,
                   pyramid_level: Optional[int]=None,
-                  pyramid_level_coord: Optional[int]=None,                  
+                  pyramid_level_coord: Optional[int]=None,
                   channels: list[int]=[0],
                   channel_colors: list[str]=['white'],
                   channel_ranges: list[list[float]]=[[0.01, 0.95]],
@@ -979,9 +979,9 @@ class FractalZarr:
                   fig_dpi: int=200,
                   fig_style: str='dark_background'):
         """
-        Plot microtiter plate.
+        Plot a well from a microtiter plate.
          
-        Plot an overview of all wells in plate arrangement, for `channel` at
+        Plot an overview of a single well, for `channel` at
         resolution `pyramid_level`.
 
         Parameters:
@@ -992,7 +992,7 @@ class FractalZarr:
                 (higher) coordinates defining the region of interest.
             size_yx (tuple): Tuple of (size_y, size_x) defining the size of the
                 region of interest.
-            image_name (str): The name of the image in each well to be plotted.
+            image_name (str): The name of the image in the well to be plotted.
                 Default: '0'.
             label_name (str): The name of the a segmentation mask to be plotted
                 semi-transparently over the images. If `None`, just the image
@@ -1024,21 +1024,21 @@ class FractalZarr:
                 `spacing_yx` is used to convert pixel to micrometer.
             title (str): String scalar to add as title. If `None`, `well` will
                 be used as `title`.
-            scalebar_micrometer (int): If non-zero, add a scale bar corresonding
+            scalebar_micrometer (int): If non-zero, add a scale bar corresponding
                 to `scalebar_micrometer` to the bottom right.
             scalebar_label (bool): If `True`, add micrometer label to scale bar.
-            fig_width_inch (float): Figure width (inch).
-            fig_height_inch (float): Figure height (inch).
+            fig_width_inch (float): Figure width (in inches).
+            fig_height_inch (float): Figure height (in inches).
             fig_dpi (int): Figure resolution (dots per inch).
             fig_style (str): Style for the figure. Supported are 'brightfield', which
                 is a special mode for single-channel brightfield microscopic images
                 (it will automatically set `channels=[0]`, `channel_colors=['white']`
-                `z_projection_method='minimum' and `fig_style='default'`), and any
+                `z_projection_method='minimum'` and `fig_style='default'`), and any
                 other styles that can be passed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
 
         Examples:
-            Overview plot of a well 'B03'.
+            Overview plot of the well 'B03'.
 
             >>> plateA.plot_well(well='B03')
         """
@@ -1154,7 +1154,7 @@ class FractalZarr:
         Parameters:
             image_name (str): The name of the image in each well to be plotted.
                 Default: '0'.
-            label_name (str): The name of the a segmentation mask to be plotted
+            label_name (str): The name of the segmentation mask to be plotted
                 semi-transparently over the images. If `None`, just the image
                 is plotted.
             label_alpha (float): A scalar value between 0 (fully transparent)
@@ -1180,13 +1180,13 @@ class FractalZarr:
             fig_title (str): String scalar to use as overall figure title
                 (default: the `.name` attribute of the object). Use `fig_title=''`
                 to not add any title to the plot.
-            fig_width_inch (float): Figure width (inch).
-            fig_height_inch (float): Figure height (inch).
+            fig_width_inch (float): Figure width (in inches).
+            fig_height_inch (float): Figure height (in inches).
             fig_dpi (int): Figure resolution (dots per inch).
             fig_style (str): Style for the figure. Supported are 'brightfield', which
                 is a special mode for single-channel brightfield microscopic images
                 (it will automatically set `channels=[0]`, `channel_colors=['white']`
-                `z_projection_method='minimum' and `fig_style='default'`), and any
+                `z_projection_method='minimum'` and `fig_style='default'`), and any
                 other styles that can be passed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
 
@@ -1319,24 +1319,24 @@ class FractalZarrSet:
     # constructor and helper functions ----------------------------------------
     def __init__(self, path: str, name=None) -> None:
         """
-        Initializes a container for a folder containing one or several ome-zarr
+        Initializes a container for a folder containing one or several OME-Zarr
         fileset(s) (.zarr). Typically, the object is used for a folder which
-        contains exactly two related .zarr objects, one corresponding to the
+        contains exactly two related `.zarr` objects, one corresponding to the
         four-dimensional (c,z,y,x) plate dataset, and a second one corresponding to
         a three-dimensional maximum intensity projection derived from it.
 
         Parameters:
-            path (str): Path containing the ome-zarr fileset(s).
+            path (str): Path containing the OME-Zarr fileset(s).
             name (str): Optional name for the experiment.
         
         Examples:
-            Get an object corresponding to a set of .zarr's.
+            Get an object corresponding to a set of `.zarr`s.
 
             >>> from ez_zarr import hcs_wrappers
             >>> plate_set = hcs_wrappers.FractalZarrSet('path/to/zarrs')
             >>> plate_set
 
-            This will print information on the zarrs.
+            This will print information on the `.zarr`s.
         """
         if not os.path.isdir(path):
             raise ValueError(f'`{path}` does not exist')
@@ -1348,7 +1348,7 @@ class FractalZarrSet:
             self.name = name
         self.zarr_paths: list[str] = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
         if len(self.zarr_paths) == 0:
-            raise ValueError(f'no .zarr filesets found in `{path}`')
+            raise ValueError(f'no `.zarr` filesets found in `{path}`')
         self.zarr: list[FractalZarr] = [FractalZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
         self.zarr_names: list[str] = [x.name for x in self.zarr]
         self.zarr_mip_idx: Optional[int] = None

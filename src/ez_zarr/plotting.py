@@ -62,15 +62,18 @@ def zproject(im: Union[dask.array.Array, np.ndarray],
     Helper function to conveniently project multi-dimensional images along z-axis according to desired projection method. 
 
     Parameters:
-        im (dask.array or np.ndarray): The array to be projected
+        im (dask.array or np.ndarray): The array to be projected.
         axis (int): The axis on which to perform the projection (typically
-            the z-axis). Unless otherwise specified, it defaults to axis 1 (by convention Fractal outputs have shape ch,z,y,x). Note: if masks are projected, Fractal output have usually shape z,y,x, so use `axis=0` in that case.
-        method (str): The projection method of choice. Available are 
-            'maximum' (default), 'minimum' (typically used for brightfield images), 'sum', 'average'
+            the z-axis). Unless otherwise specified, it defaults to axis 1 (by convention Fractal 
+            outputs have shape ch,z,y,x). Note: if masks are projected, Fractal output have usually 
+            shape z,y,x, so use `axis=0` in that case.
+        method (str): The projection method of choice. Available options are 
+            'maximum' (default), 'minimum' (typically used for brightfield images), 'sum', 'average'.
         keepdims (bool): Should the output array keep the same dimensions 
-            as the input array, or should the z-axis been squeezed (default behaviour of e.g. np.min())
+            as the input array (`True`), or should the z-axis been squeezed 
+            (`False`, default behaviour of e.g. np.min())
         img_bit (int): Is the image 8- or 16-bit? Relevant for 'sum' 
-            projection, where clipping might be necessary
+            projection, where clipping might be necessary.
     
     Returns:
         The input array where the z-axis has been projected according to the method of choice.
@@ -156,7 +159,7 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
     Returns:
         An RGB image of shape (y, x, 3), where the third axis corresponds to
             red, green and blue channels. The image is suitable for plotting with
-            `matplotlib.pyplot.imshow` and oriented such that is results in the
+            `matplotlib.pyplot.imshow` and oriented such that it results in the
             same orentiation as when directly plotting a single channel.
 
     Examples:
@@ -266,7 +269,7 @@ def plot_image(im: np.ndarray,
                 (default: 'maximum').
             pad_to_yx (list[int]): If the image or label mask are smaller, pad
                 them by `pad_value` to this total y and x size. 
-            pad_value (int): value to use for contant-value image padding.
+            pad_value (int): Value to use for constant-value image padding.
             axis_style (str): A string scalar defining how to draw the axis. Should
                 be one of 'none' (no axis, the default), 'pixel' (show pixel labels),
                 'frame' (show just a frame around the plot without ticks)
@@ -277,24 +280,24 @@ def plot_image(im: np.ndarray,
                 `axis_style='micrometer'`.
             title (str): String to add as a title on top of the image. If `None`
                 (the default), no title will be added.
-            scalebar_pixel (int): If non-zero, draw a scalebar at the lower right
-                corner of the image of size `scalebar_pixel`.
+            scalebar_pixel (int): If non-zero, draw a scalebar of size `scalebar_pixel`
+                in the corner of the image defined by `scalebar_position`.
             scalebar_color (str): Scalebar color.
             scalebar_position (str): position of the scale bar, one of 'topleft',
                 'topright', 'bottomleft' or 'bottomright'
             scalebar_label (str): If not `None` (default), a string scalar to show
                 as a label for the scale bar.
-            call_show (bool): If true, the call to `matplotlib.pyplot.imshow` is
+            call_show (bool): If `True`, the call to `matplotlib.pyplot.imshow` is
                 embedded between `matplotlib.pyplot.figure` and
                 `matplotlib.pyplot.show`/`matplotlib.pyplot.close` calls.
-                This is the default behaviour and typically used when an indiviual
+                This is the default behaviour and typically used when an individual
                 image should be plotted and displayed. It can be set to `False`
                 if multiple images should be plotted and their arrangement
                 is controlled outside of `plotting.plot_image`. The parameters
                 `fig_width_inch`, `fig_height_inch`, `fig_dpi` and `fig_style`
                 are ignored in that case.
-            fig_width_inch (float): Figure width (inch).
-            fig_height_inch (float): Figure height (inch).
+            fig_width_inch (float): Figure width (in inches).
+            fig_height_inch (float): Figure height (in inches).
             fig_dpi (int): Figure resolution (dots per inch).
             fig_style (str): Style for the figure. Supported are 'brightfield', which
                 is a special mode for single-channel brightfield microscopic images

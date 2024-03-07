@@ -46,7 +46,7 @@ The release version of `ez_zarr` can be installed using:
 pip install ez-zarr
 ```
 
-The current (development) `ez_zarr` can be installed from github.com using:
+The current (development) version of `ez_zarr` can be installed from github.com using:
 ```
 pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
 ```
