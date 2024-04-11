@@ -1,2 +1,2 @@
-__version__ = '0.1.5'
-__author__ = 'Silvia Barbiero, Michael Stadler'
+__version__ = '0.2.0'
+__author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
