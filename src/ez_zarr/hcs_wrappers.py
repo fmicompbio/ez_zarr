@@ -1359,14 +1359,17 @@ class FractalZarrSet:
         self.zarr_paths: list[str] = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
         if len(self.zarr_paths) == 0:
             raise ValueError(f'no `.zarr` filesets found in `{path}`')
-        self.zarr: list[FractalZarr] = [FractalZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
-        self.zarr_names: list[str] = [x.name for x in self.zarr]
         self.zarr_mip_idx: Optional[int] = None
         self.zarr_3d_idx: Optional[int] = None
-        if len(self.zarr) == 2 and self.zarr_names[0].replace('_mip.zarr', '.zarr') == self.zarr_names[1]:
-            # special case of 3D plate plus derived maximum intensity projection?
-            self.zarr_mip_idx = 0
-            self.zarr_3d_idx = 1
+        if len(self.zarr_paths) == 2:
+            if self.zarr_paths[1].replace('_mip.zarr', '.zarr') == self.zarr_paths[0]:
+                self.zarr_paths.reverse()
+            if self.zarr_paths[0].replace('_mip.zarr', '.zarr') == self.zarr_paths[1]:
+                # special case of 3D plate plus derived maximum intensity projection?
+                self.zarr_mip_idx = 0
+                self.zarr_3d_idx = 1
+        self.zarr: list[FractalZarr] = [FractalZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
+        self.zarr_names: list[str] = [x.name for x in self.zarr]
 
     # string representation ---------------------------------------------------
     def __str__(self) -> str:
