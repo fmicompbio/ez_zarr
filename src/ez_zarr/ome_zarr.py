@@ -57,6 +57,7 @@ class Image:
             self.name = os.path.basename(self.path)
         self.zarr_group: zarr.Group = zarr.open_group(store=self.path, mode='r')
         self.array_dict = {x[0]: x[1] for x in self.zarr_group.arrays()}
+        self.ndim = self.array_dict[list(self.array_dict.keys())[0]].ndim
         self.label_names = []
         if 'labels' in list(self.zarr_group.group_keys()):
             self.label_names = [x for x in self.zarr_group.labels.group_keys()]
@@ -80,9 +81,18 @@ class Image:
         self.multiscales_labels = {x: self._load_multiscale_info(self.zarr_group.labels[x], skip_checks) for x in self.label_names}
 
         # load channel metadata
+        # ... label dimensions, e.g. "czyx"
+        self.channel_info_image = self._load_channel_info(self.multiscales_image)
+        self.channel_info_labels = {x: self._load_channel_info(self.multiscales_labels[x]) for x in self.label_names}
+        # ... store the number of image channels
+        self.nchannels_image = self.array_dict[list(self.array_dict.keys())[0]].shape[self.channel_info_image.index('c')] if 'c' in self.channel_info_image else None
+        # ... store channel annotation from OMERO
         self.channels = []
         if 'omero' in self.zarr_group.attrs and 'channels' in self.zarr_group.attrs['omero']:
             self.channels = self.zarr_group.attrs['omero']['channels']
+        elif self.nchannels_image is not None:
+            self.channels = [{'label': f'channel-{i+1}',
+                              'color': '00FFFF'} for i in range(self.nchannels_image)]
        
     @staticmethod
     def _load_multiscale_info(group: zarr.Group,
@@ -97,26 +107,40 @@ class Image:
                 raise ValueError(f"no axes info found in 'multiscales' of {group.path}")
             # TODO: add further checks
         return info
+
+    @staticmethod
+    def _load_channel_info(multiscale_dict: dict[str, Any]) -> str:
+        type2ch = {'time': 't', 'channel': 'c', 'space': 'S'}
+        spatial = ['x', 'y', 'z']
+        L = [type2ch[d['type']] for d in multiscale_dict['axes']]
+        L.reverse()
+        while 'S' in L:
+            L[L.index('S')] = spatial.pop(0)
+        L.reverse()
+        return ''.join(L)
+            
     
     @staticmethod
-    def _extract_zyx_spacings(dataset_dict: dict[str, Any]) -> list[str, list[float]]:
+    def _extract_scale_spacings(dataset_dict: dict[str, Any]) -> list[str, list[float]]:
         if 'path' not in dataset_dict or 'coordinateTransformations' not in dataset_dict or 'scale' not in dataset_dict['coordinateTransformations'][0]:
             raise ValueError("could not extract zyx spacing from multiscale_info")
         return [dataset_dict['path'], dataset_dict['coordinateTransformations'][0]['scale']]
     
     # string representation ---------------------------------------------------
     def __str__(self):
-        nch = len(self.channels)
+        nch = self.nchannels_image
         chlabs = ', '.join([x['label'] for x in self.channels])
         npl = len(self.multiscales_image['datasets'])
         segnames = ', '.join(self.label_names)
         tabnames = ', '.join(self.table_names)
-        image_zyx = {x[0]: x[1][1:] for x in [self._extract_zyx_spacings(y) for y in self.multiscales_image['datasets']]}
+        spatial_dims = [i for i in range(len(self.channel_info_image)) if self.channel_info_image[i] in ['z', 'y', 'x']]
+        zyx = ''.join([self.channel_info_image[i] for i in spatial_dims])
+        image_spacings = {x[0]: [x[1][s] for s in spatial_dims] for x in [self._extract_scale_spacings(y) for y in self.multiscales_image['datasets']]}
         pl_scalefactor = 'None (only one pyramid level)'
-        if len(image_zyx) > 1:
-            pl_nms = list(image_zyx.keys())
-            pl_scalefactor = np.divide(image_zyx[pl_nms[1]], image_zyx[pl_nms[0]])
-        return f"Image {self.name}\n  path: {self.path}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_zyx_scalefactor: {pl_scalefactor}\n  full_resolution_zyx_spacing (µm): {image_zyx[list(image_zyx.keys())[0]]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
+        if len(image_spacings) > 1:
+            pl_nms = list(image_spacings.keys())
+            pl_scalefactor = np.divide(image_spacings[pl_nms[1]], image_spacings[pl_nms[0]])
+        return f"Image {self.name}\n  path: {self.path}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_{zyx}_scalefactor: {pl_scalefactor}\n  full_resolution_{zyx}_spacing: {image_spacings[list(image_spacings.keys())[0]]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
     
     def __repr__(self):
         return str(self)
