@@ -79,6 +79,8 @@ class Image:
             raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
         self.multiscales_image = self._load_multiscale_info(self.zarr_group, skip_checks)
         self.multiscales_labels = {x: self._load_multiscale_info(self.zarr_group.labels[x], skip_checks) for x in self.label_names}
+        self.axes_unit_image = self._load_axes_unit(self.multiscales_image)
+        self.axes_unit_labels = {x: self._load_axes_unit(self.multiscales_labels[x]) for x in self.label_names}
 
         # load channel metadata
         # ... label dimensions, e.g. "czyx"
@@ -108,6 +110,17 @@ class Image:
             # TODO: add further checks
         return info
 
+    @staticmethod
+    def _load_axes_unit(multiscale_dict: dict[str, Any]) -> str:
+        supported_units = ['micrometer', 'pixel']
+        unit_set = set([x['unit'] for x in multiscale_dict['axes'] if x['type'] == 'space' and 'unit' in x])
+        if len(unit_set) == 0 or (len(unit_set) == 1 and 'unit' in unit_set):
+            return 'pixel'
+        elif len(unit_set) == 1 and list(unit_set)[0] in supported_units:
+            return list(unit_set)[0]
+        else:
+            raise ValueError(f"unsupported unit in multiscale_info: {multiscale_dict}")
+    
     @staticmethod
     def _load_channel_info(multiscale_dict: dict[str, Any]) -> str:
         type2ch = {'time': 't', 'channel': 'c', 'space': 'S'}
@@ -140,7 +153,7 @@ class Image:
         if len(image_spacings) > 1:
             pl_nms = list(image_spacings.keys())
             pl_scalefactor = np.divide(image_spacings[pl_nms[1]], image_spacings[pl_nms[0]])
-        return f"Image {self.name}\n  path: {self.path}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_{zyx}_scalefactor: {pl_scalefactor}\n  full_resolution_{zyx}_spacing: {image_spacings[list(image_spacings.keys())[0]]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
+        return f"Image {self.name}\n  path: {self.path}\n  n_channels: {nch} ({chlabs})\n  n_pyramid_levels: {npl}\n  pyramid_{zyx}_scalefactor: {pl_scalefactor}\n  full_resolution_{zyx}_spacing ({self.axes_unit_image}): {image_spacings[list(image_spacings.keys())[0]]}\n  segmentations: {segnames}\n  tables (measurements): {tabnames}\n"
     
     def __repr__(self):
         return str(self)
