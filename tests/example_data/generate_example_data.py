@@ -129,7 +129,7 @@ for i in range(len(zarrurl)):
     label_org_zattrs = {
         "multiscales": [
             {
-                "axes": axes,
+                "axes": axes[1:],
                 "datasets": [
                     {
                         "path": level,
