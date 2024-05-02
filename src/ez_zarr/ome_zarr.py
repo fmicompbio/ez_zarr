@@ -148,6 +148,34 @@ class Image:
                 lev = datasets[i]['path']
         return str(lev)
 
+    def _digest_pyramid_level_argument(self, pyramid_level=None, label_name=None) -> str:
+        """
+        [internal] Interpret a `pyramid_level` argument in the context of a given Image object.
+
+        Parameters:
+            pyramid_level (int, str or None): pyramid level, coerced to str. If None,
+                the last pyramid level (typically the lowest-resolution one) will be returned.
+            label_name (str or None): defines what `pyramid_level` refers to. If None,
+                it refers to the intensity image. Otherwise, it refers to a label with
+                the name given by `label_name`. For example, to select the 'nuclei' labels,
+                the argument would be set to `nuclei`.
+
+        Returns:
+            Integer index of the pyramid level.
+        """
+        if pyramid_level == None: 
+            # no pyramid level given -> pick lowest resolution one
+            if label_name is None: # intensity image
+                pyramid_level = self._find_path_of_lowest_level(self.multiscales_image['datasets'])
+            elif label_name in self.label_names: # label image
+                pyramid_level = self._find_path_of_lowest_level(self.multiscales_label[label_name]['datasets'])
+            else:
+                raise ValueError(f"invalid label name '{label_name}' - must be one of {self.label_names}")
+        else:
+            # make sure it is a string
+            pyramid_level = str(pyramid_level)
+        return pyramid_level
+    
     # string representation ---------------------------------------------------
     def __str__(self):
         nch = self.nchannels_image
