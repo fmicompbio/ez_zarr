@@ -262,3 +262,101 @@ class Image:
         # return
         return scale
     
+    def get_array_by_coordinate(self,
+                                label_name: Optional[str]=None,
+                                upper_left_yx: Optional[tuple[int]]=None,
+                                lower_right_yx: Optional[tuple[int]]=None,
+                                size_yx: Optional[tuple[int]]=None,
+                                coordinate_unit: str='micrometer',
+                                pyramid_level: Optional[str]=None,
+                                pyramid_level_coord: Optional[str]=None,
+                                as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
+        """
+        Extract a (sub)array from an image (intensity image or label) by coordinates.
+
+        None or exactly two of `upper_left_yx`, `lower_right_yx` and `size_yx`
+        need to be given. If none are given, it will return the full image.
+        Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
+        (origin on the top-left, zero-based coordinates), and each of them is
+        a tuple of (y, x). No t, c or z coordinate need to be given, all of them
+        are returned if there are several ones.
+
+        Parameters:
+            label_name (str or None): The name of the label image to be extracted.
+                If `None`, the intensity image will be extracted.
+            upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left
+                (lower) coordinates defining the region of interest.
+            lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right
+                (higher) coordinates defining the region of interest.
+            size_yx (tuple): Tuple of (size_y, size_x) defining the size of the
+                region of interest.
+            coordinate_unit (str): The unit of the image coordinates, for example
+                'micrometer' or 'pixel'.
+            pyramid_level (str): The pyramid level (resolution level), from which the
+                array should be extracted. If `None`, the lowest-resolution
+                pyramid level will be selected.
+            pyramid_level_coord (str): An optional integer scalar giving the 
+                image pyramid level to which the coordinates (`upper_left_yx`,
+                `lower_right_yx` and `size_yx`) refer to if `coordinate_unit="pixel"`
+                (it is ignored otherwise). By default, this is `None`, which will
+                use `pyramid_level`.
+            as_NumPy (bool): If `True`, return the image as a `numpy.ndarray`
+                object (e.g. c,z,y,x). Otherwise, return the (on-disk) `dask`
+                array of the same dimensions.
+        
+        Returns:
+            The extracted array, either as a `dask.array.Array` on-disk array,
+            or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
+        
+        Examples:
+            Obtain the whole image of the lowest-resolution as an array:
+
+            >>> img.get_array_by_coordinate()
+        """
+        # digest arguments
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, label_name)
+
+        # load image
+        if label_name:
+            arr = self.zarr_group['labels'][label_name][pyramid_level]
+        else:
+            arr = self.zarr_group[pyramid_level]
+
+        # calculate corner coordinates and subset if needed
+        num_unknowns = sum([x == None for x in [upper_left_yx, lower_right_yx, size_yx]])
+        if num_unknowns == 1:
+            if size_yx:
+                assert all([x > 0 for x in size_yx]), 'size_yx values need to be positive'
+                if not upper_left_yx:
+                    upper_left_yx = tuple(lower_right_yx[i] - size_yx[i] for i in range(2))
+                elif not lower_right_yx:
+                    lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
+            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))]), 'upper_left_yx needs to be less than lower_right_yx'
+
+            # convert coordinates if needed
+            if coordinate_unit != "pixel" or (pyramid_level != pyramid_level_coord):
+                if coordinate_unit == "micrometer":
+                    # Note: this assumes that all non-spatial dimensions
+                    #       (channels, time) have scales of 1.0
+                    scale_from = [1.0] * len(arr.shape)
+                elif coordinate_unit == "pixel":
+                    scale_from = self.get_scale(pyramid_level_coord or pyramid_level, label_name)
+                else:
+                    raise ValueError("`coordinate_unit` needs to be 'micrometer' or 'pixel'")
+                scale_to = self.get_scale(pyramid_level, label_name)
+
+                upper_left_yx = self.convert_coordinates(upper_left_yx, scale_from[-2:], scale_to[-2:])
+                lower_right_yx = self.convert_coordinates(lower_right_yx, scale_from[-2:], scale_to[-2:])
+
+            # slice array
+            arr = arr[...,
+                      slice(int(upper_left_yx[0]), int(lower_right_yx[0]) + 1),
+                      slice(int(upper_left_yx[1]), int(lower_right_yx[1]) + 1)]
+        elif num_unknowns != 3:
+            raise ValueError("Either none or two of `upper_left_yx`, `lower_right_yx` and `size_yx` have to be given")
+
+        # convert if needed and return
+        if as_NumPy:
+            arr = np.array(arr)
+        return arr
+
