@@ -360,3 +360,151 @@ class Image:
             arr = np.array(arr)
         return arr
 
+    # plotting methods -----------------------------------------------------------
+    def plot(self,
+             upper_left_yx: Optional[tuple[int]]=None,
+             lower_right_yx: Optional[tuple[int]]=None,
+             size_yx: Optional[tuple[int]]=None,
+             coordinate_unit: str='micrometer',
+             label_name: Optional[str]=None,
+             pyramid_level: Optional[str]=None,
+             pyramid_level_coord: Optional[str]=None,
+             channels_labels: Optional[list[str]]=None,
+             scalebar_micrometer: int=0,
+             show_scalebar_label: [bool]=True,
+             **kwargs: Any) -> None:
+        """
+        Plot an image.
+         
+        Plot a single image or a part of it, optionally selecting
+        channels by label and extracting colors from the OMERO metadata
+        using data at resolution `pyramid_level`.
+
+        Parameters:
+            upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left
+                (lower) coordinates defining the region of interest.
+            lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right
+                (higher) coordinates defining the region of interest.
+            size_yx (tuple): Tuple of (size_y, size_x) defining the size of the
+                region of interest.
+            coordinate_unit (str): The unit of the image coordinates, for example
+                'micrometer' or 'pixel'.
+            label_name (str): The name of the a segmentation mask to be plotted
+                semi-transparently over the image. If `None`, just the image
+                is plotted.
+            pyramid_level (str): The pyramid level (resolution level), from
+                which the image should be extracted. If `None`, the
+                lowest-resolution (highest) pyramid level will be selected.
+            pyramid_level_coord (str): An optional integer scalar giving the 
+                image pyramid level to which the coordinates (`upper_left_yx`,
+                `lower_right_yx` and `size_yx`) refer to if `coordinate_unit="pixel"`
+                (it is ignored otherwise). By default, this is `None`, which will
+                use `pyramid_level`.
+            channels_labels (list[str]): The labels of the image channel(s) to
+                be plotted. This provides an alternative to selecting `channels`
+                by index.
+            scalebar_micrometer (int): If non-zero, add a scale bar corresponding
+                to `scalebar_micrometer` to the image.
+            show_scalebar_label (bool):  If `True`, add micrometer label to scale bar.
+            **kwargs: Additional arguments for `plotting.plot_image`, for example
+                'channels', 'channel_colors', 'channel_ranges', 'z_projection_method',
+                etc. For a full list of available arguments, see
+                [plotting.plot_image documentation](plotting.md#src.ez_zarr.plotting.plot_image).
+
+        Examples:
+            Plot the whole image `img`.
+
+            >>> img.plot(channels = [0], channel_colors = ['red'])
+        """
+        # digest arguments
+        assert label_name == None or label_name in self.label_names, (
+            f"Unknown label_name ({label_name}), should be `None` or one of "
+            ', '.join(self.label_names)
+        )
+        img_pl = self._digest_pyramid_level_argument(pyramid_level=pyramid_level,
+                                                     label_name=None)
+        # import optional modules
+        plotting = importlib.import_module('ez_zarr.plotting')
+
+        # get channel indices
+        if channels_labels != None:
+            if 'channels' in kwargs:
+                raise Warning('`channels` will be ignored if `channels_labels` is given')
+            all_channels_labels = [ch['label'] for ch in self.channels]
+            missing_labels = [channels_labels[i] for i in range(len(channels_labels)) if channels_labels[i] not in all_channels_labels]
+            if len(missing_labels) > 0:
+                raise ValueError(f"Unknown channels_labels ({', '.join(missing_labels)}), should be `None` or one of {', '.join(all_channels_labels)}")
+            kwargs['channels'] = [all_channels_labels.index(x) for x in channels_labels]
+        
+        # extract `channel_colors`
+        if 'channels' in kwargs and ('channel_colors' not in kwargs or  len(kwargs['channels']) != len(kwargs['channel_colors'])):
+            print("extracting `channel_colors` from image metadata")
+            kwargs['channel_colors'] = ['#' + self.channels[i]['color'] for i in kwargs['channels']]
+        
+        # extract `channel_ranges`
+        if 'channels' in kwargs and ('channel_ranges' not in kwargs or len(kwargs['channels']) != len(kwargs['channel_ranges'])):
+            print("setting `channel_ranges` based on length of `channels`")
+            kwargs['channel_ranges'] = [[0.01, 0.95] for i in range(len(kwargs['channels']))]
+
+        # extract scale information for image
+        scale_img = [x['coordinateTransformations'][0]['scale'] for x in self.multiscales_image['datasets'] if str(x['path']) == img_pl][0]
+        scale_img_spatial = [scale_img[i] for i in range(len(scale_img)) if self.channel_info_image[i] in ['z', 'y', 'x']]
+
+        # get label pyramid level closest to `img_pl`
+        if label_name != None:
+            # extract scale information for labels
+            scale_lab = [self._extract_scale_spacings(x) for x in self.multiscales_labels[label_name]['datasets']]
+            scale_lab_spatial = [[s[0], [s[1][i] for i in range(len(s[1])) if self.channel_info_labels[label_name][i] in ['z', 'y', 'x']]] for s in scale_lab]
+            # find nearest scale
+            nearest_scale_idx = np.argmin([np.linalg.norm(np.array(s[1]) - np.array(scale_img_spatial)) for s in scale_lab_spatial])
+            label_pl = scale_lab[nearest_scale_idx][0]
+
+            # TODO: automatically upscale labels if necessary
+            if np.any(scale_img_spatial != scale_lab_spatial[nearest_scale_idx][1]):
+                raise NotImplementedError('Automatic upscaling of labels not yet implemented')
+
+        # get well image
+        img = self.get_array_by_coordinate(label_name=None,
+                                           upper_left_yx=upper_left_yx,
+                                           lower_right_yx=lower_right_yx,
+                                           size_yx=size_yx,
+                                           coordinate_unit=coordinate_unit,
+                                           pyramid_level=img_pl,
+                                           pyramid_level_coord=pyramid_level_coord,
+                                           as_NumPy=True)
+
+        if label_name != None:
+            lab = self.get_array_by_coordinate(label_name=label_name,
+                                               upper_left_yx=upper_left_yx,
+                                               lower_right_yx=lower_right_yx,
+                                               size_yx=size_yx,
+                                               coordinate_unit=coordinate_unit,
+                                               pyramid_level=label_pl,
+                                               pyramid_level_coord=pyramid_level_coord,
+                                               as_NumPy=True)
+            assert img.shape[1:] == lab.shape, (
+                f"label {label_name} shape {lab.shape} does not match "
+                f"image shape {img.shape}"
+            )
+        else:
+            lab = None
+
+        # calculate scalebar length in pixel in x direction
+        if scalebar_micrometer != 0:
+            kwargs['scalebar_pixel'] = self.convert_coordinates(
+                coords_from = (scalebar_micrometer,),
+                scale_from = [1.0],
+                scale_to = [self.get_scale(pyramid_level=img_pl, label_name=None)[-1]])[0]
+        else:
+            kwargs['scalebar_pixel'] = 0
+
+        # plot image
+        if show_scalebar_label:
+            kwargs['scalebar_label'] = str(scalebar_micrometer) + ' µm'
+        else:
+            kwargs['scalebar_label'] = None
+        kwargs['im'] = img
+        kwargs['msk'] = lab
+        kwargs['spacing_yx'] = scale_img_spatial[-2:]
+        plotting.plot_image(**kwargs)
+
