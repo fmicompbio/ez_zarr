@@ -229,3 +229,36 @@ class Image:
         return(tuple(coords_to))
 
     # accessor methods -----------------------------------------------------------
+    def get_scale(self,
+                  pyramid_level: str,
+                  label_name: Optional[str]=None) -> list[float]:
+        """
+        Get the scale of a given pyramid level.
+
+        Parameters:
+            pyramid_level (str): The pyramid level from which to get the scale.
+            label_name (str or None): The name of the label image to which
+                `pyramid_level` refers to. If None, `pyramid_level` is assumed
+                to refer to the intensity image.
+        
+        Returns:
+            A list with the scale of the given pyramid level.
+        
+        Example:
+            Get the scale of the first pyramid level:
+
+            >>> scale = img.get_scale('level_0', 'nuclei')
+        """
+        # digest arguments
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, label_name)
+
+        # extract scale
+        if label_name:
+            datasets_list = self.multiscales_labels[label_name]['datasets']
+        else:
+            datasets_list = self.multiscales_image['datasets']
+        scale = [x['coordinateTransformations'][0]['scale'] for x in datasets_list if str(x['path']) == pyramid_level][0]
+
+        # return
+        return scale
+    
