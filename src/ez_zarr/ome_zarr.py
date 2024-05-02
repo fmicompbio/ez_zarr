@@ -139,6 +139,15 @@ class Image:
             raise ValueError("could not extract zyx spacing from multiscale_info")
         return [dataset_dict['path'], dataset_dict['coordinateTransformations'][0]['scale']]
     
+    @staticmethod
+    def _find_path_of_lowest_level(datasets: list[dict[str, Any]]) -> str:
+        lev = None
+        maxx = 0 # maximal x resolution
+        for i in range(len(datasets)):
+            if datasets[i]['coordinateTransformations'][0]['scale'][-1] > maxx:
+                lev = datasets[i]['path']
+        return str(lev)
+
     # string representation ---------------------------------------------------
     def __str__(self):
         nch = self.nchannels_image
