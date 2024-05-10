@@ -169,7 +169,7 @@ class Image:
             if label_name is None: # intensity image
                 pyramid_level = self._find_path_of_lowest_level(self.multiscales_image['datasets'])
             elif label_name in self.label_names: # label image
-                pyramid_level = self._find_path_of_lowest_level(self.multiscales_label[label_name]['datasets'])
+                pyramid_level = self._find_path_of_lowest_level(self.multiscales_labels[label_name]['datasets'])
             else:
                 raise ValueError(f"invalid label name '{label_name}' - must be one of {self.label_names}")
         else:
