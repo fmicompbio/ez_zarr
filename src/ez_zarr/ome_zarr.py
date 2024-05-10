@@ -344,7 +344,11 @@ class Image:
                     #       (channels, time) have scales of 1.0
                     scale_from = [1.0] * len(arr.shape)
                 elif coordinate_unit == "pixel":
-                    scale_from = self.get_scale(pyramid_level_coord or pyramid_level, label_name)
+                    if pyramid_level_coord is None:
+                        pyramid_level_coord = self._digest_pyramid_level_argument(pyramid_level, label_name)
+                    else:
+                        pyramid_level_coord = self._digest_pyramid_level_argument(pyramid_level_coord, label_name)
+                    scale_from = self.get_scale(pyramid_level_coord, label_name)
                 else:
                     raise ValueError("`coordinate_unit` needs to be 'micrometer' or 'pixel'")
                 scale_to = self.get_scale(pyramid_level, label_name)
