@@ -70,10 +70,6 @@ class Image:
             if len([x for x in self.zarr_group.group_keys() if x not in ['labels', 'tables']]) > 0:
                 raise ValueError(f"{self.path} contains further groups")
             
-            # make sure that we have at least one array
-            if len(self.array_dict) == 0:
-                raise ValueError(f"{self.path} does not contain any arrays")
-            
         # load info about available scales in image and labels
         if not 'multiscales' in self.zarr_group.attrs:
             raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
