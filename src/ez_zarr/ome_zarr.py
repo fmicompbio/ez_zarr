@@ -171,6 +171,13 @@ class Image:
         else:
             # make sure it is a string
             pyramid_level = str(pyramid_level)
+            # make sure it exists
+            if label_name is None: # intensity image
+                pyramid_level_names = [str(x['path']) for x in self.multiscales_image['datasets']]
+            else: # label image
+                pyramid_level_names = [str(x['path']) for x in self.multiscales_labels[label_name]['datasets']]
+            if pyramid_level not in pyramid_level_names:
+                raise ValueError(f"invalid pyramid level '{pyramid_level}' - must be one of {pyramid_level_names}")
         return pyramid_level
     
     # string representation ---------------------------------------------------
