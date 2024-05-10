@@ -145,8 +145,9 @@ class Image:
         maxx = 0 # maximal x resolution
         for i in range(len(datasets)):
             if datasets[i]['coordinateTransformations'][0]['scale'][-1] > maxx:
-                lev = datasets[i]['path']
-        return str(lev)
+                lev = str(datasets[i]['path'])
+                maxx = datasets[i]['coordinateTransformations'][0]['scale'][-1]
+        return lev
 
     def _digest_pyramid_level_argument(self, pyramid_level=None, label_name=None) -> str:
         """
