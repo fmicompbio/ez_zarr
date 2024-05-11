@@ -30,6 +30,7 @@ def img2d():
 
 
 # ome_zarr.Image ----------------------------------------------------
+# ... helper functions ..............................................
 def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     """Test `Image._load_multiscale_info`."""
 
@@ -237,6 +238,7 @@ def test_image_str(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     assert str(img2d) == repr(img2d)
     assert str(img3d) == repr(img3d)
 
+# ... constructor ...................................................
 def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
     """Test `ome_zarr.Image` object constructor."""
 
@@ -300,6 +302,7 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
     assert isinstance(img3d.channels, list)
     assert all([isinstance(img3d.channels[i], dict) for i in range(img3d.nchannels_image)])
 
+# ... coordinate conversion .........................................
 def test_convert_coordinates():
     """Test `ome_zarr.Image.convert_coordinates() function."""
     assert ome_zarr.Image.convert_coordinates(
@@ -308,6 +311,28 @@ def test_convert_coordinates():
         (5, 10), [2, 3], [1, 1]) == (10, 30)
     assert ome_zarr.Image.convert_coordinates(
         (5, 10, 20), [1, 0.2, 0.2], [1, 1, 1]) == (5, 2, 4)
+
+# ... accesssors ....................................................
+def test_get_path(img2d: ome_zarr.Image):
+    """Test `get_path()` method of `ome_zarr.Image` object."""
+    assert img2d.get_path() == 'tests/example_data/plate_ones_mip.zarr/B/03/0'
+    assert img2d.get_path() == img2d.path
+
+def test_get_channels(img3d: ome_zarr.Image):
+    """Test `get_channels()` method of `ome_zarr.Image` object."""
+    assert isinstance(img3d.get_channels(), list)
+    assert all([isinstance(x, dict) for x in img3d.get_channels()])
+    assert all(['label' in x for x in img3d.get_channels()])
+
+def test_get_label_names(img2d: ome_zarr.Image):
+    """Test `get_label_names()` method of `ome_zarr.Image` object."""
+    assert img2d.get_label_names() == ['organoids']
+    assert img2d.get_label_names() == img2d.label_names
+
+def test_get_table_names(img3d: ome_zarr.Image):
+    """Test `get_table_names()` method of `ome_zarr.Image` object."""
+    assert img3d.get_table_names() == ['FOV_ROI_table']
+    assert img3d.get_table_names() == img3d.table_names
 
 def test_get_scale(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `ome_zarr.Image` object get_scale() method."""
