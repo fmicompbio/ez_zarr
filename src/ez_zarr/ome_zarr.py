@@ -233,6 +233,38 @@ class Image:
         return(tuple(coords_to))
 
     # accessor methods -----------------------------------------------------------
+    def get_path(self) -> str:
+        """Get the path of an OME-Zarr image.
+        
+        Returns:
+            The path to the OME-Zarr image.
+        """
+        return self.path
+
+    def get_channels(self) -> list:
+        """Get info on channels in an OME-Zarr image.
+        
+        Returns:
+            A list of dicts with information on channels.
+        """
+        return self.channels
+    
+    def get_label_names(self) -> list:
+        """Get list of label names in an OME-Zarr image.
+        
+        Returns:
+            A list of label names (str) available for the image.
+        """
+        return self.label_names
+
+    def get_table_names(self) -> list:
+        """Get list of table names in an OME-Zarr image.
+        
+        Returns:
+            A list of table names (str) available for the image.
+        """
+        return self.table_names
+
     def get_scale(self,
                   pyramid_level: str,
                   label_name: Optional[str]=None) -> list[float]:
