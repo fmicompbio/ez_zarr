@@ -437,7 +437,7 @@ class Image:
         # get channel indices
         if channels_labels != None:
             if 'channels' in kwargs:
-                raise Warning('`channels` will be ignored if `channels_labels` is given')
+                warnings.warn('`channels` will be ignored if `channels_labels` is given')
             all_channels_labels = [ch['label'] for ch in self.channels]
             missing_labels = [channels_labels[i] for i in range(len(channels_labels)) if channels_labels[i] not in all_channels_labels]
             if len(missing_labels) > 0:
