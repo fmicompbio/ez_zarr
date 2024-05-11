@@ -36,6 +36,18 @@ plate_3d
 #   full_resolution_zyx_spacing: [1.0, 0.1625, 0.1625]
 #   segmentations: 
 #   tables (measurements): FOV_ROI_table
+
+from ez_zarr import ome_zarr
+img = ome_zarr.Image('tests/example_data/plate_ones_mip.zarr/B/03/0')
+img
+# Image 0
+#   path: tests/example_data/plate_ones_mip.zarr/B/03/0
+#   n_channels: 2 (some-label-1, some-label-2)
+#   n_pyramid_levels: 3
+#   pyramid_zyx_scalefactor: [1. 2. 2.]
+#   full_resolution_zyx_spacing (micrometer): [1.0, 0.1625, 0.1625]
+#   segmentations: organoids
+#   tables (measurements): FOV_ROI_table
 ```
 
 A more extensive example is available from [here](https://fmicompbio.github.io/ez_zarr/quickstart/), also available as an [ipynb notebook](https://fmicompbio.github.io/ez_zarr/quickstart.ipynb).
