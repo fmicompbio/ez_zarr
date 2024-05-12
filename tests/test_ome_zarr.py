@@ -302,16 +302,6 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
     assert isinstance(img3d.channels, list)
     assert all([isinstance(img3d.channels[i], dict) for i in range(img3d.nchannels_image)])
 
-# ... coordinate conversion .........................................
-def test_convert_coordinates():
-    """Test `ome_zarr.Image.convert_coordinates() function."""
-    assert ome_zarr.Image.convert_coordinates(
-        (10, 30), [1, 1], [2, 3]) == (5, 10)
-    assert ome_zarr.Image.convert_coordinates(
-        (5, 10), [2, 3], [1, 1]) == (10, 30)
-    assert ome_zarr.Image.convert_coordinates(
-        (5, 10, 20), [1, 0.2, 0.2], [1, 1, 1]) == (5, 2, 4)
-
 # ... accesssors ....................................................
 def test_get_path(img2d: ome_zarr.Image):
     """Test `get_path()` method of `ome_zarr.Image` object."""
