@@ -46,6 +46,7 @@ nav: # Setting up the navigation. Te below list will be tabs on left panel
   - Documentation:
     - OME-Zarr classes: 'ome_zarr.md'
     - Legacy classes: 'hcs_wrappers.md'
+    - Utilities: 'utils.md'
     - Plotting: 'plotting.md'
   - Unit tests: 'testing.md'
   - Quickstart:
