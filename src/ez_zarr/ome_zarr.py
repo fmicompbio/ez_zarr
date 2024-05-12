@@ -22,6 +22,7 @@ import importlib
 import warnings
 import random
 from typing import Union, Optional, Any
+from ez_zarr.utils import convert_coordinates
 
 
 # Image class -----------------------------------------------------------------
@@ -199,39 +200,6 @@ class Image:
     def __repr__(self):
         return str(self)
     
-    # coordinate conversion ---------------------------------------------------
-    ## REMARK: could be moved to utils.py
-    @staticmethod
-    def convert_coordinates(coords_from: tuple[Union[int, float]],
-                            scale_from: list[float],
-                            scale_to: list[float]) -> tuple[Union[int, float]]:
-        """
-        Convert coordinates between scales.
-
-        Parameters:
-            coords_from (tuple): The coordinates to be converted.
-            scale_from (list[float]): The scale that the coordinates refer to.
-                Needs to be parallel to `coords_from`.
-            scale_to (list[float]): The scale that the coordinates should be
-                converted to.
-        
-        Returns:
-            A tuple of the same length as `coords_from` with coordinates in
-            the new scale.
-        
-        Examples:
-            Convert a point (10, 30) from [1, 1] to [2, 3]:
-
-            >>> y, x = img.convert_coordinates((10,30), [1, 1], [2, 3])
-        """
-        # digest arguments
-        assert len(coords_from) == len(scale_from)
-        assert len(coords_from) == len(scale_to)
-
-        # convert and return
-        coords_to = np.divide(np.multiply(coords_from, scale_from), scale_to)
-        return(tuple(coords_to))
-
     # accessor methods -----------------------------------------------------------
     def get_path(self) -> str:
         """Get the path of an OME-Zarr image.
@@ -385,8 +353,8 @@ class Image:
                     raise ValueError("`coordinate_unit` needs to be 'micrometer' or 'pixel'")
                 scale_to = self.get_scale(pyramid_level, label_name)
 
-                upper_left_yx = self.convert_coordinates(upper_left_yx, scale_from[-2:], scale_to[-2:])
-                lower_right_yx = self.convert_coordinates(lower_right_yx, scale_from[-2:], scale_to[-2:])
+                upper_left_yx = convert_coordinates(upper_left_yx, scale_from[-2:], scale_to[-2:])
+                lower_right_yx = convert_coordinates(lower_right_yx, scale_from[-2:], scale_to[-2:])
 
             # slice array
             arr = arr[...,
@@ -573,7 +541,7 @@ class Image:
 
         # calculate scalebar length in pixel in x direction
         if scalebar_micrometer != 0:
-            kwargs['scalebar_pixel'] = self.convert_coordinates(
+            kwargs['scalebar_pixel'] = convert_coordinates(
                 coords_from = (scalebar_micrometer,),
                 scale_from = [1.0],
                 scale_to = [self.get_scale(pyramid_level=img_pl, label_name=None)[-1]])[0]
