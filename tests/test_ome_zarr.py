@@ -1,6 +1,6 @@
 # for testing, run the following from the project folder:
 #     pip install -e .
-#     pytest --color=yes -v --cov=./ --cov-report=term-missing
+#     pytest --color=yes -v --cov=./src --cov-report=term-missing tests
 
 import pytest
 import shutil
