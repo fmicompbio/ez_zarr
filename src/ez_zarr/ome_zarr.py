@@ -400,6 +400,48 @@ class Image:
             arr = np.array(arr)
         return arr
 
+    def get_table(self,
+                  table_name: str,
+                  as_AnnData: bool=False) -> Any:
+        """Extract tabular data (for example quantifications) for OME-Zarr image.
+        
+        Parameters:
+            table_name (str): The name of the table to extract.
+            as_AnnData (bool): If `True`, the table is returned as an `AnnData` object, otherwise it is returned as a `pandas.DataFrame`.
+        
+        Returns:
+            The extracted table, either as an `anndata.AnnData` object if `as_AnnData=True`, or a `pandas.DataFrame` otherwise. `None` if `table_name` is not found.
+        
+        Examples:
+            List available tables names, and get table 'FOV_ROI_table':
+
+            >>> img.get_table_names()
+            >>> img.get_table(table_name='FOV_ROI_table')
+        """
+
+        # check for existing table_name
+        if table_name not in self.table_names:
+            warnings.warn(f"Table '{table_name}' not found in image at {self.path}.")
+            return None
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            ad = importlib.import_module('anndata')
+            anndata = ad.read_zarr(os.path.join(self.path, 'tables', table_name))
+            # ... retain path information for combining anndata objects
+            anndata.obs['image_path'] = self.path
+            # ... create unique row identifier
+            anndata.obs['unique_id'] = self.path + '/tables/' + table_name + '/' + anndata.obs.index.astype(str)
+
+        if as_AnnData:
+            return anndata
+        else:
+            df = pd.concat([anndata.obs['unique_id'],
+                            anndata.obs['image_path'],
+                            anndata.to_df()],
+                            axis=1)
+            return df
+
     # plotting methods -----------------------------------------------------------
     def plot(self,
              upper_left_yx: Optional[tuple[int]]=None,
