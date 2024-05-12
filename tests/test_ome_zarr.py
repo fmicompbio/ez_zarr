@@ -12,8 +12,8 @@ import numpy as np
 import warnings
 import matplotlib
 from matplotlib import pyplot as plt
-# import anndata as ad
-# import pandas as pd
+import anndata as ad
+import pandas as pd
 
 from ez_zarr import ome_zarr
 
@@ -451,6 +451,29 @@ def test_get_array_by_coordinate(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     assert img2b.shape == img2a.shape
     assert (img1b == img1a).all()
     assert (img1c == img1a).all()
+
+def test_get_table(img2d: ome_zarr.Image):
+    """Test `Image.get_table()`."""
+
+    # invalid input
+    with pytest.warns(UserWarning):
+        assert img2d.get_table('error') is None
+
+    # table as AnnData
+    res1 = img2d.get_table(table_name='FOV_ROI_table',
+                           as_AnnData=True)
+    assert isinstance(res1, ad.AnnData)
+    assert res1.shape == (4, 8)
+    assert 'unique_id' in res1.obs
+    assert 'image_path' in res1.obs
+
+    # table as pandas.DataFrame
+    res2 = img2d.get_table(table_name='FOV_ROI_table',
+                           as_AnnData=False)
+    assert isinstance(res2, pd.DataFrame)
+    assert res2.shape == (4, 10)
+    assert 'unique_id' in res2.columns
+    assert 'image_path' in res2.columns
 
 def test_plot(img2d: ome_zarr.Image, tmpdir: str):
     """Test `Image.plot()`."""
