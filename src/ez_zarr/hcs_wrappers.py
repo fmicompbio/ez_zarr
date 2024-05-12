@@ -181,7 +181,7 @@ class FractalZarr:
             pyramid_level = int(pyramid_level)
         return pyramid_level
     
-    def _calculate_regular_grid_coordsinates(self, y, x, num_y=10, num_x=10):
+    def _calculate_regular_grid_coordinates(self, y, x, num_y=10, num_x=10):
         """
         [internal] Calculate the cell coordinates for a regular rectangular grid of total size (y, x)
         by splitting the dimensions into num_y and num_x cells.
@@ -534,13 +534,13 @@ class FractalZarr:
         # calculate grid coordinates as a list of (y_start, y_end, x_start, x_end)
         # (images are always of 4D shape c,z,y,x)
         ch, z, y, x = img.shape
-        grid = self._calculate_regular_grid_coordsinates(y=y, x=x,
-                                                         num_y=num_y,
-                                                         num_x=num_x)
+        grid = self._calculate_regular_grid_coordinates(y=y, x=x,
+                                                        num_y=num_y,
+                                                        num_x=num_x)
         ch_lr, z_lr, y_lr, x_lr = img_lowres.shape
-        grid_lowres = self._calculate_regular_grid_coordsinates(y=y_lr, x=x_lr,
-                                                                num_y=num_y,
-                                                                num_x=num_x)
+        grid_lowres = self._calculate_regular_grid_coordinates(y=y_lr, x=x_lr,
+                                                               num_y=num_y,
+                                                               num_x=num_x)
 
         # select and extract grid cells
         sel_coords = []
