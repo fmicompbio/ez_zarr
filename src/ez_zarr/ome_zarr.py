@@ -571,6 +571,11 @@ class Image:
         )
         img_pl = self._digest_pyramid_level_argument(pyramid_level=pyramid_level,
                                                      label_name=None)
+        if pyramid_level_coord is None:
+            img_pl_coord = img_pl
+        else:
+            img_pl_coord = pyramid_level_coord
+
         # import optional modules
         plotting = importlib.import_module('ez_zarr.plotting')
 
@@ -599,41 +604,140 @@ class Image:
         scale_img_spatial = [scale_img[i] for i in range(len(scale_img)) if self.channel_info_image[i] in ['z', 'y', 'x']]
 
         # get label pyramid level closest to `img_pl`
+        # and convert coordinates to pixels if necessary
+        # Remark:
+        # To avoid inconsistent `img` and `lab` shapes resulting from
+        # inconsistent conversion from micrometer to pixel at different resolutions.
+        # To this end, we first convert the micrometer to pixel coordinates
+        # in the lower resolution space (labels), and propagate the resulting rounding
+        # errors to the higher resolution space (intensity image).
+        # The resulting label and image pixel grids can then be scaled consistently.
+        imgpixel_upper_left_yx = None
+        imgpixel_lower_right_yx = None
+        imgpixel_size_yx = None
         if label_name != None:
             # extract scale information for labels
             scale_lab = [self._extract_scale_spacings(x) for x in self.multiscales_labels[label_name]['datasets']]
             scale_lab_spatial = [[s[0], [s[1][i] for i in range(len(s[1])) if self.channel_info_labels[label_name][i] in ['z', 'y', 'x']]] for s in scale_lab]
+
             # find nearest scale
             nearest_scale_idx = np.argmin([np.linalg.norm(np.array(s[1]) - np.array(scale_img_spatial)) for s in scale_lab_spatial])
             label_pl = scale_lab[nearest_scale_idx][0]
+            scale_lab_spatial = scale_lab_spatial[nearest_scale_idx][1]
 
-            # TODO: automatically upscale labels if necessary
-            if np.any(scale_img_spatial != scale_lab_spatial[nearest_scale_idx][1]):
-                raise NotImplementedError('Automatic upscaling of labels not yet implemented')
+            # convert coordinates (label)
+            if np.any(scale_img_spatial > scale_lab_spatial):
+                raise NotImplementedError('Automatic upscaling of images not yet implemented')
+            labpixel_upper_left_yx = None
+            labpixel_lower_right_yx = None
+            labpixel_size_yx = None
+            if coordinate_unit == 'micrometer':
+                if upper_left_yx is not None:
+                    labpixel_upper_left_yx = convert_coordinates(
+                        coords_from=upper_left_yx,
+                        scale_from=tuple([1] * len(upper_left_yx)),
+                        scale_to=scale_lab_spatial[-2:])
+                if lower_right_yx is not None:
+                    labpixel_lower_right_yx = convert_coordinates(
+                        coords_from=lower_right_yx,
+                        scale_from=tuple([1] * len(lower_right_yx)),
+                        scale_to=scale_lab_spatial[-2:])
+                if size_yx is not None:
+                    labpixel_size_yx = convert_coordinates(
+                        coords_from=size_yx,
+                        scale_from=tuple([1] * len(size_yx)),
+                        scale_to=scale_lab_spatial[-2:])
+            elif coordinate_unit == 'pixel':
+                if upper_left_yx is not None:
+                    labpixel_upper_left_yx = convert_coordinates(
+                        coords_from=upper_left_yx,
+                        scale_from=self.get_scale(pyramid_level=img_pl_coord)[-2:],
+                        scale_to=scale_lab_spatial[-2:])
+                    labpixel_lower_right_yx = convert_coordinates(
+                        coords_from=lower_right_yx,
+                        scale_from=self.get_scale(pyramid_level=img_pl_coord)[-2:],
+                        scale_to=scale_lab_spatial[-2:])
+                    labpixel_size_yx = convert_coordinates(
+                        coords_from=size_yx,
+                        scale_from=self.get_scale(pyramid_level=img_pl_coord)[-2:],
+                        scale_to=scale_lab_spatial[-2:])
+            # convert label coordinates (lower resolution) to image coordinates
+            if labpixel_upper_left_yx is not None:
+                imgpixel_upper_left_yx = convert_coordinates(
+                    coords_from=labpixel_upper_left_yx,
+                    scale_from=scale_lab_spatial[-2:],
+                    scale_to=scale_img_spatial[-2:])
+            if labpixel_lower_right_yx is not None:
+                imgpixel_lower_right_yx = convert_coordinates(
+                    coords_from=labpixel_lower_right_yx,
+                    scale_from=scale_lab_spatial[-2:],
+                    scale_to=scale_img_spatial[-2:])
+            if labpixel_size_yx is not None:
+                imgpixel_size_yx = convert_coordinates(
+                    coords_from=labpixel_size_yx,
+                    scale_from=scale_lab_spatial[-2:],
+                    scale_to=scale_img_spatial[-2:])
+        else:
+            # convert coordinates (no label)
+            if coordinate_unit == 'micrometer':
+                if upper_left_yx is not None:
+                    imgpixel_upper_left_yx = convert_coordinates(
+                        coords_from=upper_left_yx,
+                        scale_from=tuple([1] * len(upper_left_yx)),
+                        scale_to=scale_img_spatial[-2:])
+                if lower_right_yx is not None:
+                    imgpixel_lower_right_yx = convert_coordinates(
+                        coords_from=lower_right_yx,
+                        scale_from=tuple([1] * len(lower_right_yx)),
+                        scale_to=scale_img_spatial[-2:])
+                if size_yx is not None:
+                    imgpixel_size_yx = convert_coordinates(
+                        coords_from=size_yx,
+                        scale_from=tuple([1] * len(size_yx)),
+                        scale_to=scale_img_spatial[-2:])
+            elif coordinate_unit == 'pixel':
+                if upper_left_yx is not None:
+                    imgpixel_upper_left_yx = convert_coordinates(
+                        coords_from=upper_left_yx,
+                        scale_from=self.get_scale(pyramid_level=img_pl_coord),
+                        scale_to=scale_img_spatial[-2:])
+                if lower_right_yx is not None:
+                    imgpixel_lower_right_yx = convert_coordinates(
+                        coords_from=lower_right_yx,
+                        scale_from=self.get_scale(pyramid_level=img_pl_coord),
+                        scale_to=scale_img_spatial[-2:])
+                if size_yx is not None:
+                    imgpixel_size_yx = convert_coordinates(
+                        coords_from=size_yx,
+                        scale_from=self.get_scale(pyramid_level=img_pl_coord),
+                        scale_to=scale_img_spatial[-2:])
 
-        # get well image
+        # get image (and label)
         img = self.get_array_by_coordinate(label_name=None,
-                                           upper_left_yx=upper_left_yx,
-                                           lower_right_yx=lower_right_yx,
-                                           size_yx=size_yx,
-                                           coordinate_unit=coordinate_unit,
+                                           upper_left_yx=imgpixel_upper_left_yx,
+                                           lower_right_yx=imgpixel_lower_right_yx,
+                                           size_yx=imgpixel_size_yx,
+                                           coordinate_unit='pixel',
                                            pyramid_level=img_pl,
-                                           pyramid_level_coord=pyramid_level_coord,
+                                           pyramid_level_coord=None,
                                            as_NumPy=True)
 
         if label_name != None:
             lab = self.get_array_by_coordinate(label_name=label_name,
-                                               upper_left_yx=upper_left_yx,
-                                               lower_right_yx=lower_right_yx,
-                                               size_yx=size_yx,
-                                               coordinate_unit=coordinate_unit,
+                                               upper_left_yx=labpixel_upper_left_yx,
+                                               lower_right_yx=labpixel_lower_right_yx,
+                                               size_yx=labpixel_size_yx,
+                                               coordinate_unit='pixel',
                                                pyramid_level=label_pl,
-                                               pyramid_level_coord=pyramid_level_coord,
+                                               pyramid_level_coord=None,
                                                as_NumPy=True)
-            assert img.shape[1:] == lab.shape, (
-                f"label {label_name} shape {lab.shape} does not match "
-                f"image shape {img.shape}"
-            )
+            if np.any(img.shape[1:] != lab.shape):
+                lab = resize_image(
+                    im=lab,
+                    output_shape=img.shape[1:],
+                    im_type='label',
+                    number_nonspatial_axes=sum([int(s not in ['z','y','x']) for s in self.channel_info_labels[label_name]])
+                )
         else:
             lab = None
 
