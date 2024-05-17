@@ -603,15 +603,13 @@ class Image:
         scale_img = [x['coordinateTransformations'][0]['scale'] for x in self.multiscales_image['datasets'] if str(x['path']) == img_pl][0]
         scale_img_spatial = [scale_img[i] for i in range(len(scale_img)) if self.channel_info_image[i] in ['z', 'y', 'x']]
 
-        # get label pyramid level closest to `img_pl`
-        # and convert coordinates to pixels if necessary
+        # get label pyramid level closest to `img_pl` and convert coordinates to pixels if necessary
         # Remark:
-        # To avoid inconsistent `img` and `lab` shapes resulting from
-        # inconsistent conversion from micrometer to pixel at different resolutions.
-        # To this end, we first convert the micrometer to pixel coordinates
-        # in the lower resolution space (labels), and propagate the resulting rounding
-        # errors to the higher resolution space (intensity image).
-        # The resulting label and image pixel grids can then be scaled consistently.
+        # To avoid inconsistent `img` and `lab` shapes resulting from inconsistent conversion from
+        # micrometer to pixel at different resolutions, we first convert the micrometer to pixel coordinates
+        # for label (if any, assuming that this has typically a lower resolution than the intensity image),
+        # and propagate the resulting rounding errors to the intensity image. This should minimize the
+        # inconsistencies due to rounding errors in the conversions of coordinates.
         imgpixel_upper_left_yx = None
         imgpixel_lower_right_yx = None
         imgpixel_size_yx = None
@@ -626,8 +624,6 @@ class Image:
             scale_lab_spatial = scale_lab_spatial[nearest_scale_idx][1]
 
             # convert coordinates (label)
-            if np.any(scale_img_spatial > scale_lab_spatial):
-                raise NotImplementedError('Automatic upscaling of images not yet implemented')
             labpixel_upper_left_yx = None
             labpixel_lower_right_yx = None
             labpixel_size_yx = None
