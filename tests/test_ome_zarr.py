@@ -233,6 +233,51 @@ def test_digest_pyramid_level_argument(img2d: ome_zarr.Image, img3d: ome_zarr.Im
     assert img3d._digest_pyramid_level_argument(1) == '1'
     assert img3d._digest_pyramid_level_argument('1', None) == '1'
 
+def test_digest_bounding_box(img2d: ome_zarr.Image):
+    """Test `Image._digest_bounding_box`."""
+    
+    # invalid input
+    with pytest.raises(Exception) as e_info: # unknown label
+        img2d._digest_bounding_box(label_name='error')
+    with pytest.raises(Exception) as e_info: # missing coordinates
+        img2d._digest_bounding_box(upper_left_yx=(5, 10))
+    with pytest.raises(Exception) as e_info: # wrong dimensions
+        img2d._digest_bounding_box(upper_left_yx=(5, 10, 10), size_yx=(1, 1, 1))
+    with pytest.raises(Exception) as e_info: # unknown pyramid level
+        img2d._digest_bounding_box(upper_left_yx=(5, 10), lower_right_yx=(20, 50), pyramid_level=7)
+    with pytest.raises(Exception) as e_info: # unknown coord pyramid level
+        img2d._digest_bounding_box(upper_left_yx=(5, 10), lower_right_yx=(20, 50), pyramid_level_coord=7, coordinate_unit='pixel')
+    with pytest.raises(Exception) as e_info: # unknown coordinate unit
+        img2d._digest_bounding_box(upper_left_yx=(5, 10), lower_right_yx=(20, 50), coordinate_unit = 'error')
+
+    # expected results
+    # ... full array
+    assert img2d._digest_bounding_box() == [(0, 0), (269, 319)]
+    # ... corners from different inputs
+    assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
+                                      lower_right_yx=(20, 50),
+                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+    assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
+                                      size_yx=(15, 40),
+                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+    assert img2d._digest_bounding_box(size_yx=(15, 40),
+                                      lower_right_yx=(20, 50),
+                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+    # ... different pyramid levels
+    assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
+                                      lower_right_yx=(20, 50),
+                                      pyramid_level=1,
+                                      pyramid_level_coord=2,
+                                      coordinate_unit='pixel') == [(10, 20), (40, 100)]
+    # ... micrometer coordinates
+    s = img2d.get_scale(pyramid_level=1)
+    assert img2d._digest_bounding_box(upper_left_yx=(0, 0),
+                                      lower_right_yx=(s[-2] * 1000, s[-1] * 1000),
+                                      pyramid_level=1,
+                                      coordinate_unit='micrometer') == [(0, 0), (1000, 1000)]
+    # ... label array
+    assert img2d._digest_bounding_box(label_name='organoids') == [(0, 0), (269, 319)]
+
 def test_image_str(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `ome_zarr.Image` object string representation."""
     assert str(img2d) == repr(img2d)
