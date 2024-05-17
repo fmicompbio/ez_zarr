@@ -38,7 +38,8 @@ dependencies = [
     "numpy",
     "pandas",
     "zarr",
-    "matplotlib"
+    "matplotlib",
+    "scikit-image"
 ]
 requires-python = ">=3.9"
 

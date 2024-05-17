@@ -14,53 +14,94 @@ click==8.1.7
     # via dask
 cloudpickle==3.0.0
     # via dask
+contourpy==1.2.1
+    # via matplotlib
+cycler==0.12.1
+    # via matplotlib
 dask==2024.1.1
     # via ez_zarr (ez_zarr/pyproject.toml)
 exceptiongroup==1.2.0
     # via anndata
 fasteners==0.19
     # via zarr
+fonttools==4.51.0
+    # via matplotlib
 fsspec==2023.12.2
     # via dask
 h5py==3.10.0
     # via anndata
+imageio==2.34.1
+    # via scikit-image
 importlib-metadata==7.0.1
     # via dask
+importlib-resources==6.4.0
+    # via matplotlib
+kiwisolver==1.4.5
+    # via matplotlib
+lazy-loader==0.4
+    # via scikit-image
 locket==1.0.0
     # via partd
+matplotlib==3.8.4
+    # via ez_zarr (ez_zarr/pyproject.toml)
 natsort==8.4.0
     # via anndata
+networkx==3.2.1
+    # via scikit-image
 numcodecs==0.12.1
     # via zarr
 numpy==1.26.3
     # via
     #   anndata
+    #   contourpy
     #   ez_zarr (ez_zarr/pyproject.toml)
     #   h5py
+    #   imageio
+    #   matplotlib
     #   numcodecs
     #   pandas
+    #   scikit-image
     #   scipy
+    #   tifffile
     #   zarr
 packaging==23.2
     # via
     #   anndata
     #   dask
+    #   lazy-loader
+    #   matplotlib
+    #   scikit-image
 pandas==2.2.0
     # via
     #   anndata
     #   ez_zarr (ez_zarr/pyproject.toml)
 partd==1.4.1
     # via dask
+pillow==10.3.0
+    # via
+    #   imageio
+    #   matplotlib
+    #   scikit-image
+pyparsing==3.1.2
+    # via matplotlib
 python-dateutil==2.8.2
-    # via pandas
+    # via
+    #   matplotlib
+    #   pandas
 pytz==2023.4
     # via pandas
 pyyaml==6.0.1
     # via dask
+scikit-image==0.22.0
+    # via ez_zarr (ez_zarr/pyproject.toml)
 scipy==1.12.0
-    # via anndata
+    # via
+    #   anndata
+    #   scikit-image
 six==1.16.0
     # via python-dateutil
+tifffile==2024.5.10
+    # via scikit-image
 toolz==0.12.1
     # via
     #   dask
@@ -70,4 +111,6 @@ tzdata==2023.4
 zarr==2.16.1
     # via ez_zarr (ez_zarr/pyproject.toml)
 zipp==3.17.0
-    # via importlib-metadata
+    # via
+    #   importlib-metadata
+    #   importlib-resources
