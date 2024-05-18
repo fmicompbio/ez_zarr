@@ -607,95 +607,44 @@ class Image:
             scale_lab_spatial = scale_lab_spatial[nearest_scale_idx][1]
 
             # convert coordinates (label)
-            labpixel_upper_left_yx = None
-            labpixel_lower_right_yx = None
-            labpixel_size_yx = None
-            if coordinate_unit == 'micrometer':
-                if upper_left_yx is not None:
-                    labpixel_upper_left_yx = convert_coordinates(
-                        coords_from=upper_left_yx,
-                        scale_from=tuple([1] * len(upper_left_yx)),
-                        scale_to=scale_lab_spatial[-2:])
-                if lower_right_yx is not None:
-                    labpixel_lower_right_yx = convert_coordinates(
-                        coords_from=lower_right_yx,
-                        scale_from=tuple([1] * len(lower_right_yx)),
-                        scale_to=scale_lab_spatial[-2:])
-                if size_yx is not None:
-                    labpixel_size_yx = convert_coordinates(
-                        coords_from=size_yx,
-                        scale_from=tuple([1] * len(size_yx)),
-                        scale_to=scale_lab_spatial[-2:])
-            elif coordinate_unit == 'pixel':
-                if upper_left_yx is not None:
-                    labpixel_upper_left_yx = convert_coordinates(
-                        coords_from=upper_left_yx,
-                        scale_from=self.get_scale(pyramid_level=img_pl_coord)[-2:],
-                        scale_to=scale_lab_spatial[-2:])
-                    labpixel_lower_right_yx = convert_coordinates(
-                        coords_from=lower_right_yx,
-                        scale_from=self.get_scale(pyramid_level=img_pl_coord)[-2:],
-                        scale_to=scale_lab_spatial[-2:])
-                    labpixel_size_yx = convert_coordinates(
-                        coords_from=size_yx,
-                        scale_from=self.get_scale(pyramid_level=img_pl_coord)[-2:],
-                        scale_to=scale_lab_spatial[-2:])
+            labpixel_upper_left_yx, labpixel_lower_right_yx = self._digest_bounding_box(
+                upper_left_yx=upper_left_yx,
+                lower_right_yx=lower_right_yx,
+                size_yx=size_yx,
+                coordinate_unit=coordinate_unit,
+                label_name=label_name,
+                pyramid_level=label_pl,
+                pyramid_level_coord=img_pl_coord
+            )
+
             # convert label coordinates (lower resolution) to image coordinates
-            if labpixel_upper_left_yx is not None:
-                imgpixel_upper_left_yx = convert_coordinates(
-                    coords_from=labpixel_upper_left_yx,
-                    scale_from=scale_lab_spatial[-2:],
-                    scale_to=scale_img_spatial[-2:])
-            if labpixel_lower_right_yx is not None:
-                imgpixel_lower_right_yx = convert_coordinates(
-                    coords_from=labpixel_lower_right_yx,
-                    scale_from=scale_lab_spatial[-2:],
-                    scale_to=scale_img_spatial[-2:])
-            if labpixel_size_yx is not None:
-                imgpixel_size_yx = convert_coordinates(
-                    coords_from=labpixel_size_yx,
-                    scale_from=scale_lab_spatial[-2:],
-                    scale_to=scale_img_spatial[-2:])
+            imgpixel_upper_left_yx = convert_coordinates(
+                coords_from=labpixel_upper_left_yx,
+                scale_from=scale_lab_spatial[-2:],
+                scale_to=scale_img_spatial[-2:]
+            )
+            imgpixel_lower_right_yx = convert_coordinates(
+                coords_from=labpixel_lower_right_yx,
+                scale_from=scale_lab_spatial[-2:],
+                scale_to=scale_img_spatial[-2:]
+            )
         else:
             # convert coordinates (no label)
-            if coordinate_unit == 'micrometer':
-                if upper_left_yx is not None:
-                    imgpixel_upper_left_yx = convert_coordinates(
-                        coords_from=upper_left_yx,
-                        scale_from=tuple([1] * len(upper_left_yx)),
-                        scale_to=scale_img_spatial[-2:])
-                if lower_right_yx is not None:
-                    imgpixel_lower_right_yx = convert_coordinates(
-                        coords_from=lower_right_yx,
-                        scale_from=tuple([1] * len(lower_right_yx)),
-                        scale_to=scale_img_spatial[-2:])
-                if size_yx is not None:
-                    imgpixel_size_yx = convert_coordinates(
-                        coords_from=size_yx,
-                        scale_from=tuple([1] * len(size_yx)),
-                        scale_to=scale_img_spatial[-2:])
-            elif coordinate_unit == 'pixel':
-                if upper_left_yx is not None:
-                    imgpixel_upper_left_yx = convert_coordinates(
-                        coords_from=upper_left_yx,
-                        scale_from=self.get_scale(pyramid_level=img_pl_coord),
-                        scale_to=scale_img_spatial[-2:])
-                if lower_right_yx is not None:
-                    imgpixel_lower_right_yx = convert_coordinates(
-                        coords_from=lower_right_yx,
-                        scale_from=self.get_scale(pyramid_level=img_pl_coord),
-                        scale_to=scale_img_spatial[-2:])
-                if size_yx is not None:
-                    imgpixel_size_yx = convert_coordinates(
-                        coords_from=size_yx,
-                        scale_from=self.get_scale(pyramid_level=img_pl_coord),
-                        scale_to=scale_img_spatial[-2:])
+            imgpixel_upper_left_yx, imgpixel_lower_right_yx = self._digest_bounding_box(
+                upper_left_yx=upper_left_yx,
+                lower_right_yx=lower_right_yx,
+                size_yx=size_yx,
+                coordinate_unit=coordinate_unit,
+                label_name=None,
+                pyramid_level=img_pl,
+                pyramid_level_coord=img_pl_coord
+            )
 
         # get image (and label)
         img = self.get_array_by_coordinate(label_name=None,
                                            upper_left_yx=imgpixel_upper_left_yx,
                                            lower_right_yx=imgpixel_lower_right_yx,
-                                           size_yx=imgpixel_size_yx,
+                                           size_yx=None,
                                            coordinate_unit='pixel',
                                            pyramid_level=img_pl,
                                            pyramid_level_coord=None,
@@ -705,7 +654,7 @@ class Image:
             lab = self.get_array_by_coordinate(label_name=label_name,
                                                upper_left_yx=labpixel_upper_left_yx,
                                                lower_right_yx=labpixel_lower_right_yx,
-                                               size_yx=labpixel_size_yx,
+                                               size_yx=None,
                                                coordinate_unit='pixel',
                                                pyramid_level=label_pl,
                                                pyramid_level_coord=None,
