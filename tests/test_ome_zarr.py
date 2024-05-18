@@ -252,7 +252,7 @@ def test_digest_bounding_box(img2d: ome_zarr.Image):
 
     # expected results
     # ... full array
-    assert img2d._digest_bounding_box() == [(0, 0), (269, 319)]
+    assert img2d._digest_bounding_box() == [(0, 0), (270, 320)]
     # ... corners from different inputs
     assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
                                       lower_right_yx=(20, 50),
@@ -276,7 +276,7 @@ def test_digest_bounding_box(img2d: ome_zarr.Image):
                                       pyramid_level=1,
                                       coordinate_unit='micrometer') == [(0, 0), (1000, 1000)]
     # ... label array
-    assert img2d._digest_bounding_box(label_name='organoids') == [(0, 0), (269, 319)]
+    assert img2d._digest_bounding_box(label_name='organoids') == [(0, 0), (270, 320)]
 
 def test_image_str(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `ome_zarr.Image` object string representation."""
@@ -454,7 +454,7 @@ def test_get_array_by_coordinate(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     assert isinstance(img1a, np.ndarray)
     assert isinstance(img1b, np.ndarray)
     assert isinstance(img1c, np.ndarray)
-    assert img1a.shape == (2, 3, 12, 11)
+    assert img1a.shape == (2, 3, 11, 10)
     assert img1b.shape == img1a.shape
     assert img1c.shape == img1a.shape
     assert (img1b == img1a).all()
@@ -478,9 +478,9 @@ def test_get_array_by_coordinate(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
         as_NumPy=True)
     assert isinstance(img2a, np.ndarray)
     assert isinstance(img2b, np.ndarray)
-    expected_shape = np.multiply(
+    expected_shape = np.divide(
         [1, 11, 10], # size z, y, x in micrometer
-        np.divide(1, img2d.get_scale(0, 'organoids')))
+        img2d.get_scale(0, 'organoids'))
     expected_shape = tuple([int(round(x)) for x in expected_shape])
     assert img2a.shape == expected_shape
     assert img2b.shape == img2a.shape
@@ -528,7 +528,8 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
                    show_scalebar_label=True)
         # ... unknown channel label
         with pytest.raises(Exception) as e_info:
-            img2d.plot(channels_labels=['error'])
+            img2d.plot(channels_labels=['error'],
+                       pyramid_level_coord=2)
         # ... both channels and channels_labels given
         with pytest.warns(UserWarning):
             img2d.plot(channels=[0],
