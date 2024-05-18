@@ -428,42 +428,21 @@ class Image:
         else:
             arr = self.zarr_group[pyramid_level]
 
-        # calculate corner coordinates and subset if needed
-        num_unknowns = sum([x == None for x in [upper_left_yx, lower_right_yx, size_yx]])
-        if num_unknowns == 1:
-            if size_yx:
-                assert all([x > 0 for x in size_yx]), 'size_yx values need to be positive'
-                if not upper_left_yx:
-                    upper_left_yx = tuple(lower_right_yx[i] - size_yx[i] for i in range(2))
-                elif not lower_right_yx:
-                    lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
-            assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))]), 'upper_left_yx needs to be less than lower_right_yx'
-
-            # convert coordinates if needed
-            if coordinate_unit != "pixel" or (pyramid_level != pyramid_level_coord):
-                if coordinate_unit == "micrometer":
-                    # Note: this assumes that all non-spatial dimensions
-                    #       (channels, time) have scales of 1.0
-                    scale_from = [1.0] * len(arr.shape)
-                elif coordinate_unit == "pixel":
-                    if pyramid_level_coord is None:
-                        pyramid_level_coord = self._digest_pyramid_level_argument(pyramid_level, label_name)
-                    else:
-                        pyramid_level_coord = self._digest_pyramid_level_argument(pyramid_level_coord, label_name)
-                    scale_from = self.get_scale(pyramid_level_coord, label_name)
-                else:
-                    raise ValueError("`coordinate_unit` needs to be 'micrometer' or 'pixel'")
-                scale_to = self.get_scale(pyramid_level, label_name)
-
-                upper_left_yx = convert_coordinates(upper_left_yx, scale_from[-2:], scale_to[-2:])
-                lower_right_yx = convert_coordinates(lower_right_yx, scale_from[-2:], scale_to[-2:])
-
-            # slice array
+        # calculate corner coordinates
+        upper_left_yx, lower_right_yx = self._digest_bounding_box(
+            upper_left_yx=upper_left_yx,
+            lower_right_yx=lower_right_yx,
+            size_yx=size_yx,
+            coordinate_unit=coordinate_unit,
+            label_name=label_name,
+            pyramid_level=pyramid_level,
+            pyramid_level_coord=pyramid_level_coord)
+        
+        # subset array if needed
+        if upper_left_yx != (0, 0) or lower_right_yx != arr.shape[-2:]:
             arr = arr[...,
-                      slice(int(upper_left_yx[0]), int(lower_right_yx[0]) + 1),
-                      slice(int(upper_left_yx[1]), int(lower_right_yx[1]) + 1)]
-        elif num_unknowns != 3:
-            raise ValueError("Either none or two of `upper_left_yx`, `lower_right_yx` and `size_yx` have to be given")
+                      slice(upper_left_yx[0], lower_right_yx[0]),
+                      slice(upper_left_yx[1], lower_right_yx[1])]
 
         # convert if needed and return
         if as_NumPy:
@@ -760,3 +739,5 @@ class Image:
         kwargs['spacing_yx'] = scale_img_spatial[-2:]
         plotting.plot_image(**kwargs)
 
+# TODO:
+# - plot_object(label_name, object_id)
