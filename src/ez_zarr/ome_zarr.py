@@ -254,6 +254,7 @@ class Image:
             upper_left_yx = (0, 0)
             lower_right_yx = (arr.shape[-2], arr.shape[-1])
             coordinate_unit = 'pixel'
+            pyramid_level_coord = pyramid_level
         else:
             raise ValueError("Either none or two of `upper_left_yx`, `lower_right_yx` and `size_yx` have to be given")
 
