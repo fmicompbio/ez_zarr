@@ -252,7 +252,7 @@ class Image:
             assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))]), 'upper_left_yx needs to be less than lower_right_yx'
         elif num_unknowns == 3:
             upper_left_yx = (0, 0)
-            lower_right_yx = (arr.shape[-2] - 1, arr.shape[-1] - 1)
+            lower_right_yx = (arr.shape[-2], arr.shape[-1])
             coordinate_unit = 'pixel'
         else:
             raise ValueError("Either none or two of `upper_left_yx`, `lower_right_yx` and `size_yx` have to be given")
