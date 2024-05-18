@@ -388,20 +388,20 @@ class Image:
         are returned if there are several ones.
 
         Parameters:
-            label_name (str or None): The name of the label image to be extracted.
+            label_name (str, optional): The name of the label image to be extracted.
                 If `None`, the intensity image will be extracted.
-            upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left
+            upper_left_yx (tuple, optional): Tuple of (y, x) coordinates for the upper-left
                 (lower) coordinates defining the region of interest.
-            lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right
+            lower_right_yx (tuple, optional): Tuple of (y, x) coordinates for the lower-right
                 (higher) coordinates defining the region of interest.
-            size_yx (tuple): Tuple of (size_y, size_x) defining the size of the
+            size_yx (tuple, optional): Tuple of (size_y, size_x) defining the size of the
                 region of interest.
             coordinate_unit (str): The unit of the image coordinates, for example
                 'micrometer' or 'pixel'.
             pyramid_level (str): The pyramid level (resolution level), from which the
                 array should be extracted. If `None`, the lowest-resolution
                 pyramid level will be selected.
-            pyramid_level_coord (str): An optional integer scalar giving the 
+            pyramid_level_coord (str, optional): An optional string giving the 
                 image pyramid level to which the coordinates (`upper_left_yx`,
                 `lower_right_yx` and `size_yx`) refer to if `coordinate_unit="pixel"`
                 (it is ignored otherwise). By default, this is `None`, which will
