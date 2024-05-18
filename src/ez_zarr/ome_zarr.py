@@ -594,9 +594,6 @@ class Image:
         # for label (if any, assuming that this has typically a lower resolution than the intensity image),
         # and propagate the resulting rounding errors to the intensity image. This should minimize the
         # inconsistencies due to rounding errors in the conversions of coordinates.
-        imgpixel_upper_left_yx = None
-        imgpixel_lower_right_yx = None
-        imgpixel_size_yx = None
         if label_name != None:
             # extract scale information for labels
             scale_lab = [self._extract_scale_spacings(x) for x in self.multiscales_labels[label_name]['datasets']]

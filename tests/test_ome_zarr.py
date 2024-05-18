@@ -313,7 +313,6 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
     shutil.move(zattr_file + '.orig', zattr_file)
     # ... clean up
     shutil.rmtree(str(tmpdir) + '/example_img')
-    
 
     # 2D image with labels
     assert isinstance(img2d, ome_zarr.Image)
@@ -515,8 +514,10 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
 
     matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore') # suppress warning due to cannot show FigureCanvas 
-        # ... using channels_labels
+        # suppress warning due to cannot show FigureCanvas
+        warnings.simplefilter('ignore')
+
+        # using channels_labels
         img2d.plot(label_name=None,
                    pyramid_level=None,
                    pyramid_level_coord=None,
@@ -526,22 +527,62 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
                    z_projection_method='maximum',
                    scalebar_micrometer=50,
                    show_scalebar_label=True)
-        # ... unknown channel label
+
+        # unknown channel label
         with pytest.raises(Exception) as e_info:
             img2d.plot(channels_labels=['error'],
                        pyramid_level_coord=2)
-        # ... both channels and channels_labels given
+
+        # both channels and channels_labels given
         with pytest.warns(UserWarning):
             img2d.plot(channels=[0],
                        channels_labels=['some-label-2'],
                        scalebar_micrometer=50,
                        show_scalebar_label=False)
-        # ... automatically extract channel colors and ranges
+
+        # automatically extract channel colors and ranges
         img2d.plot(channels=[0])
-        # ... using label_name
+
+        # using label_name
         img2d.plot(label_name='organoids',
                    channels=[0],
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]])
+
+        # using label_name without matching pyrmaid level
+        # ... copy zarr fileset
+        assert tmpdir.check()
+        shutil.copytree('tests/example_data/plate_ones_mip.zarr/B/03/0',
+                        str(tmpdir) + '/example_img')
+        assert tmpdir.join('/example_img/1').check()
+        # ... remove pyramid levels 1 and 2 from image
+        shutil.rmtree(str(tmpdir) + '/example_img/1')
+        shutil.rmtree(str(tmpdir) + '/example_img/2')
+        zattr_file = str(tmpdir) + '/example_img/.zattrs'
+        with open(zattr_file) as f:
+            zattr = json.load(f)
+        zattr['multiscales'][0]['datasets'] = [zattr['multiscales'][0]['datasets'][0]]
+        with open(zattr_file, "w") as jsonfile:
+            json.dump(zattr, jsonfile, indent=4)
+        # ... remove pyramid levels 0 and 1 from label organoids
+        shutil.rmtree(str(tmpdir) + '/example_img/labels/organoids/0')
+        shutil.rmtree(str(tmpdir) + '/example_img/labels/organoids/1')
+        zattr_file = str(tmpdir) + '/example_img/labels/organoids/.zattrs'
+        with open(zattr_file) as f:
+            zattr = json.load(f)
+        zattr['multiscales'][0]['datasets'] = [zattr['multiscales'][0]['datasets'][2]]
+        with open(zattr_file, "w") as jsonfile:
+            json.dump(zattr, jsonfile, indent=4)
+        # ... plot
+        imgtmp = ome_zarr.Image(str(tmpdir) + '/example_img')
+        imgtmp.plot(label_name='organoids')
+        # ... clean up
+        shutil.rmtree(str(tmpdir) + '/example_img')
+        ### TODO: problematic case where pyramid_level_coord is not None
+        ###       and pyramid_level is not parallel in image and label
+        ###       what does pyramid_level_coord refer to?
+        ###       solution: remove pyramid_level_coord argument?
+        ###       not needed: can use coordinate_unit="micrometer"
+
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
