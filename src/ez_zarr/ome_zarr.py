@@ -276,6 +276,10 @@ class Image:
             upper_left_yx = convert_coordinates(upper_left_yx, scale_from[-2:], scale_to[-2:])
             lower_right_yx = convert_coordinates(lower_right_yx, scale_from[-2:], scale_to[-2:])
 
+            # convert to int
+            upper_left_yx = tuple(int(round(x)) for x in upper_left_yx)
+            lower_right_yx = tuple(int(round(x)) for x in lower_right_yx)
+
         # return
         return([upper_left_yx, lower_right_yx])
     
