@@ -188,14 +188,14 @@ class Image:
                              coordinate_unit: str='micrometer',
                              label_name: Optional[str]=None,
                              pyramid_level: Optional[str]=None,
-                             pyramid_level_coord: Optional[str]=None)-> list[tuple[int]]:
+                             pyramid_level_coord: Optional[str]=None) -> list[tuple[int]]:
         """
         Solves for the bounding box defined by upper-left, lower-right or size.
 
         None or exactly two of `upper_left_yx`, `lower_right_yx` and `size_yx`
         need to be given. If none are given, the bounding box will correspond to
         the full image.
-        Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
+        Otherwise, `upper_left_yx` contains lower values than `lower_right_yx`
         (origin on the top-left, zero-based coordinates), and each of them is
         a tuple of (y, x).
         If `coordinate_unit` is not 'pixel', or `coordinate_unit` is 'pixel' and
@@ -223,8 +223,8 @@ class Image:
                 use `pyramid_level`.
         
         Returns:
-            A list of upper-left and lower-right tuple coordinates for the bounding box:
-            `[(y1, x1), (y2, x2)].
+            A list of upper-left and lower-right tuple coordinates for the bounding box: `[(y1, x1), (y2, x2)]`. These coordinates
+            are always in 'pixel' units of `pyramid_level`.
         
         Examples:
             Obtain the whole coordinates of the full image at pyramid level 0:
@@ -513,28 +513,30 @@ class Image:
         using data at resolution `pyramid_level`.
 
         Parameters:
-            upper_left_yx (tuple): Tuple of (y, x) coordinates for the upper-left
-                (lower) coordinates defining the region of interest.
-            lower_right_yx (tuple): Tuple of (y, x) coordinates for the lower-right
-                (higher) coordinates defining the region of interest.
-            size_yx (tuple): Tuple of (size_y, size_x) defining the size of the
-                region of interest.
-            coordinate_unit (str): The unit of the image coordinates, for example
-                'micrometer' or 'pixel'.
-            label_name (str): The name of the a segmentation mask to be plotted
-                semi-transparently over the image. If `None`, just the image
-                is plotted.
-            pyramid_level (str): The pyramid level (resolution level), from
-                which the image should be extracted. If `None`, the
-                lowest-resolution (highest) pyramid level will be selected.
-            pyramid_level_coord (str): An optional integer scalar giving the 
+            upper_left_yx (tuple, optional): Tuple of (y, x) coordinates
+                for the upper-left (lower) coordinates defining the region
+                of interest.
+            lower_right_yx (tuple, optional): Tuple of (y, x) coordinates
+                for the lower-right (higher) coordinates defining the region
+                of interest.
+            size_yx (tuple, optional): Tuple of (size_y, size_x) defining
+                the size of the region of interest.
+            coordinate_unit (str): The unit of the image coordinates, for
+                example 'micrometer' or 'pixel'.
+            label_name (str, optional): The name of the a segmentation mask
+                to be plotted semi-transparently over the intensity image.
+                If `None`, just the intensity image is plotted.
+            pyramid_level (str, optional): The pyramid level (resolution level),
+                from which the intensity image should be extracted. If `None`,
+                the lowest-resolution (highest) pyramid level will be selected.
+            pyramid_level_coord (str, optional): An optional string giving the 
                 image pyramid level to which the coordinates (`upper_left_yx`,
                 `lower_right_yx` and `size_yx`) refer to if `coordinate_unit="pixel"`
-                (it is ignored otherwise). By default, this is `None`, which will
-                use `pyramid_level`.
-            channels_labels (list[str]): The labels of the image channel(s) to
-                be plotted. This provides an alternative to selecting `channels`
-                by index.
+                (it is ignored otherwise). By default, this is `None`, which
+                indicates that coordinates refer to `pyramid_level`.
+            channels_labels (list[str], optional): The labels of the image
+                channel(s) to be plotted. This provides an alternative to
+                selecting `channels` by index.
             scalebar_micrometer (int): If non-zero, add a scale bar corresponding
                 to `scalebar_micrometer` to the image.
             show_scalebar_label (bool):  If `True`, add micrometer label to scale bar.
@@ -544,9 +546,9 @@ class Image:
                 [plotting.plot_image documentation](plotting.md#src.ez_zarr.plotting.plot_image).
 
         Examples:
-            Plot the whole image `img`.
+            Plot the first channel in cyan from the whole intensity image `img`.
 
-            >>> img.plot(channels = [0], channel_colors = ['red'])
+            >>> img.plot(channels = [0], channel_colors = ['cyan'])
         """
         # digest arguments
         assert label_name == None or label_name in self.label_names, (
