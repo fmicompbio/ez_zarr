@@ -233,6 +233,19 @@ def test_digest_pyramid_level_argument(img2d: ome_zarr.Image, img3d: ome_zarr.Im
     assert img3d._digest_pyramid_level_argument(1) == '1'
     assert img3d._digest_pyramid_level_argument('1', None) == '1'
 
+def test_digest_channels_labels(img2d: ome_zarr.Image):
+    """Test `Image._digest_channels_labels`."""
+
+    # invalid input
+    with pytest.raises(Exception) as e_info:
+        img2d._digest_channels_labels(None)
+    with pytest.raises(Exception) as e_info:
+        img2d._digest_channels_labels(['error'])
+
+    # expected results
+    assert img2d._digest_channels_labels(['some-label-1']) == [0]
+    assert img2d._digest_channels_labels(['some-label-2', 'some-label-1']) == [1, 0]
+
 def test_digest_bounding_box(img2d: ome_zarr.Image):
     """Test `Image._digest_bounding_box`."""
     

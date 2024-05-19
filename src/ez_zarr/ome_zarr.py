@@ -181,6 +181,13 @@ class Image:
                 raise ValueError(f"invalid pyramid level '{pyramid_level}' - must be one of {pyramid_level_names}")
         return pyramid_level
     
+    def _digest_channels_labels(self, channels_labels: list[str]) -> list[int]:
+            all_channels_labels = [ch['label'] for ch in self.channels]
+            missing_labels = [channels_labels[i] for i in range(len(channels_labels)) if channels_labels[i] not in all_channels_labels]
+            if len(missing_labels) > 0:
+                raise ValueError(f"Unknown channels_labels ({', '.join(missing_labels)}), should be `None` or one of {', '.join(all_channels_labels)}")
+            return [all_channels_labels.index(x) for x in channels_labels]
+    
     def _digest_bounding_box(self,
                              upper_left_yx: Optional[tuple[int]]=None,
                              lower_right_yx: Optional[tuple[int]]=None,
@@ -569,11 +576,7 @@ class Image:
         if channels_labels != None:
             if 'channels' in kwargs:
                 warnings.warn('`channels` will be ignored if `channels_labels` is given')
-            all_channels_labels = [ch['label'] for ch in self.channels]
-            missing_labels = [channels_labels[i] for i in range(len(channels_labels)) if channels_labels[i] not in all_channels_labels]
-            if len(missing_labels) > 0:
-                raise ValueError(f"Unknown channels_labels ({', '.join(missing_labels)}), should be `None` or one of {', '.join(all_channels_labels)}")
-            kwargs['channels'] = [all_channels_labels.index(x) for x in channels_labels]
+            kwargs['channels'] = self._digest_channels_labels(channels_labels)
         
         # extract `channel_colors`
         if 'channels' in kwargs and ('channel_colors' not in kwargs or  len(kwargs['channels']) != len(kwargs['channel_colors'])):
