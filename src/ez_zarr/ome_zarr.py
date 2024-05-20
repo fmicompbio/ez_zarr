@@ -342,6 +342,22 @@ class Image:
             A list of table names (str) available for the image.
         """
         return self.table_names
+    
+    def get_pyramid_levels(self, label_name: Optional[str]=None) -> list[str]:
+        """Get list of pyramid levels in an OME-Zarr image.
+        
+        Parameters:
+            label_name (str, optional): The name of the label image for which
+                to return pyramid levels. If None, pyramid levels from the
+                intensity image are returned.
+        
+        Returns:
+            A list of available pyramid levels (str).
+        """
+        if label_name:
+            return [str(x['path']) for x in self.multiscales_labels[label_name]['datasets']]
+        else:
+            return [str(x['path']) for x in self.multiscales_image['datasets']]
 
     def get_scale(self,
                   pyramid_level: str,

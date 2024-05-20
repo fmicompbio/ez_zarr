@@ -381,6 +381,13 @@ def test_get_table_names(img3d: ome_zarr.Image):
     assert img3d.get_table_names() == ['FOV_ROI_table']
     assert img3d.get_table_names() == img3d.table_names
 
+def test_get_pyramid_levels(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
+    """Test `get_pyramid_levels()` method of `ome_zarr.Image` object."""
+    assert img2d.get_pyramid_levels() == ['0', '1', '2']
+    assert img2d.get_pyramid_levels(None) == ['0', '1', '2']
+    assert img2d.get_pyramid_levels('organoids') == ['0', '1', '2']
+    assert img3d.get_pyramid_levels() == ['0', '1', '2']
+
 def test_get_scale(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `ome_zarr.Image` object get_scale() method."""
 
