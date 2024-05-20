@@ -361,7 +361,8 @@ class Image:
 
     def get_scale(self,
                   pyramid_level: str,
-                  label_name: Optional[str]=None) -> list[float]:
+                  label_name: Optional[str]=None,
+                  spatial_axes_only: bool=False) -> list[float]:
         """
         Get the scale of a given pyramid level.
 
@@ -370,12 +371,14 @@ class Image:
             label_name (str or None): The name of the label image to which
                 `pyramid_level` refers to. If None, `pyramid_level` is assumed
                 to refer to the intensity image.
+            spatial_axes_only (bool): If True, only the scales for spatial
+                dimensions are returned.
         
         Returns:
-            A list with the scale of the given pyramid level.
+            A list with the axis scales of the given pyramid level.
         
         Example:
-            Get the scale of the first pyramid level:
+            Get the axis scales of the first pyramid level:
 
             >>> scale = img.get_scale('level_0', 'nuclei')
         """
@@ -385,10 +388,19 @@ class Image:
         # extract scale
         if label_name:
             datasets_list = self.multiscales_labels[label_name]['datasets']
+            channel_info = self.channel_info_labels[label_name]
         else:
             datasets_list = self.multiscales_image['datasets']
-        scale = [x['coordinateTransformations'][0]['scale'] for x in datasets_list if str(x['path']) == pyramid_level][0]
+            channel_info = self.channel_info_image
+        scale = [x['coordinateTransformations'][0]['scale']
+                 for x in datasets_list
+                 if str(x['path']) == pyramid_level][0]
 
+        if spatial_axes_only:
+            scale = [scale[i]
+                     for i in range(len(scale))
+                     if channel_info[i] in ['z', 'y', 'x']]
+        
         # return
         return scale
     

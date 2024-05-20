@@ -406,11 +406,13 @@ def test_get_scale(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     assert img2d.get_scale(0, 'organoids') == [1.0, 0.1625, 0.1625]
     assert img2d.get_scale('1', 'organoids') == [1.0, 0.325, 0.325]
     assert img2d.get_scale(2, 'organoids') == [1.0, 0.65, 0.65]
+    assert img2d.get_scale(2, 'organoids', True) == [1.0, 0.65, 0.65]
 
     # 3D image
-    assert img2d.get_scale(0) == [1.0, 1.0, 0.1625, 0.1625]
-    assert img2d.get_scale('1') == [1.0, 1.0, 0.325, 0.325]
-    assert img2d.get_scale(2) == [1.0, 1.0, 0.65, 0.65]
+    assert img3d.get_scale(0) == [1.0, 1.0, 0.1625, 0.1625]
+    assert img3d.get_scale('1') == [1.0, 1.0, 0.325, 0.325]
+    assert img3d.get_scale(2) == [1.0, 1.0, 0.65, 0.65]
+    assert img3d.get_scale(2, spatial_axes_only=True) == [1.0, 0.65, 0.65]
 
 def test_get_array_by_coordinate(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `ome_zarr.Image` object get_array_by_coordinate() method."""
