@@ -485,6 +485,146 @@ class Image:
             arr = np.array(arr)
         return arr
 
+    def get_array_pair_by_coordinate(self,
+                                     label_name: str,
+                                     upper_left_yx: Optional[tuple[int]]=None,
+                                     lower_right_yx: Optional[tuple[int]]=None,
+                                     size_yx: Optional[tuple[int]]=None,
+                                     coordinate_unit: str='micrometer',
+                                     pyramid_level: Optional[str]=None,
+                                     pyramid_level_coord: Optional[str]=None) -> tuple[np.ndarray]:
+        """
+        Extract a matching pair of (sub)arrays (intensity and label) by coordinates.
+
+        None or exactly two of `upper_left_yx`, `lower_right_yx` and `size_yx`
+        need to be given. If none are given, it will return the full image.
+        Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
+        (origin on the top-left, zero-based coordinates), and each of them is
+        a tuple of (y, x). No t, c or z coordinate need to be given, all of them
+        are returned if there are several ones.
+
+        Coordinate and pyramid level arguments all refer to the intensity image.
+        For the label, matching values will be selected automatically, and if
+        necessary, the label array is resized to match the intensity array.
+
+        Parameters:
+            label_name (str): The name of the label image to be extracted.
+            upper_left_yx (tuple, optional): Tuple of (y, x) intensity image
+                coordinates for the upper-left (lower) coordinates defining the
+                region of interest.
+            lower_right_yx (tuple, optional): Tuple of (y, x) intensity image
+                coordinates for the lower-right (higher) coordinates defining the
+                region of interest.
+            size_yx (tuple, optional): Tuple of (size_y, size_x) defining the size
+                of the intensity image region of interest.
+            coordinate_unit (str): The unit of the image coordinates, for example
+                'micrometer' or 'pixel'.
+            pyramid_level (str): The intensity image pyramid level (resolution
+                level), from which the intensity array should be extracted.
+                If `None`, the lowest-resolution pyramid level will be selected.
+                A matching pyramid level for the label will be selected
+                automatically.
+            pyramid_level_coord (str, optional): An optional string giving the 
+                intensity image pyramid level to which the coordinates (if any)
+                refer to if `coordinate_unit="pixel"` (it is ignored otherwise).
+                By default, this is `None`, which will use `pyramid_level`.
+        
+        Returns:
+            A tuple of two `numpy.ndarray` objects with the extracted intensity
+            and (possibly resized) label arrays.
+        
+        Examples:
+            Obtain the whole image and matching 'organoids' label arrays:
+
+            >>> image_array, label_array = img.get_array_pair_by_coordinate(label_name = 'organoids')
+        """
+        # digest arguments
+        assert isinstance(label_name, str) and label_name in self.label_names, (
+            f"Unknown label_name ({label_name}), should be one of "
+            ', '.join(self.label_names)
+        )
+        pyramid_level = self._digest_pyramid_level_argument(
+            pyramid_level=pyramid_level,
+            label_name=None
+        )
+        if pyramid_level_coord is None:
+            pyramid_level_coord = pyramid_level
+
+        # find matching label pyramid level
+        img_scale_spatial = self.get_scale(
+            pyramid_level=pyramid_level,
+            label_name=None,
+            spatial_axes_only=True
+        )
+        lab_scale_spatial_dict = {
+            pl: self.get_scale(pyramid_level=pl, label_name=label_name, spatial_axes_only=True) for pl in self.get_pyramid_levels(label_name=label_name)
+        }
+        nearest_scale_idx = np.argmin([np.linalg.norm(np.array(lab_scale_spatial_dict[pl]) - np.array(img_scale_spatial)) for pl in lab_scale_spatial_dict.keys()])
+        nearest_scale_pl = list(lab_scale_spatial_dict.keys())[nearest_scale_idx]
+        lab_scale_spatial = lab_scale_spatial_dict[nearest_scale_pl]
+
+        # calculate image corner points
+        imgpixel_upper_left_yx, imgpixel_lower_right_yx = self._digest_bounding_box(
+            upper_left_yx=upper_left_yx,
+            lower_right_yx=lower_right_yx,
+            size_yx=size_yx,
+            coordinate_unit=coordinate_unit,
+            label_name=None,
+            pyramid_level=pyramid_level,
+            pyramid_level_coord=pyramid_level_coord
+        )
+
+        # make sure that the dimensions are divisible by
+        # the yx scaling factor between intensity and label arrays
+        scalefact_yx = np.divide(lab_scale_spatial, img_scale_spatial)
+        imgpixel_upper_left_yx = tuple((np.floor_divide(imgpixel_upper_left_yx, scalefact_yx[-2:]) * scalefact_yx[-2:]))
+        imgpixel_lower_right_yx = tuple((np.floor_divide(imgpixel_lower_right_yx, scalefact_yx[-2:]) * scalefact_yx[-2:]))
+
+        # get intensity array
+        img_arr = np.array(self.get_array_by_coordinate(
+            upper_left_yx=imgpixel_upper_left_yx,
+            lower_right_yx=imgpixel_lower_right_yx,
+            size_yx=None,
+            coordinate_unit='pixel',
+            label_name=None,
+            pyramid_level=pyramid_level
+        ))
+
+        # convert intensity coordiantes to label coordinates
+        labpixel_upper_left_yx = convert_coordinates(
+            imgpixel_upper_left_yx,
+            img_scale_spatial[-2:],
+            lab_scale_spatial[-2:]
+        )
+        labpixel_lower_right_yx = convert_coordinates(
+            imgpixel_lower_right_yx,
+            img_scale_spatial[-2:],
+            lab_scale_spatial[-2:]
+        )
+
+        # get label array
+        lab_arr = np.array(self.get_array_by_coordinate(
+            upper_left_yx=labpixel_upper_left_yx,
+            lower_right_yx=labpixel_lower_right_yx,
+            size_yx=None,
+            coordinate_unit='pixel',
+            label_name=label_name,
+            pyramid_level=nearest_scale_pl
+        ))
+
+        # resize label if needed (correct non-matching scales or rounding errors)
+        if lab_arr.shape[-2:] != img_arr.shape[-2:]:
+            lab_arr = resize_image(
+                im=lab_arr,
+                output_shape=img_arr.shape[(img_arr.ndim-lab_arr.ndim):],
+                im_type='label',
+                number_nonspatial_axes=sum([int(s not in ['z','y','x']) for s in self.channel_info_labels[label_name]])
+            )
+
+        # return arrays
+        return tuple([img_arr, lab_arr])
+
+
     def get_table(self,
                   table_name: str,
                   as_AnnData: bool=False) -> Any:
