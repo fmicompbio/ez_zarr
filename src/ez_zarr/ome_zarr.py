@@ -139,11 +139,21 @@ class Image:
     @staticmethod
     def _find_path_of_lowest_resolution_level(datasets: list[dict[str, Any]]) -> str:
         lev = None
-        maxx = 0 # maximal x resolution
+        maxx = 0 # maximal x pixel size (lowest resolution)
         for i in range(len(datasets)):
             if datasets[i]['coordinateTransformations'][0]['scale'][-1] > maxx:
                 lev = str(datasets[i]['path'])
                 maxx = datasets[i]['coordinateTransformations'][0]['scale'][-1]
+        return lev
+
+    @staticmethod
+    def _find_path_of_highest_resolution_level(datasets: list[dict[str, Any]]) -> str:
+        lev = None
+        minx = float('inf') # minimal x pixel size (highest resolution)
+        for i in range(len(datasets)):
+            if datasets[i]['coordinateTransformations'][0]['scale'][-1] < minx:
+                lev = str(datasets[i]['path'])
+                minx = datasets[i]['coordinateTransformations'][0]['scale'][-1]
         return lev
 
     def _digest_pyramid_level_argument(self, pyramid_level=None, label_name=None) -> str:
