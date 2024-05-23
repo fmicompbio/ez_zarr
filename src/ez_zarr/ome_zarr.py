@@ -560,7 +560,11 @@ class Image:
             pl: self.get_scale(pyramid_level=pl, label_name=label_name, spatial_axes_only=True) for pl in self.get_pyramid_levels(label_name=label_name)
         }
         # ... filter out label scales with higher resolution than the intensity image
-        nearest_scale_idx = np.argmin([np.linalg.norm(np.array(lab_scale_spatial_dict[pl]) - np.array(img_scale_spatial)) for pl in lab_scale_spatial_dict.keys()])
+        lab_scale_spatial_dict = {pl: lab_scale_spatial for pl, lab_scale_spatial in lab_scale_spatial_dict.items() if all([lab_scale_spatial[i] >= img_scale_spatial[i] for i in range(len(lab_scale_spatial))])}
+        if len(lab_scale_spatial_dict) == 0:
+            raise ValueError(f"For the requested pyramid level ({pyramid_level}) of the intensity image, down-scaling of an available label ('{label_name}') would be required. Down-scaling of labels is not supported - try selecting a higher-resolution intensity image.")
+
+        nearest_scale_idx = np.argmin([np.mean(np.array(lab_scale_spatial_dict[pl]) / np.array(img_scale_spatial)) for pl in lab_scale_spatial_dict.keys()])
         nearest_scale_pl = list(lab_scale_spatial_dict.keys())[nearest_scale_idx]
         lab_scale_spatial = lab_scale_spatial_dict[nearest_scale_pl]
 
