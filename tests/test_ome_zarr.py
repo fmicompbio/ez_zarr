@@ -508,6 +508,31 @@ def test_get_array_by_coordinate(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     assert (img1b == img1a).all()
     assert (img1c == img1a).all()
 
+def test_get_array_pair_by_coordinate(img2d: ome_zarr.Image, tmpdir: str):
+    """Test `ome_zarr.Image` object get_array_pair_by_coordinate() method."""
+
+    # using pyramid_level corresponding to a lower resolution intensity image
+    #     than any available label resolutions
+    # ... copy zarr fileset
+    assert tmpdir.check()
+    shutil.copytree('tests/example_data/plate_ones_mip.zarr/B/03/0',
+                    str(tmpdir) + '/example_img')
+    assert tmpdir.join('/example_img/1').check()
+    # ... remove pyramid level 2 from label organoids
+    shutil.rmtree(str(tmpdir) + '/example_img/labels/organoids/2')
+    zattr_file = str(tmpdir) + '/example_img/labels/organoids/.zattrs'
+    with open(zattr_file) as f:
+        zattr = json.load(f)
+    zattr['multiscales'][0]['datasets'] = zattr['multiscales'][0]['datasets'][:2]
+    with open(zattr_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    # ... plot
+    imgtmp = ome_zarr.Image(str(tmpdir) + '/example_img')
+    with pytest.raises(Exception) as e_info:
+        imgtmp.get_array_pair_by_coordinate(pyramid_level='2', label_name='organoids')
+    # ... clean up
+    shutil.rmtree(str(tmpdir) + '/example_img')
+
 def test_get_table(img2d: ome_zarr.Image):
     """Test `Image.get_table()`."""
 
