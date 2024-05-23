@@ -291,6 +291,53 @@ class Image:
         # return
         return([upper_left_yx, lower_right_yx])
     
+    def _get_bounding_box_for_label_value(self,
+                                          label_name: str,
+                                          label_value: Union[int, float, str],
+                                          label_pyramid_level: Union[int, str],
+                                          padding_pixels: Optional[int]=0) -> tuple[tuple[int], tuple[int]]:
+        """
+        Given a label name and value, find the corner coordinates of the bounding box.
+
+        Parameters:
+            label_name (str): The name of the label image to extract the bounding box from.
+            label_value (int, float, str): The value of the label to extract the bounding box for.
+            label_pyramid_level (int, str): The pyramid level to extract the bounding box from.
+            padding_pixels (int): The number of pixels to add to each side for each axis of the bounding box.
+        
+        Returns:
+            A tuple of upper-left and lower-right pixel coordinates for the bounding box
+            containing the label value, or `None` if the label value is not found.
+            For a 2D label image, this would be `((y1, x1), (y2, x2))`.
+        
+        Example:
+            Get the bounding box for the label value 1 in pyramid level 0:
+
+            >>> img._get_bounding_box_for_label_value(label_name='nuclei', label_value=1, label_pyramid_level=0)
+        """
+        # digest arguments
+        assert label_name in self.label_names, f'`label_name` must be in {self.label_names}'
+        label_pyramid_level = self._digest_pyramid_level_argument(label_pyramid_level, label_name)
+        assert isinstance(padding_pixels, int), '`padding_pixels` must be an integer scalar'
+
+        # get label array
+        lab_arr = self.get_array_by_coordinate(label_name=label_name,
+                                               pyramid_level=label_pyramid_level)
+
+        # find bounding box
+        value_coordinates = np.equal(lab_arr, label_value).nonzero()
+        if len(value_coordinates[0]) == 0:
+            return None
+        upper_left = tuple([min(x) for x in value_coordinates])
+        lower_right = tuple([max(x) + 1 for x in value_coordinates])
+
+        # padding
+        upper_left = tuple([max(0, upper_left[i] - padding_pixels) for i in range(len(upper_left))])
+        lower_right = tuple([min(lab_arr.shape[i], lower_right[i] + padding_pixels) for i in range(len(lower_right))])
+
+        # return result
+        return tuple([upper_left, lower_right])
+    
     # string representation ---------------------------------------------------
     def __str__(self):
         nch = self.nchannels_image
