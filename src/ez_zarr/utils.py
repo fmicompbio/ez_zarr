@@ -44,6 +44,43 @@ def convert_coordinates(coords_from: tuple[Union[int, float]],
     return(tuple(coords_to))
 
 # image rescaling and resizing --------------------------------------
+def _setup_for_resizing(im: np.ndarray,
+                        im_type: str,
+                        number_nonspatial_axes: int,
+                        scale_from: Optional[list[float]]=None,
+                        scale_to: Optional[list[float]]=None,
+                        output_shape: Optional[tuple[int]]=None) -> tuple[list[int], np.ndarray, int, bool]:
+    # Digest arguments
+    assert isinstance(im, np.ndarray), "`im` must be a numpy array"
+    assert scale_from is None or len(scale_from) == im.ndim, f"`scale_from` must be of length {im.ndim}"
+    assert scale_to is None or len(scale_to) == im.ndim, f"`scale_to` must be of length {im.ndim}"
+    assert output_shape is None or len(output_shape) == im.ndim, f"`output_shape` must be of length {im.ndim}"
+    assert im_type in ['intensity', 'label'], f"invalid `im_type` '{im_type}' - must be 'intensity' or 'label'"
+    assert isinstance(number_nonspatial_axes, int) and number_nonspatial_axes >= 0 and number_nonspatial_axes < im.ndim, f"`number_of_nonspatial_axes` must be an integer greater or equal to 0 and less than the number of image dimensions ({im.ndim})"
+
+    # Get the spatial and non-spatial axes
+    non_spatial_axes = list(range(number_nonspatial_axes))
+    spatial_axes = list(range(number_nonspatial_axes, im.ndim))
+    if scale_from is not None and scale_to is not None and any([scale_from[i] != scale_to[i] for i in non_spatial_axes]):
+        warnings.warn("Ignoring `scale_from` and `scale_to` components for non-spatial axes.")
+    if output_shape is not None and any([im.shape[i] != output_shape[i] for i in non_spatial_axes]):
+        warnings.warn("Ignoring `output_shape` components for non-spatial axes.")
+
+    # Reshape the image to separate non-spatial from spatial axes
+    reshaped_im = im.reshape(int(np.prod([im.shape[i] for i in non_spatial_axes])),
+                            *[im.shape[i] for i in spatial_axes])
+    
+    # Set scaling/resizing parameters
+    if im_type == 'intensity':
+        interpolation_order = 1
+        do_anti_aliasing = True
+    elif im_type == 'label':
+        interpolation_order = 0
+        do_anti_aliasing = False
+    
+    # return results
+    return (non_spatial_axes, reshaped_im, interpolation_order, do_anti_aliasing)
+
 def rescale_image(im: np.ndarray,
                   scale_from: list[float],
                   scale_to: list[float],
@@ -81,33 +118,18 @@ def rescale_image(im: np.ndarray,
         >>> im_small.shape # returns (4, 50, 50)
     """
 
-    # Digest arguments
-    assert isinstance(im, np.ndarray), "`im` must be a numpy array"
-    assert len(scale_from) == im.ndim, f"`scale_from` must be of length {im.ndim}"
-    assert len(scale_to) == im.ndim, f"`scale_to` must be of length {im.ndim}"
-    assert im_type in ['intensity', 'label'], f"invalid `im_type` '{im_type}' - must be 'intensity' or 'label'"
-    assert isinstance(number_nonspatial_axes, int) and number_nonspatial_axes >= 0 and number_nonspatial_axes < im.ndim, f"`number_of_nonspatial_axes` must be an integer greater or equal to 0 and less than the number of image dimensions ({im.ndim})"
-
-    # Get the spatial and non-spatial axes
-    non_spatial_axes = list(range(number_nonspatial_axes))
-    spatial_axes = list(range(number_nonspatial_axes, im.ndim))
-    if any([scale_from[i] != scale_to[i] for i in non_spatial_axes]):
-        warnings.warn("Ignoring `scale_from` and `scale_to` components for non-spatial axes.")
+    # setup for rescale
+    non_spatial_axes, reshaped_im, interpolation_order, do_anti_aliasing = _setup_for_resizing(
+        im=im,
+        scale_from=scale_from,
+        scale_to=scale_to,
+        im_type=im_type,
+        number_nonspatial_axes=number_nonspatial_axes)
 
     # Calculate the rescaling factors
     scale_factors = [from_ / to for from_, to in zip(scale_from, scale_to)]
 
-    # Reshape the image to separate non-spatial from spatial axes
-    reshaped_im = im.reshape(int(np.prod([im.shape[i] for i in non_spatial_axes])),
-                            *[im.shape[i] for i in spatial_axes])
-    
     # Rescale the spatial dimensions separately for each non-spatial element
-    if im_type == 'intensity':
-        interpolation_order = 1
-        do_anti_aliasing = True
-    elif im_type == 'label':
-        interpolation_order = 0
-        do_anti_aliasing = False
     rescaled_im = np.stack([rescale(image=reshaped_im[i],
                                     scale=scale_factors[number_nonspatial_axes:],
                                     order=interpolation_order,
@@ -158,29 +180,14 @@ def resize_image(im: np.ndarray,
         >>> im_small.shape # returns (4, 50, 50)
     """
 
-    # Digest arguments
-    assert isinstance(im, np.ndarray), "`im` must be a numpy array"
-    assert len(output_shape) == im.ndim, f"`output_shape` must be of length {im.ndim}"
-    assert im_type in ['intensity', 'label'], f"invalid `im_type` '{im_type}' - must be 'intensity' or 'label'"
-    assert isinstance(number_nonspatial_axes, int) and number_nonspatial_axes >= 0 and number_nonspatial_axes < im.ndim, f"`number_of_nonspatial_axes` must be an integer greater or equal to 0 and less than the number of image dimensions ({im.ndim})"
+    # setup for rescale
+    non_spatial_axes, reshaped_im, interpolation_order, do_anti_aliasing = _setup_for_resizing(
+        im=im,
+        output_shape=output_shape,
+        im_type=im_type,
+        number_nonspatial_axes=number_nonspatial_axes)
 
-    # Get the spatial and non-spatial axes
-    non_spatial_axes = list(range(number_nonspatial_axes))
-    spatial_axes = list(range(number_nonspatial_axes, im.ndim))
-    if any([im.shape[i] != output_shape[i] for i in non_spatial_axes]):
-        warnings.warn("Ignoring `output_shape` components for non-spatial axes.")
-
-    # Reshape the image to separate non-spatial from spatial axes
-    reshaped_im = im.reshape(int(np.prod([im.shape[i] for i in non_spatial_axes])),
-                            *[im.shape[i] for i in spatial_axes])
-    
     # Rescale the spatial dimensions separately for each non-spatial element
-    if im_type == 'intensity':
-        interpolation_order = 1
-        do_anti_aliasing = True
-    elif im_type == 'label':
-        interpolation_order = 0
-        do_anti_aliasing = False
     resized_im = np.stack([resize(image=reshaped_im[i],
                                   output_shape=output_shape[number_nonspatial_axes:],
                                   order=interpolation_order,
