@@ -193,21 +193,21 @@ def test_extract_scale_spacings(img2d: ome_zarr.Image):
     ) == [7, [1.0, 2.0, 0.5]]
 
 def test_find_path_of_lowest_level(img2d: ome_zarr.Image):
-    """Test `Image._find_path_of_lowest_level`."""
+    """Test `Image._find_path_of_lowest_resolution_level`."""
     
     # input with missing axes
-    assert img2d._find_path_of_lowest_level({}) == None
+    assert img2d._find_path_of_lowest_resolution_level({}) == None
     
     # example input
-    assert img2d._find_path_of_lowest_level(img2d.multiscales_image['datasets']) == '2'
-    assert img2d._find_path_of_lowest_level(img2d.multiscales_labels['organoids']['datasets']) == '2'
+    assert img2d._find_path_of_lowest_resolution_level(img2d.multiscales_image['datasets']) == '2'
+    assert img2d._find_path_of_lowest_resolution_level(img2d.multiscales_labels['organoids']['datasets']) == '2'
     
     # synthetic input
-    assert img2d._find_path_of_lowest_level(
+    assert img2d._find_path_of_lowest_resolution_level(
         [{'path': 0, 'coordinateTransformations': [{'scale': [0.2, 0.2]}]},
          {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.4]}]}
         ]) == '1'
-    assert img2d._find_path_of_lowest_level(
+    assert img2d._find_path_of_lowest_resolution_level(
         [{'path': 0, 'coordinateTransformations': [{'scale': [0.1, 0.2]}]},
          {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.1]}]}
         ]) == '0'

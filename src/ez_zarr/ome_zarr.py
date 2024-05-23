@@ -137,7 +137,7 @@ class Image:
         return [dataset_dict['path'], dataset_dict['coordinateTransformations'][0]['scale']]
     
     @staticmethod
-    def _find_path_of_lowest_level(datasets: list[dict[str, Any]]) -> str:
+    def _find_path_of_lowest_resolution_level(datasets: list[dict[str, Any]]) -> str:
         lev = None
         maxx = 0 # maximal x resolution
         for i in range(len(datasets)):
@@ -166,9 +166,9 @@ class Image:
         if pyramid_level == None: 
             # no pyramid level given -> pick lowest resolution one
             if label_name is None: # intensity image
-                pyramid_level = self._find_path_of_lowest_level(self.multiscales_image['datasets'])
+                pyramid_level = self._find_path_of_lowest_resolution_level(self.multiscales_image['datasets'])
             else: # label image
-                pyramid_level = self._find_path_of_lowest_level(self.multiscales_labels[label_name]['datasets'])
+                pyramid_level = self._find_path_of_lowest_resolution_level(self.multiscales_labels[label_name]['datasets'])
         else:
             # make sure it is a string
             pyramid_level = str(pyramid_level)
@@ -417,7 +417,7 @@ class Image:
         Extract a (sub)array from an image (intensity image or label) by coordinates.
 
         None or exactly two of `upper_left_yx`, `lower_right_yx` and `size_yx`
-        need to be given. If none are given, it will return the full image.
+        need to be given. If none are given, the full image is returned.
         Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
         (origin on the top-left, zero-based coordinates), and each of them is
         a tuple of (y, x). No t, c or z coordinate need to be given, all of them
@@ -497,7 +497,7 @@ class Image:
         Extract a matching pair of (sub)arrays (intensity and label) by coordinates.
 
         None or exactly two of `upper_left_yx`, `lower_right_yx` and `size_yx`
-        need to be given. If none are given, it will return the full image.
+        need to be given. If none are given, the full image is returned.
         Otherwise, `upper_left_yx` contains the lower indices than `lower_right_yx`
         (origin on the top-left, zero-based coordinates), and each of them is
         a tuple of (y, x). No t, c or z coordinate need to be given, all of them
@@ -536,7 +536,7 @@ class Image:
         Examples:
             Obtain the whole image and matching 'organoids' label arrays:
 
-            >>> image_array, label_array = img.get_array_pair_by_coordinate(label_name = 'organoids')
+            >>> img, lab = img.get_array_pair_by_coordinate(label_name = 'organoids')
         """
         # digest arguments
         assert isinstance(label_name, str) and label_name in self.label_names, (
@@ -559,6 +559,7 @@ class Image:
         lab_scale_spatial_dict = {
             pl: self.get_scale(pyramid_level=pl, label_name=label_name, spatial_axes_only=True) for pl in self.get_pyramid_levels(label_name=label_name)
         }
+        # ... filter out label scales with higher resolution than the intensity image
         nearest_scale_idx = np.argmin([np.linalg.norm(np.array(lab_scale_spatial_dict[pl]) - np.array(img_scale_spatial)) for pl in lab_scale_spatial_dict.keys()])
         nearest_scale_pl = list(lab_scale_spatial_dict.keys())[nearest_scale_idx]
         lab_scale_spatial = lab_scale_spatial_dict[nearest_scale_pl]
