@@ -737,11 +737,13 @@ class Image:
              size_yx: Optional[tuple[int]]=None,
              coordinate_unit: str='micrometer',
              label_name: Optional[str]=None,
+             label_value: Optional[Union[int, float, str]]=None,
+             padding_pixels: int=0,
              pyramid_level: Optional[str]=None,
              pyramid_level_coord: Optional[str]=None,
              channels_labels: Optional[list[str]]=None,
              scalebar_micrometer: int=0,
-             show_scalebar_label: [bool]=True,
+             show_scalebar_label: bool=True,
              **kwargs: Any) -> None:
         """
         Plot an image.
@@ -764,6 +766,15 @@ class Image:
             label_name (str, optional): The name of the a segmentation mask
                 to be plotted semi-transparently over the intensity image.
                 If `None`, just the intensity image is plotted.
+            label_value (int, float, str, optional): The value of the label,
+                for which bounding box coordinates should be extracted. 
+                The highest resolution pyramid level will be used.If
+                not `None`, `label_value` will automatically determine `upper_left_yx`,
+                `lower_right_yx` and `size_yx`. Any values given to those or
+                to `coordinate_unit` and `pyramid_level_coord` will be ignored.
+            padding_pixels (int): The number of pixels to add to the final
+                image region coordinates on both sides of each axis. Only used
+                if `label_value` is not `None`.
             pyramid_level (str, optional): The pyramid level (resolution level),
                 from which the intensity image should be extracted. If `None`,
                 the lowest-resolution (highest) pyramid level will be selected.
@@ -817,6 +828,41 @@ class Image:
             print("setting `channel_ranges` based on length of `channels`")
             kwargs['channel_ranges'] = [[0.01, 0.95] for i in range(len(kwargs['channels']))]
 
+        # get coordiantes by `label_value` if needed
+        if label_value != None:
+            if upper_left_yx != None or lower_right_yx != None or size_yx != None:
+                warnings.warn("Ignoring provided coordinates since `label_value` was provided.")
+            label_pyramid_level = self._find_path_of_highest_resolution_level(
+                self.multiscales_labels[label_name]['datasets']
+            )
+            label_upper_left_yx, label_lower_right_yx = self._get_bounding_box_for_label_value(
+                label_name=label_name,
+                label_value=label_value,
+                label_pyramid_level=label_pyramid_level,
+                padding_pixels=0
+            )
+            if label_upper_left_yx is None:
+                raise ValueError(f"No label value {label_value} found in label '{label_name}', pyramid level '{label_pyramid_level}'")
+            upper_left_yx = convert_coordinates(
+                coords_from=label_upper_left_yx[-2:],
+                scale_from=self.get_scale(label_name=label_name,
+                                          pyramid_level=label_pyramid_level)[-2:],
+                scale_to=self.get_scale(pyramid_level=pyramid_level)[-2:]
+            )
+            lower_right_yx = convert_coordinates(
+                coords_from=label_lower_right_yx[-2:],
+                scale_from=self.get_scale(label_name=label_name,
+                                          pyramid_level=label_pyramid_level)[-2:],
+                scale_to=self.get_scale(pyramid_level=pyramid_level)[-2:]
+            )
+            size_yx = None
+            coordinate_unit = 'pixel'
+            pyramid_level_coord = None
+
+            # padding
+            upper_left_yx = tuple([max(0, upper_left_yx[i] - padding_pixels) for i in range(2)])
+            lower_right_yx = tuple([min(self.array_dict[pyramid_level].shape[-2:][i], lower_right_yx[i] + padding_pixels) for i in range(2)])
+        
         # get image and label arrays
         scale_img_spatial = self.get_scale(
             pyramid_level=pyramid_level,
