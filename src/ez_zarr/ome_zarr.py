@@ -619,6 +619,7 @@ class Image:
 
         # resize label if needed (correct non-matching scales or rounding errors)
         if lab_arr.shape[-2:] != img_arr.shape[-2:]:
+            warnings.warn(f"For the requested pyramid level ({pyramid_level}) of the intensity image, no matching label ('{label_name}') is available. Up-scaling the label using factor(s) {scalefact_yx}")
             lab_arr = resize_image(
                 im=lab_arr,
                 output_shape=img_arr.shape[(img_arr.ndim-lab_arr.ndim):],
