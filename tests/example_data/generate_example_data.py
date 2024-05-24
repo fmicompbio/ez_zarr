@@ -16,6 +16,30 @@ import itertools
 
 from fractal_tasks_core.roi import prepare_FOV_ROI_table
 
+# helper functions
+def generate_circular_mask(shape, radius, center=(0, 0)):
+  """
+  Generates a 2D numpy array with values of 1 in a circular region and zero values everywhere else.
+
+  Args:
+      shape: Tuple representing the shape of the desired array (rows, columns).
+      radius: Float representing the radius of the circle.
+      center: Tuple representing the center coordinates of the circle (default: (0, 0)).
+
+  Returns:
+      A 2D numpy array with the specified shape.
+  """
+  # Create arrays with coordinates
+  y_range = da.arange(shape[0])
+  x_range = da.arange(shape[1])
+  # Reshape for broadcasting
+  y = y_range.reshape((shape[0], 1))
+  x = x_range.reshape((1, shape[1]))
+  # Calculate distance from center
+  dist_from_center = da.sqrt(((x - center[0])**2) + ((y - center[1])**2))
+  mask = da.where(dist_from_center <= radius, 1, 0).astype(np.uint16)
+  return mask
+
 # gloabl parameters
 axes = [
     {"name": "c", "type": "channel"},
@@ -196,9 +220,11 @@ for i in range(len(zarrurl)):
     
     if create_labels[i]:
         group_labels = zarr.group(f"{zarrurl[i]}{component}/labels")
+        xl = generate_circular_mask(x.shape[-2:], radius=100, center=(200,300)) * 1 + generate_circular_mask(x.shape[-2:], radius=200, center=(200,800)) * 2 + generate_circular_mask(x.shape[-2:], radius=300, center=(700,700)) * 3
+        xl = da.expand_dims(xl, axis=0)
         for ind_level in range(num_levels):
             scale = 2**ind_level
-            yl = da.coarsen(np.min, x[0], {1: scale, 2: scale}).rechunk(
+            yl = da.coarsen(np.min, xl, {1: scale, 2: scale}).rechunk(
                 (1, size_y, size_x), balance=True
             )
             yl.to_zarr(
