@@ -311,6 +311,16 @@ def test_digest_bounding_box(img2d: ome_zarr.Image):
     # ... label array
     assert img2d._digest_bounding_box(label_name='organoids') == [(0, 0), (270, 320)]
 
+def test_get_bounding_box_for_label_value(img2d: ome_zarr.Image):
+    """Test `Image._get_bounding_box_for_label_value`."""
+
+    # available label values
+    assert img2d._get_bounding_box_for_label_value(label_value=0, label_name='organoids', label_pyramid_level='2') == ((0, 0, 0), (1, 270, 320))
+    assert img2d._get_bounding_box_for_label_value(label_value=1, label_name='organoids', label_pyramid_level='0') == ((0, 200, 100), (1, 401, 301))
+    assert img2d._get_bounding_box_for_label_value(label_value=2, label_name='organoids', label_pyramid_level='0') == ((0, 600, 0), (1, 1001, 401))
+    assert img2d._get_bounding_box_for_label_value(label_value=3, label_name='organoids', label_pyramid_level='0') == ((0, 400, 400), (1, 1001, 1001))
+    assert img2d._get_bounding_box_for_label_value(label_value=4, label_name='organoids', label_pyramid_level='0') == (None, None)
+
 def test_image_str(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `ome_zarr.Image` object string representation."""
     assert str(img2d) == repr(img2d)

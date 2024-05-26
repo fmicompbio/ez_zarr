@@ -300,7 +300,7 @@ class Image:
                                           label_name: str,
                                           label_value: Union[int, float, str],
                                           label_pyramid_level: Union[int, str],
-                                          padding_pixels: Optional[int]=0) -> Union[tuple[tuple[int, int], tuple[int, int]], tuple[None, None]]:
+                                          padding_pixels: Optional[int]=0) -> Union[tuple[tuple[int, ...], tuple[int, ...]], tuple[None, None]]:
         """
         Given a label name and value, find the corner coordinates of the bounding box.
 
