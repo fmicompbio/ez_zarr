@@ -55,7 +55,7 @@ class Image:
         else:
             self.name = os.path.basename(self.path)
         self.zarr_group: zarr.Group = zarr.open_group(store=self.path, mode='r')
-        self.array_dict = {x[0]: x[1] for x in self.zarr_group.arrays()}
+        self.array_dict: dict[str, zarr.Array] = {x[0]: x[1] for x in self.zarr_group.arrays()}
         self.ndim = self.array_dict[list(self.array_dict.keys())[0]].ndim
         self.label_names = []
         if 'labels' in list(self.zarr_group.group_keys()):
@@ -72,22 +72,22 @@ class Image:
         # load info about available scales in image and labels
         if not 'multiscales' in self.zarr_group.attrs:
             raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
-        self.multiscales_image = self._load_multiscale_info(self.zarr_group, skip_checks)
-        self.multiscales_labels = {x: self._load_multiscale_info(self.zarr_group.labels[x], skip_checks) for x in self.label_names}
-        self.axes_unit_image = self._load_axes_unit(self.multiscales_image)
-        self.axes_unit_labels = {x: self._load_axes_unit(self.multiscales_labels[x]) for x in self.label_names}
+        self.multiscales_image: dict[str, Any] = self._load_multiscale_info(self.zarr_group, skip_checks)
+        self.multiscales_labels: dict[str, dict[str, Any]] = {x: self._load_multiscale_info(self.zarr_group.labels[x], skip_checks) for x in self.label_names}
+        self.axes_unit_image: str = self._load_axes_unit(self.multiscales_image)
+        self.axes_unit_labels: dict[str, str] = {x: self._load_axes_unit(self.multiscales_labels[x]) for x in self.label_names}
 
         # load channel metadata
         # ... label dimensions, e.g. "czyx"
-        self.channel_info_image = self._load_channel_info(self.multiscales_image)
-        self.channel_info_labels = {x: self._load_channel_info(self.multiscales_labels[x]) for x in self.label_names}
+        self.channel_info_image: str = self._load_channel_info(self.multiscales_image)
+        self.channel_info_labels: dict[str, str] = {x: self._load_channel_info(self.multiscales_labels[x]) for x in self.label_names}
         # ... store the number of image channels
-        self.nchannels_image = self.array_dict[list(self.array_dict.keys())[0]].shape[self.channel_info_image.index('c')] if 'c' in self.channel_info_image else None
+        self.nchannels_image: int = self.array_dict[list(self.array_dict.keys())[0]].shape[self.channel_info_image.index('c')] if 'c' in self.channel_info_image else 0
         # ... store channel annotation from OMERO
-        self.channels = []
+        self.channels: list[dict[str, Any]] = []
         if 'omero' in self.zarr_group.attrs and 'channels' in self.zarr_group.attrs['omero']:
             self.channels = self.zarr_group.attrs['omero']['channels']
-        elif self.nchannels_image is not None:
+        elif self.nchannels_image > 0:
             self.channels = [{'label': f'channel-{i+1}',
                               'color': '00FFFF'} for i in range(self.nchannels_image)]
        
@@ -129,13 +129,13 @@ class Image:
             
     
     @staticmethod
-    def _extract_scale_spacings(dataset_dict: dict[str, Any]) -> list[str, list[float]]:
+    def _extract_scale_spacings(dataset_dict: dict[str, Any]) -> list[Union[str, list[float]]]:
         if 'path' not in dataset_dict or 'coordinateTransformations' not in dataset_dict or 'scale' not in dataset_dict['coordinateTransformations'][0]:
             raise ValueError("could not extract zyx spacing from multiscale_info")
         return [dataset_dict['path'], dataset_dict['coordinateTransformations'][0]['scale']]
     
     @staticmethod
-    def _find_path_of_lowest_resolution_level(datasets: list[dict[str, Any]]) -> str:
+    def _find_path_of_lowest_resolution_level(datasets: list[dict[str, Any]]) -> Optional[str]:
         lev = None
         maxx = 0 # maximal x pixel size (lowest resolution)
         for i in range(len(datasets)):
@@ -145,7 +145,7 @@ class Image:
         return lev
 
     @staticmethod
-    def _find_path_of_highest_resolution_level(datasets: list[dict[str, Any]]) -> str:
+    def _find_path_of_highest_resolution_level(datasets: list[dict[str, Any]]) -> Optional[str]:
         lev = None
         minx = float('inf') # minimal x pixel size (highest resolution)
         for i in range(len(datasets)):
@@ -197,13 +197,13 @@ class Image:
             return [all_channels_labels.index(x) for x in channels_labels]
     
     def _digest_bounding_box(self,
-                             upper_left_yx: Optional[tuple[int]]=None,
-                             lower_right_yx: Optional[tuple[int]]=None,
-                             size_yx: Optional[tuple[int]]=None,
+                             upper_left_yx: Optional[tuple[int, ...]]=None,
+                             lower_right_yx: Optional[tuple[int, ...]]=None,
+                             size_yx: Optional[tuple[int, ...]]=None,
                              coordinate_unit: str='micrometer',
                              label_name: Optional[str]=None,
                              pyramid_level: Optional[str]=None,
-                             pyramid_level_coord: Optional[str]=None) -> list[tuple[int]]:
+                             pyramid_level_coord: Optional[str]=None) -> list[tuple[int, ...]]:
         """
         Solves for the bounding box defined by upper-left, lower-right or size.
 
@@ -289,12 +289,9 @@ class Image:
                 raise ValueError("`coordinate_unit` needs to be 'micrometer' or 'pixel'")
             scale_to = self.get_scale(pyramid_level, label_name)
 
-            upper_left_yx = convert_coordinates(upper_left_yx, scale_from[-2:], scale_to[-2:])
-            lower_right_yx = convert_coordinates(lower_right_yx, scale_from[-2:], scale_to[-2:])
-
-            # convert to int
-            upper_left_yx = tuple(int(round(x)) for x in upper_left_yx)
-            lower_right_yx = tuple(int(round(x)) for x in lower_right_yx)
+            # convert and round to int
+            upper_left_yx = tuple(int(round(x)) for x in convert_coordinates(upper_left_yx, scale_from[-2:], scale_to[-2:]))
+            lower_right_yx = tuple(int(round(x)) for x in convert_coordinates(lower_right_yx, scale_from[-2:], scale_to[-2:]))
 
         # return
         return([upper_left_yx, lower_right_yx])
@@ -303,7 +300,7 @@ class Image:
                                           label_name: str,
                                           label_value: Union[int, float, str],
                                           label_pyramid_level: Union[int, str],
-                                          padding_pixels: Optional[int]=0) -> tuple[tuple[int], tuple[int]]:
+                                          padding_pixels: Optional[int]=0) -> Union[tuple[tuple[int, int], tuple[int, int]], tuple[None, None]]:
         """
         Given a label name and value, find the corner coordinates of the bounding box.
 
@@ -467,7 +464,7 @@ class Image:
                                 coordinate_unit: str='micrometer',
                                 pyramid_level: Optional[str]=None,
                                 pyramid_level_coord: Optional[str]=None,
-                                as_NumPy: bool=False) -> Union[dask.array.Array, np.ndarray]:
+                                as_NumPy: bool=False) -> Union[zarr.Array, np.ndarray]:
         """
         Extract a (sub)array from an image (intensity image or label) by coordinates.
 
@@ -502,7 +499,7 @@ class Image:
                 array of the same dimensions.
         
         Returns:
-            The extracted array, either as a `dask.array.Array` on-disk array,
+            The extracted array, either as an on-disk `zarr.Array`,
             or as an in-memory `numpy.ndarray` if `as_NumPy=True`.
         
         Examples:
