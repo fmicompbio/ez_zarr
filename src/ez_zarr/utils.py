@@ -12,9 +12,9 @@ import warnings
 from typing import Union, Optional, Any
 
 # coordinate conversion ---------------------------------------------
-def convert_coordinates(coords_from: tuple[Union[int, float]],
+def convert_coordinates(coords_from: tuple[Union[int, float], ...],
                         scale_from: list[float],
-                        scale_to: list[float]) -> tuple[Union[int, float]]:
+                        scale_to: list[float]) -> tuple[Union[int, float], ...]:
     """
     Convert coordinates between scales.
 

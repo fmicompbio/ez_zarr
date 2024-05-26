@@ -626,6 +626,18 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]])
 
+        # automatically extract coordinates for label_value
+        with pytest.warns(UserWarning):
+            img2d.plot(upper_left_yx=(0, 0),
+                       lower_right_yx=(100, 100),label_name='organoids',
+                       label_value=3,
+                       padding_pixels=8)
+        
+        # ... non-existent label_value
+        with pytest.raises(Exception) as e_info:
+            img2d.plot(label_name='organoids',
+                       label_value=99)
+
         # using label_name without matching pyrmaid level
         # ... copy zarr fileset
         assert tmpdir.check()
