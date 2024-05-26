@@ -212,6 +212,26 @@ def test_find_path_of_lowest_level(img2d: ome_zarr.Image):
          {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.1]}]}
         ]) == '0'
 
+def test_find_path_of_highest_resolution_level(img2d: ome_zarr.Image):
+    """Test `Image._find_path_of_highest_resolution_level`."""
+
+    # input with missing axes
+    assert img2d._find_path_of_highest_resolution_level({}) == None
+    
+    # example input
+    assert img2d._find_path_of_highest_resolution_level(img2d.multiscales_image['datasets']) == '0'
+    assert img2d._find_path_of_highest_resolution_level(img2d.multiscales_labels['organoids']['datasets']) == '0'
+    
+    # synthetic input
+    assert img2d._find_path_of_highest_resolution_level(
+        [{'path': 0, 'coordinateTransformations': [{'scale': [0.2, 0.2]}]},
+         {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.4]}]}
+        ]) == '0'
+    assert img2d._find_path_of_highest_resolution_level(
+        [{'path': 0, 'coordinateTransformations': [{'scale': [0.1, 0.2]}]},
+         {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.1]}]}
+        ]) == '1'
+
 def test_digest_pyramid_level_argument(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `Image._digest_pyramid_level_argument`."""
 
