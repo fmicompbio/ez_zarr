@@ -138,6 +138,13 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]],
                    title='test', call_show=True)
+        plot_image(im=npa4d, msk=npa3d,
+                   channels=[1],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]],
+                   show_label_values=True,
+                   label_text_colour='red', label_fontsize=12,
+                   title='test', call_show=True)
         # brightfield image
         plot_image(im=npa4d[slice(0,1)],
                    call_show=True,

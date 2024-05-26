@@ -786,7 +786,8 @@ class Image:
             show_scalebar_label (bool):  If `True`, add micrometer label to scale bar.
             **kwargs: Additional arguments for `plotting.plot_image`, for example
                 'channels', 'channel_colors', 'channel_ranges', 'z_projection_method',
-                etc. For a full list of available arguments, see
+                'show_label_values', 'label_text_colour', 'label_fontsize', etc.
+                For a full list of available arguments, see
                 [plotting.plot_image documentation](plotting.md#src.ez_zarr.plotting.plot_image).
 
         Examples:

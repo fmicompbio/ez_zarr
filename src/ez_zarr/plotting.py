@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.patches as patches
 import matplotlib.ticker as ticker
+import importlib
 
 # global variables ------------------------------------------------------------
 plate_layouts = {
@@ -211,6 +212,9 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
 def plot_image(im: np.ndarray,
                msk: Optional[np.ndarray]=None,
                msk_alpha: float=0.3,
+               show_label_values: bool=False,
+               label_text_colour: str='white',
+               label_fontsize: int=8,
                channels: list[int]=[0],
                channel_colors: list[str]=['white'],
                channel_ranges: list[list[float]]=[[0.01, 0.95]],
@@ -249,6 +253,12 @@ def plot_image(im: np.ndarray,
                 to discrete colors and plotted transparently on top of the image.
             msk_alpha (float): A scalar value between 0 (fully transparent)
                 and 1 (solid) defining the transparency of the mask.
+            show_label_values (bool): Whether to show the label values at
+                the centroid of each label.
+            label_text_colour (str): The colour of the label text, if
+                `show_label_values` is True. Ignored otherwise.
+            label_fontsize (int): The font size of the label text, if
+                `show_label_values` is True. Ignored otherwise.
             channels (list[int]): The image channel(s) to be plotted. For example,
                 to plot the first and third channel of a 4-channel image with
                 shape (4,1,500,600), you can use `channels=[0, 2]`.
@@ -370,6 +380,17 @@ def plot_image(im: np.ndarray,
                            interpolation='none',
                            cmap=get_shuffled_cmap(),
                            alpha=np.multiply(msk_alpha, msk > 0))
+                if show_label_values:
+                    skim = importlib.import_module('skimage.measure')
+                    props = skim.regionprops(msk)
+                    for j in range(len(props)):
+                        plt.text(x=props[j].centroid[1],
+                                 y=props[j].centroid[0],
+                                 s=props[j].label,
+                                 ha='center',
+                                 va='center',
+                                 color=label_text_colour,
+                                 fontsize=label_fontsize)
             if axis_style == 'none':
                 plt.axis('off')
             elif axis_style == 'pixel':
