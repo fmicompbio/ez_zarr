@@ -16,11 +16,9 @@ __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 import os
 import numpy as np
 import zarr
-import dask.array
 import pandas as pd
 import importlib
 import warnings
-import random
 from typing import Union, Optional, Any
 from ez_zarr.utils import convert_coordinates, resize_image
 
