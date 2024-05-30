@@ -351,6 +351,8 @@ def plot_image(im: np.ndarray,
             pad_value = 1
             z_projection_method = 'minimum'
             fig_style = 'default'
+            if label_text_colour == 'white':
+                label_text_colour = 'black'
 
         # combine z planes if needed
         if ndim == 4:
