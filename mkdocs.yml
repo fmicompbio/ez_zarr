@@ -49,6 +49,6 @@ nav: # Setting up the navigation. Te below list will be tabs on left panel
     - Utilities: 'utils.md'
     - Plotting: 'plotting.md'
   - Unit tests: 'testing.md'
-  - Quickstart:
+  - Getting started:
     - html version: 'quickstart.md'
-    - ipynb version (download): 'quickstart.ipynb'
+    - Legacy classes: 'getting_started_hcs_wrappers.md'
