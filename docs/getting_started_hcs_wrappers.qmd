@@ -26,6 +26,8 @@ pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
 
 # Quickstart
 
+Note: If you prefer to run these examples interactively, you can also download them as an [ipynb notebook](https://fmicompbio.github.io/ez_zarr/getting_started_hcs_wrappers.ipynb).
+
 Here are some examples of how you can use `ez_zarr`:
 
 ## Download example data
