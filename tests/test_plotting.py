@@ -149,6 +149,9 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
         plot_image(im=npa4d[slice(0,1)],
                    call_show=True,
                    fig_style='brightfield')
+        # 2D image
+        plot_image(im=npa4d[0, 0],
+                   call_show=True)
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
 
