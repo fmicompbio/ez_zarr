@@ -64,4 +64,4 @@ is with the Friedrich Miescher Insitute for Biomedical Research
 (see [LICENSE](https://github.com/fmicompbio/ez_zarr/blob/main/LICENSE)).
 
 `ez_zarr` is being developed at the Friedrich Miescher Institute for
-Biomedical Research by [@silvbarb](https://github.com/silvbarb) and [@mbstadler](https://github.com/mbstadler).
+Biomedical Research by [@silvbarb](https://github.com/silvbarb), [@csoneson](https://github.com/csoneson) and [@mbstadler](https://github.com/mbstadler).
