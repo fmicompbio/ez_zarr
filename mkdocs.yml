@@ -24,7 +24,7 @@ plugins:
       default_handler: python
       handlers:
         python:
-          paths: [src]  # search packages in the src folder
+          paths: [.]
   # - mkquartodocs # maps quarto CSS to admonition CSS (see https://github.com/jspaezp/mkquartodocs/blob/e5c3f825f86645f13f57bc0789f64c4db2f3863b/mkquartodocs/extension.py#L25-L30)
 
 # for info on code block formatting, see: https://squidfunk.github.io/mkdocs-material/reference/code-blocks
