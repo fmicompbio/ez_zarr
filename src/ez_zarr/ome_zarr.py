@@ -711,19 +711,11 @@ class Image:
             warnings.filterwarnings("ignore")
             ad = importlib.import_module('anndata')
             anndata = ad.read_zarr(os.path.join(self.path, 'tables', table_name))
-            # ... retain path information for combining anndata objects
-            anndata.obs['image_path'] = self.path
-            # ... create unique row identifier
-            anndata.obs['unique_id'] = self.path + '/tables/' + table_name + '/' + anndata.obs.index.astype(str)
 
         if as_AnnData:
             return anndata
         else:
-            df = pd.concat([anndata.obs['unique_id'],
-                            anndata.obs['image_path'],
-                            anndata.to_df()],
-                            axis=1)
-            return df
+            return anndata.to_df()
 
     # plotting methods -----------------------------------------------------------
     def plot(self,

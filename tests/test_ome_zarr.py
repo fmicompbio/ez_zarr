@@ -575,16 +575,12 @@ def test_get_table(img2d: ome_zarr.Image):
                            as_AnnData=True)
     assert isinstance(res1, ad.AnnData)
     assert res1.shape == (4, 8)
-    assert 'unique_id' in res1.obs
-    assert 'image_path' in res1.obs
 
     # table as pandas.DataFrame
     res2 = img2d.get_table(table_name='FOV_ROI_table',
                            as_AnnData=False)
     assert isinstance(res2, pd.DataFrame)
-    assert res2.shape == (4, 10)
-    assert 'unique_id' in res2.columns
-    assert 'image_path' in res2.columns
+    assert res2.shape == (4, 8)
 
 def test_plot(img2d: ome_zarr.Image, tmpdir: str):
     """Test `Image.plot()`."""
