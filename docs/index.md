@@ -41,6 +41,9 @@ plate_3d
 A more extensive example is available from [here](https://fmicompbio.github.io/ez_zarr/getting_started_hcs_wrappers/), also available as an [ipynb notebook](https://fmicompbio.github.io/ez_zarr/getting_started_hcs_wrappers.ipynb).
 
 ## Install
+
+`ez_zarr` is hosted on GitHub at [github.com/fmicompbio/ez_zarr](https://github.com/fmicompbio/ez_zarr) and the documentation can be found at [fmicompbio.github.io/ez_zarr](https://fmicompbio.github.io/ez_zarr/).
+
 The release version of `ez_zarr` can be installed using:
 ```
 pip install ez-zarr
