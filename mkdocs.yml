@@ -44,9 +44,11 @@ extra_css:
 nav: # Setting up the navigation. Te below list will be tabs on left panel
   - Home: 'index.md'
   - Documentation:
-    - Classes: 'hcs_wrappers.md'
+    - OME-Zarr classes: 'ome_zarr.md'
+    - Legacy classes: 'hcs_wrappers.md'
+    - Utilities: 'utils.md'
     - Plotting: 'plotting.md'
   - Unit tests: 'testing.md'
-  - Quickstart:
-    - html version: 'quickstart.md'
-    - ipynb version (download): 'quickstart.ipynb'
+  - Getting started:
+    - Working with individual images: 'getting_started_Image.md'
+    - Working with HCS plates (legacy classes): 'getting_started_hcs_wrappers.md'

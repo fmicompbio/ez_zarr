@@ -1,6 +1,6 @@
 # for testing, run the following from the project folder:
 #     pip install -e .
-#     pytest --color=yes -v --cov=./ --cov-report=term-missing
+#     pytest --color=yes -v --cov=./src --cov-report=term-missing tests
 
 import pytest
 import numpy as np
@@ -138,10 +138,20 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]],
                    title='test', call_show=True)
+        plot_image(im=npa4d, msk=npa3d,
+                   channels=[1],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]],
+                   show_label_values=True,
+                   label_text_colour='red', label_fontsize=12,
+                   title='test', call_show=True)
         # brightfield image
         plot_image(im=npa4d[slice(0,1)],
                    call_show=True,
                    fig_style='brightfield')
+        # 2D image
+        plot_image(im=npa4d[0, 0],
+                   call_show=True)
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
 

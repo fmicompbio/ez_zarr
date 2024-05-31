@@ -3,10 +3,6 @@
         {
             "axes": [
                 {
-                    "name": "c",
-                    "type": "channel"
-                },
-                {
                     "name": "z",
                     "type": "space",
                     "unit": "micrometer"

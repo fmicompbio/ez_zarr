@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.patches as patches
 import matplotlib.ticker as ticker
+import importlib
 
 # global variables ------------------------------------------------------------
 plate_layouts = {
@@ -211,6 +212,9 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
 def plot_image(im: np.ndarray,
                msk: Optional[np.ndarray]=None,
                msk_alpha: float=0.3,
+               show_label_values: bool=False,
+               label_text_colour: str='white',
+               label_fontsize: Union[float, str]='xx-large',
                channels: list[int]=[0],
                channel_colors: list[str]=['white'],
                channel_ranges: list[list[float]]=[[0.01, 0.95]],
@@ -232,7 +236,7 @@ def plot_image(im: np.ndarray,
         """
         Plot an image array, optionally overlaid with a segmentation mask.
          
-        Plot an image (provided as an array with shape (ch,z,y,x) or (ch,y,x))
+        Plot an image (provided as an array with shape (ch,z,y,x), (ch,y,x) or (y,x))
         by summarizing multiple z planes using `z_projection_method` (if needed),
         mapping channels values (in the range of `channel_ranges`) to colors
         (given by `channel_colors`), converting it to an RGB array of shape
@@ -242,13 +246,22 @@ def plot_image(im: np.ndarray,
         on top of the image.
 
         Parameters:
-            im (numpy.ndarray): An array with four (ch,z,y,x) or three (ch,y,x)
-                dimensions with image intensities.
+            im (numpy.ndarray): An array with four (ch,z,y,x), three (ch,y,x)
+                or two (y,x) dimensions with image intensities.
             msk (numpy.ndarray): An optional cooresponding mask array with
-                shape `im.shape[1:]`. If given, label values will be mapped
-                to discrete colors and plotted transparently on top of the image.
+                a shape compatible to `im` (typically without `ch` axis).
+                If given, label values will be mapped to discrete colors
+                and plotted transparently on top of the image.
             msk_alpha (float): A scalar value between 0 (fully transparent)
                 and 1 (solid) defining the transparency of the mask.
+            show_label_values (bool): Whether to show the label values at
+                the centroid of each label.
+            label_text_colour (str): The colour of the label text, if
+                `show_label_values` is True. Ignored otherwise.
+            label_fontsize (float or str): The font size of the label text, if
+                `show_label_values` is True. Ignored otherwise. Values accepted
+                by `matplotlib.axes.Axes.text` are supported, such a the size
+                in points (e.g. `12.5`) or a relative size (e.g. `'xx-large'`).
             channels (list[int]): The image channel(s) to be plotted. For example,
                 to plot the first and third channel of a 4-channel image with
                 shape (4,1,500,600), you can use `channels=[0, 2]`.
@@ -312,6 +325,8 @@ def plot_image(im: np.ndarray,
             >>> plot_image(img, channels=[0], channel_colors=['white'])
         """
         # digest arguments
+        if im.ndim == 2:
+            im = im[np.newaxis, :]
         ndim = len(im.shape)
         assert ndim == 3 or ndim == 4, (
             f"Unsupported image dimension ({im.shape}), ",
@@ -336,6 +351,8 @@ def plot_image(im: np.ndarray,
             pad_value = 1
             z_projection_method = 'minimum'
             fig_style = 'default'
+            if label_text_colour == 'white':
+                label_text_colour = 'black'
 
         # combine z planes if needed
         if ndim == 4:
@@ -370,6 +387,17 @@ def plot_image(im: np.ndarray,
                            interpolation='none',
                            cmap=get_shuffled_cmap(),
                            alpha=np.multiply(msk_alpha, msk > 0))
+                if show_label_values:
+                    skim = importlib.import_module('skimage.measure')
+                    props = skim.regionprops(msk)
+                    for j in range(len(props)):
+                        plt.text(x=props[j].centroid[1],
+                                 y=props[j].centroid[0],
+                                 s=props[j].label,
+                                 ha='center',
+                                 va='center',
+                                 color=label_text_colour,
+                                 fontsize=label_fontsize)
             if axis_style == 'none':
                 plt.axis('off')
             elif axis_style == 'pixel':

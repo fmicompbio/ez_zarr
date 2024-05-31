@@ -181,7 +181,7 @@ class FractalZarr:
             pyramid_level = int(pyramid_level)
         return pyramid_level
     
-    def _calculate_regular_grid_coordsinates(self, y, x, num_y=10, num_x=10):
+    def _calculate_regular_grid_coordinates(self, y, x, num_y=10, num_x=10):
         """
         [internal] Calculate the cell coordinates for a regular rectangular grid of total size (y, x)
         by splitting the dimensions into num_y and num_x cells.
@@ -534,13 +534,13 @@ class FractalZarr:
         # calculate grid coordinates as a list of (y_start, y_end, x_start, x_end)
         # (images are always of 4D shape c,z,y,x)
         ch, z, y, x = img.shape
-        grid = self._calculate_regular_grid_coordsinates(y=y, x=x,
-                                                         num_y=num_y,
-                                                         num_x=num_x)
+        grid = self._calculate_regular_grid_coordinates(y=y, x=x,
+                                                        num_y=num_y,
+                                                        num_x=num_x)
         ch_lr, z_lr, y_lr, x_lr = img_lowres.shape
-        grid_lowres = self._calculate_regular_grid_coordsinates(y=y_lr, x=x_lr,
-                                                                num_y=num_y,
-                                                                num_x=num_x)
+        grid_lowres = self._calculate_regular_grid_coordinates(y=y_lr, x=x_lr,
+                                                               num_y=num_y,
+                                                               num_x=num_x)
 
         # select and extract grid cells
         sel_coords = []
@@ -1359,14 +1359,17 @@ class FractalZarrSet:
         self.zarr_paths: list[str] = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
         if len(self.zarr_paths) == 0:
             raise ValueError(f'no `.zarr` filesets found in `{path}`')
-        self.zarr: list[FractalZarr] = [FractalZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
-        self.zarr_names: list[str] = [x.name for x in self.zarr]
         self.zarr_mip_idx: Optional[int] = None
         self.zarr_3d_idx: Optional[int] = None
-        if len(self.zarr) == 2 and self.zarr_names[0].replace('_mip.zarr', '.zarr') == self.zarr_names[1]:
-            # special case of 3D plate plus derived maximum intensity projection?
-            self.zarr_mip_idx = 0
-            self.zarr_3d_idx = 1
+        if len(self.zarr_paths) == 2:
+            if self.zarr_paths[1].replace('_mip.zarr', '.zarr') == self.zarr_paths[0]:
+                self.zarr_paths.reverse()
+            if self.zarr_paths[0].replace('_mip.zarr', '.zarr') == self.zarr_paths[1]:
+                # special case of 3D plate plus derived maximum intensity projection?
+                self.zarr_mip_idx = 0
+                self.zarr_3d_idx = 1
+        self.zarr: list[FractalZarr] = [FractalZarr(os.path.join(self.path, f)) for f in self.zarr_paths]
+        self.zarr_names: list[str] = [x.name for x in self.zarr]
 
     # string representation ---------------------------------------------------
     def __str__(self) -> str:
