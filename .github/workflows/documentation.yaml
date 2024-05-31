@@ -29,10 +29,11 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
       
-      - name: Compile quarto documents
+      - name: Compile quarto documents (ome_zarr.Image)
         uses: quarto-dev/quarto-actions/render@v2
         with:
           to: md,ipynb # If set, it will be equivalent to `quarto render --to X`
+          path: docs/getting_started_Image.qmd # runs in current working dir, i.e `quarto render .`
 
       - name: Compile quarto documents (legacy classes)
         uses: quarto-dev/quarto-actions/render@v2

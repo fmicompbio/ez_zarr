@@ -167,6 +167,10 @@ docs/20200812-CardiomyocyteDifferentiation*
 docs/__MACOSX
 
 # local vignette files (will be re-created online)
+docs/getting_started_Image.md
+docs/getting_started_Image_files
+docs/getting_started_Image.ipynb
+docs/getting_started_Image.html
 docs/getting_started_hcs_wrappers.md
 docs/getting_started_hcs_wrappers_files
 docs/getting_started_hcs_wrappers.ipynb

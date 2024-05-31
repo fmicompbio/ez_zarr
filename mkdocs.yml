@@ -50,5 +50,5 @@ nav: # Setting up the navigation. Te below list will be tabs on left panel
     - Plotting: 'plotting.md'
   - Unit tests: 'testing.md'
   - Getting started:
-    - html version: 'quickstart.md'
-    - Legacy classes: 'getting_started_hcs_wrappers.md'
+    - Working with individual images: 'getting_started_Image.md'
+    - Working with HCS plates (legacy classes): 'getting_started_hcs_wrappers.md'
