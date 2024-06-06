@@ -371,6 +371,25 @@ img.plot(label_value=877,
          fig_dpi=100)
 ```
 
+If you want to restrict the plot to the exact are within that specific
+object (or objects), you can use the `restrict_to_label_values` argument
+and provide a list of values:
+
+```{python}
+img.plot(label_value=877,
+         restrict_to_label_values=[877,914],
+         padding_pixels=10,
+         msk_alpha=0.15,
+         show_label_values=True,
+         label_fontsize='xx-large',
+         label_text_colour='black',
+         label_name='nuclei',
+         pyramid_level=0,
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
 ## Calculations on the image data
 
 To save memory, images are stored on disk and only loaded when needed (for implementation details see the [`dask` Array documentation](https://docs.dask.org/en/stable/array.html)).
