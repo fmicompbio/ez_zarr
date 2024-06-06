@@ -629,6 +629,16 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
                        label_value=3,
                        padding_pixels=8)
         
+        # ... restrict plotting to label_value
+        img2d.plot(label_name='organoids',
+                   label_value=3,
+                   restrict_to_label_values=[3])
+        
+        # ... restrict plotting to non-existent label_value
+        img2d.plot(label_name='organoids',
+                   label_value=3,
+                   restrict_to_label_values=99)
+        
         # ... non-existent label_value
         with pytest.raises(Exception) as e_info:
             img2d.plot(label_name='organoids',
