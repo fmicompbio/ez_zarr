@@ -189,7 +189,10 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
         if max(channel_ranges[i]) <= 1.0:
             # ranges are given as quantiles -> calculate corresponding intensities
             nonzero = im[i] > 0
-            rng = np.quantile(a=im[i][nonzero], q=channel_ranges[i], overwrite_input=False)
+            if np.any(nonzero):
+                rng = np.quantile(a=im[i][nonzero], q=channel_ranges[i], overwrite_input=False)
+            else:
+                rng = [0.0, 0.0]
         else:
             rng = channel_ranges[i]
         ranges_used.append(rng)
