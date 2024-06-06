@@ -216,6 +216,7 @@ def plot_image(im: np.ndarray,
                msk: Optional[np.ndarray]=None,
                msk_alpha: float=0.3,
                show_label_values: bool=False,
+               restrict_to_label_values: Union[list,int,float,bool,str]=[],
                label_text_colour: str='white',
                label_fontsize: Union[float, str]='xx-large',
                channels: list[int]=[0],
@@ -259,6 +260,11 @@ def plot_image(im: np.ndarray,
                 and 1 (solid) defining the transparency of the mask.
             show_label_values (bool): Whether to show the label values at
                 the centroid of each label.
+            restrict_to_label_values (list or scalar): A scalar or a (possibly
+                empty) list of label values. Only has an effect if `msk` is provided.
+                In that case, pixels with values not in `restrict_to_label_values`
+                will be set to `pad_value` in `img` (see below), and to 0 in `msk`.
+                If empty, all data within the image is shown without restriction.
             label_text_colour (str): The colour of the label text, if
                 `show_label_values` is True. Ignored otherwise.
             label_fontsize (float or str): The font size of the label text, if
@@ -346,6 +352,11 @@ def plot_image(im: np.ndarray,
         assert axis_style != 'micrometer' or spacing_yx != None, (
             f"For `axis_style='micrometer', the parameter `spacing_yx` needs to be provided."
         )
+        if isinstance(restrict_to_label_values, np.ScalarType):
+            restrict_to_label_values = [restrict_to_label_values]
+        assert isinstance(restrict_to_label_values, list), (
+            f"`restrict_to_label_values` must be a list of values, but is {restrict_to_label_values}"
+        )
 
         # adjust parameters for brightfield images
         if fig_style == 'brightfield':
@@ -366,6 +377,12 @@ def plot_image(im: np.ndarray,
                 # msk: (z,y,x) -> (y,x)
                 msk = zproject(im=msk, method='maximum', # always use 'maximum' for labels
                             axis=0, keepdims=False)
+
+        # restrict to label values if needed
+        if len(restrict_to_label_values) > 0 and not msk is None:
+            keep_elements = np.isin(msk, restrict_to_label_values)
+            im = np.where(keep_elements, im, pad_value)
+            msk = np.where(keep_elements, msk, 0)
 
         # pad if necessary
         if any([v > 0 for v in pad_to_yx]) and (im.shape[1] <= pad_to_yx[0] and im.shape[2] <= pad_to_yx[1]):
