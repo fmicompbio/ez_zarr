@@ -53,6 +53,10 @@ img
 A more extensive example is available from [here](https://fmicompbio.github.io/ez_zarr/getting_started_hcs_wrappers/), also available as an [ipynb notebook](https://fmicompbio.github.io/ez_zarr/getting_started_hcs_wrappers.ipynb).
 
 ## Install
+[![PyPI - Version](https://img.shields.io/pypi/v/ez-zarr.svg?logo=pypi&label=PyPI&logoColor=gold)](https://pypi.org/project/ez-zarr/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ez-zarr.svg?logo=python&label=Python&logoColor=gold)](https://pypi.org/project/ez-zarr/)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/ez-zarr)
+
 The release version of `ez_zarr` can be installed using:
 ```
 pip install ez-zarr
