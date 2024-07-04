@@ -7,8 +7,8 @@ Classes:
     Image: Contains a single `.zgroup`, typicallly a single image and possibly derived labels or tables.
 """
 
-__all__ = ['Image']
-__version__ = '0.2.1'
+__all__ = ['Image', 'ImageList']
+__version__ = '0.2.2'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 
 
@@ -898,5 +898,160 @@ class Image:
         kwargs['spacing_yx'] = scale_img_spatial[-2:]
         plotting.plot_image(**kwargs)
 
-# TODO:
-# - plot_object(label_name, object_id)
+
+
+# ImageList class -----------------------------------------------------------------
+class ImageList:
+    """Represents a list of OME-Zarr images."""
+
+    # constructor and helper functions ----------------------------------------
+    def __init__(self, paths: list[str],
+                 names: Optional[list[str]]=None,
+                 layout: Optional[pd.DataFrame]=None) -> None:
+        """
+        Initializes an OME-Zarr image list from a list of paths, each
+        containing a single zarr group, possibly with multiple resolution levels,
+        derived labels or tables, but no further groups.
+
+        Parameters:
+            paths (list of str): Paths containing the OME-Zarr images.
+            names (list of str, optional): Optional names for the images.
+            layout (Pandas DataFrame, optional): Controls the plot layout. The
+                data frame must have the following columns: 'row_index',
+                'column_index', 'row_label', 'column_label', and optionally
+                additional columns. The values in the 'row_index' and
+                'column_index' are 1-based integers.
+        
+            If provided, the elements in `names` and/or the rows in `layout`
+            need to be parallel to the element in `paths`.
+                
+        Returns:
+            An `ImageList` object.
+        
+        Examples:
+            Get an object corresponding to an image.
+
+            >>> from ez_zarr import ome_zarr
+            >>> listA = ome_zarr.ImageList(['path/to/image1', 'path/to/image2'])
+        """
+
+        self.paths: list = paths
+        if names is None:
+            names = [f'Image {i+1}' for i in range(len(paths))]
+        self.names: list = names
+        self.layout: Optional[pd.DataFrame] = layout
+        self.n_images = len(paths)
+
+        # check arguments
+        assert len(self.names) == self.n_images, (
+            f"Number of paths ({self.n_images}) and names ({len(self.names)}) must be the same."
+        )
+        if self.layout is not None:
+            assert self.layout.shape[0] == self.n_images, (
+                f"Number of paths ({self.n_images}) and layout rows ({self.layout.shape[0]}) must be the same."
+            )
+        
+        # initialize image objects
+        self.images = [Image(path=path, name=name) for path, name in zip(self.paths, self.names)]
+
+    # length ------------------------------------------------------------------
+    def __len__(self) -> int:
+        """Returns the number of images."""
+        return self.n_images
+    
+    # string representation ---------------------------------------------------
+    def __str__(self) -> str:
+        paths_compact = ", ".join(self.paths)
+        if len(paths_compact) > 80:
+            paths_compact = paths_compact[:80] + "..."
+        names_compact = ", ".join(self.names)
+        if len(names_compact) > 80:
+            names_compact = names_compact[:80] + "..."
+        has_layout = "no"
+        if self.layout is not None:
+            has_layout = "yes"
+        return f"ImageList of {self.n_images} images\n  paths: {paths_compact}\n  names: {names_compact}\n  has layout: {has_layout}\n"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    # subsetting --------------------------------------------------------------
+    def __getitem__(self, idx: Union[int, list[int], slice]) -> Union[Image, 'ImageList']:
+        """Returns the image(s) at index `idx`."""
+
+        if isinstance(idx, int):
+            return self.images[idx]
+        elif isinstance(idx, str):
+            if len(set(self.names)) < self.n_images:
+                raise ValueError(f"Image names are not unique - cannot subset by name.")
+            return self.images[self.names.index(idx)]
+        elif isinstance(idx, list) or isinstance(idx, slice):
+            if all(isinstance(element, str) for element in idx):
+                if len(set(self.names)) < self.n_images:
+                    raise ValueError(f"Image names are not unique - cannot subset by names.")
+                return self[[self.names.index(nm) for nm in idx]]
+            else:
+                if self.layout is not None:
+                    layout_sub = self.layout.iloc[idx]
+                else:
+                    layout_sub = None
+                return ImageList(paths=[self.paths[i] for i in idx],
+                                 names=[self.names[i] for i in idx],
+                                 layout=layout_sub)
+
+    # accessors ---------------------------------------------------------------
+    def get_paths(self) -> list[str]:
+        """Returns the paths of the images."""
+        return self.paths
+    
+    def get_names(self) -> list[str]:
+        """Returns the names of the images."""
+        return self.names
+    
+    def get_layout(self) -> Optional[pd.DataFrame]:
+        """Returns the layout of the images."""
+        return self.layout
+    
+    # setting the layout ------------------------------------------------------
+    @staticmethod
+    def _create_layout(nrow: int, ncol: int,
+                       n: int, by_row: bool) -> pd.DataFrame:
+        if by_row:
+            ri = list(np.repeat(np.arange(nrow) + 1, ncol))[:n]
+            ci = (list(np.arange(ncol) + 1) * nrow)[:n]
+        else:
+            ri = (list(np.arange(nrow) + 1) * ncol)[:n]
+            ci = list(np.repeat(np.arange(ncol) + 1, nrow))[:n]
+        layout = pd.DataFrame({'row_index': ri,
+                               'column_index': ci,
+                               'row_label': [str(i) for i in ri],
+                               'column_label': [str(i) for i in ci]})
+        return layout
+
+    def set_layout(self,
+                   layout: Optional[Union[pd.DataFrame, str]]=None,
+                   nrow: Optional[int]=None,
+                   ncol: Optional[int]=None,
+                   by_row: bool=False) -> None:
+        """Sets the layout of the images."""
+
+        if isinstance(layout, pd.DataFrame):
+            if layout.shape[0] != self.n_images:
+                raise ValueError(f"Number of layout rows ({layout.shape[0]}) must be the same as the number of images ({self.n_images}).")
+            self.layout = layout.copy()
+        elif isinstance(layout, str):
+            if layout == 'grid':
+                nrow: int = int(np.ceil(np.sqrt(self.n_images)))
+                ncol: int = int(np.ceil(self.n_images / nrow))
+                self.layout = self._create_layout(nrow=nrow, ncol=ncol, n=self.n_images, by_row=by_row)
+            else:
+                raise ValueError(f"Layout provided as a string must be one of 'grid'.")
+        elif layout is None and (nrow is not None or ncol is not None):
+            if nrow is None:
+                nrow: int = int(np.ceil(self.n_images / ncol))
+            if ncol is None:
+                ncol: int = int(np.ceil(self.n_images / nrow))
+            self.layout = self._create_layout(nrow=nrow, ncol=ncol, n=self.n_images, by_row=by_row)
+
+
+
