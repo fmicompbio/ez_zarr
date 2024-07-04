@@ -1,6 +1,6 @@
 """Helpful functions for plotting and working with image arrays."""
 
-__all__ = ['zproject']
+__all__ = ['get_shuffled_cmap', 'zproject', 'pad_image', 'convert_to_rgb', 'plot_image']
 __version__ = '0.1.5'
 __author__ = 'Silvia Barbiero, Michael Stadler'
 
