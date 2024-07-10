@@ -982,10 +982,7 @@ class ImageList:
         names_compact = ", ".join(self.names)
         if len(names_compact) > 80:
             names_compact = names_compact[:80] + "..."
-        has_layout = "no"
-        if self.layout is not None:
-            has_layout = "yes"
-        return f"ImageList of {self.n_images} images\n  paths: {paths_compact}\n  names: {names_compact}\n  has layout: {has_layout}\n"
+        return f"ImageList of {self.n_images} images\n  paths: {paths_compact}\n  names: {names_compact}\n"
 
     def __repr__(self) -> str:
         return str(self)
