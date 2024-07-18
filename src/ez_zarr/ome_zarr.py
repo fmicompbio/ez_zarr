@@ -8,7 +8,7 @@ Classes:
 """
 
 __all__ = ['Image', 'ImageList', 'create_name_row_col', 'create_name_plate_A1',
-           'create_name_plate_A01', 'create_name_plate_A001']
+           'create_name_plate_A01']
 __version__ = '0.2.2'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 
@@ -76,22 +76,71 @@ def create_name_plate_A01(ri: int, ci: int) -> str:
     """
     return f"{chr(ord('A') + ri - 1)}{ci:02}"
 
-def create_name_plate_A001(ri: int, ci: int) -> str:
+def import_Fractal_plate(path: str, image_name: str = '0') -> "ImageList":
     """
-    Create name corresponding the wells in a microwell plate.
+    Create an ImageList object from a OME-Zarr image set created by Fractal.
+
+    Description:
+        The image set is assumed to correspond to images corresponding to
+        the wells of a microwell plate, and the folder names below `path`
+        are expected to correspond to plate rows and columns, respectively
+        (example the image in 'path/B/03/0' corresponds to well 'B03').
 
     Parameters:
-        ri (int): Row index (1-based)
-        ci (int): Column index (1-based)
+        path (str): Path to a folder containing the well images.
     
     Returns:
-        str: Name (`ci` always using three digits, with pre-fixed zeros)
+        ImageList object
 
     Examples:
-        >>> create_name_plate_A001(3, 4)
-        'C004'
+        >>> imgL = import_Fractal_plate('path/to/images')
+        >>> imgL
+        ImageList of 2 images
+        paths: path/to/images/B/03/0, path/to/images/C/03/0
+        names: B03, C03
     """
-    return f"{chr(ord('A') + ri - 1)}{ci:03}"
+
+    # check arguments
+    assert isinstance(path, str), f"path ({path}) must be a string."
+    assert os.path.isdir(path), f"Path {path} does not exist."
+    assert isinstance(image_name, str), f"image_name ({image_name}) must be a string."
+
+    # list image paths
+    img_paths = []
+    row_index = []
+    column_index = []
+    for row_path in os.listdir(path):
+        if len(row_path) == 1 and ord(row_path) >= ord('A') and ord(row_path) <= ord('P'):
+            for column_path in os.listdir(os.path.join(path, row_path)):
+                if all([ch in ['0','1','2','3','4','5','6','7','8','9'] for ch in column_path]) and int(column_path) >= 1 and int(column_path) <= 24:
+                    img_path = os.path.join(path, row_path, column_path, image_name)
+                    if os.path.isdir(img_path):
+                        img_paths.append(img_path)
+                        row_index.append(ord(row_path) - ord('A') + 1)
+                        column_index.append(int(column_path))
+
+    # build layout
+    layout = pd.DataFrame({'row_index': row_index,
+                           'column_index': column_index})
+    layout = layout.sort_values(by=['row_index', 'column_index']).reset_index(drop=True)
+
+    # set nrow, ncol
+    known_plate_dims = [(2, 3), (4, 6), (8, 12), (16, 24)]
+    mx_row = max(layout['row_index'])
+    mx_column = max(layout['column_index'])
+    nrow, ncol = known_plate_dims[min([i for i in range(len(known_plate_dims)) if known_plate_dims[i][0] >= mx_row and known_plate_dims[i][1] >= mx_column])]
+
+    # set fallback naming function
+    nm_func = create_name_plate_A1
+    if ncol > 9:
+        nm_func = create_name_plate_A01
+    
+    # create ImageList object
+    imgL = ImageList(paths = img_paths, layout=layout, nrow=nrow, ncol=ncol,
+                     by_row=True, fallback_name_function=nm_func)
+
+    # return
+    return imgL
 
 # Image class -----------------------------------------------------------------
 class Image:
@@ -1016,8 +1065,8 @@ class ImageList:
                 `None` or when plotting empty images for row/column indices
                 that are not present in `layout`. `ez_zarr.ome_zarr` defines
                 a few pre-defined functions that can be used, such as
-                `create_name_row_col`, `create_name_plate_A1`, `create_name_plate_A01`
-                and `create_name_plate_A001`.
+                `create_name_row_col`, `create_name_plate_A1` and
+                `create_name_plate_A01`.
                 
         Returns:
             An `ImageList` object.
