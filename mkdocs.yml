@@ -37,8 +37,6 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
-  - toc:
-      permalink: true
 
 extra_css:
     - 'extra.css'
