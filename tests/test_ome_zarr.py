@@ -627,7 +627,7 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
             img2d.plot(upper_left_yx=(0, 0),
                        lower_right_yx=(100, 100),label_name='organoids',
                        label_value=3,
-                       padding_pixels=8)
+                       extend_pixels=8)
         
         # ... restrict plotting to label_value
         img2d.plot(label_name='organoids',
