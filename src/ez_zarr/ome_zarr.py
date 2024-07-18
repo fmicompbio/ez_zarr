@@ -1161,5 +1161,117 @@ class ImageList:
             self.names = [self.fallback_name_function(ri, ci) for ri, ci in zip(self.layout['row_index'].to_list(), self.layout['column_index'].to_list())]
 
     
+    # plotting ----------------------------------------------------------------
+    def plot(self,
+             fig_title: Optional[str]=None,
+             fig_width_inch: Optional[float]=None,
+             fig_height_inch: Optional[float]=None,
+             fig_dpi: int=200,
+             fig_style: str='dark_background',
+             **kwargs: Any) -> None:
+        """
+        Plot the images in the `ImageList`.
+         
+        The overall layout and the location of individual images are
+        defined by `layout`, `nrow` and `ncol` properties. The plotting of
+        individual images is can be controlled using `kwargs` and is
+        performed using `Image.plot()`.
+
+        Parameters:
+            fig_title (str, optional): String scalar to use as overall figure title
+                (default: do not add any title).
+            fig_width_inch (float, optional): Figure width (in inches). If `None`,
+                the number of rows multiplied by 2.0 will be used.
+            fig_height_inch (float, optional): Figure height (in inches). If `None`,
+                the number of columns multiplied by 2.0 will be used.
+            fig_dpi (int): Figure resolution (dots per inch).
+            fig_style (str): Style for the figure. Supported are 'brightfield', which
+                is a special mode for single-channel brightfield microscopic images
+                (it will automatically set `channels=[0]`, `channel_colors=['white']`
+                `z_projection_method='minimum'` and `fig_style='default'`), and any
+                other styles that can be passed to `matplotlib.pyplot.style.context`
+                (default: 'dark_background')
+            **kwargs: Additional arguments for `Image.plot_image`, for example
+                'label_name', 'pyramid_level', 'scalebar_micrometer', 'show_scalebar_label',
+                'channels', 'channel_colors', 'channel_ranges', 'z_projection_method',
+                'show_label_values', 'label_text_colour', 'label_fontsize', etc.
+                For a full list of available arguments, see
+                [ome_zarr.Image.plot documentation](ome_zarr.md#src.ez_zarr.ome_zarr.Image.plot)
+                and the underlying
+                [plotting.plot_image documentation](plotting.md#src.ez_zarr.plotting.plot_image).
+
+        Examples:
+            Plot the intensity images in the `ImageList` `imgL`.
+
+            >>> imgL.plot()
+        """
+
+        # digest arguments
+        fig_width_inch = fig_width_inch if fig_width_inch is not None else self.ncol * 2.0
+        fig_height_inch = fig_height_inch if fig_height_inch is not None else self.nrow * 2.0
+
+        # import optional modules
+        plt = importlib.import_module('matplotlib.pyplot')
+
+        # get the maximal image y,x coordinates
+        channel_info = [img.channel_info_image for img in self.images]
+        assert all([channel_info[0] == ci for ci in channel_info]), f"Not all images have the same channel info: {', '.join(channel_info)}"
+        spatial_dims = [i for i in range(len(channel_info[0])) if channel_info[0][i] in ['y', 'x']]
+        img_dims = [img.get_array_by_coordinate().shape for img in self.images]
+        img_dims_spatial = [[d[i] for i in spatial_dims] for d in img_dims]
+        max_yx = np.max(np.stack(img_dims_spatial), axis=0)
+        kwargs['pad_to_yx'] = max_yx
+
+        # adjust parameters for brightfield images
+        if fig_style == 'brightfield':
+            kwargs['channels'] = [0]
+            kwargs['channel_colors'] = ['white']
+            kwargs['z_projection_method'] = 'minimum'
+            kwargs['pad_value'] = 1
+            fig_style = 'default'
+            empty_well = np.ones(max_yx)
+        else:
+            kwargs['pad_value'] = 0
+            empty_well = np.zeros(max_yx)
+
+        # create figure
+        with plt.style.context(fig_style):
+            fig = plt.figure(figsize=(fig_width_inch, fig_height_inch))
+            fig.set_dpi(fig_dpi)
+            if fig_title is not None:
+                fig.suptitle(fig_title, size='xx-large') # default title size: 'large'
+            
+            # loop over images
+            kwargs['call_show'] = False # don't create new figures for each image
+            for ri in range(self.nrow):
+                for ci in range(self.ncol):
+                    plt.subplot(self.nrow, self.ncol, ri * self.ncol + ci + 1)
+
+                    # check if we have an image for this row and column
+                    condition = (self.layout['row_index'] == ri + 1) & (self.layout['column_index'] == ci + 1)
+                    n_matching = np.sum(condition.to_numpy())
+
+                    if n_matching > 1:
+                        # more than one image
+                        raise Exception(f"More than one image at row {ri + 1}, column {ci + 1}")
+                    
+                    elif n_matching == 1:
+                        # exactly one image, plot it
+                        i = self.layout[condition].index.to_list()[0]
+                        kwargs['title'] = self.names[i]
+                        self.images[i].plot(**kwargs)
+                    
+                    else:
+                        # plot empty well
+                        plt.imshow(empty_well, cmap='gray', vmin=0, vmax=1)
+                        if 'axis_style' in kwargs and kwargs['axis_style'] != 'none':
+                            plt.xticks([]) # remove axis ticks
+                            plt.yticks([])
+                        else:
+                            plt.axis('off')
+                        plt.title(self.fallback_name_function(ri + 1, ci + 1))
+            fig.tight_layout()
+            plt.show()
+            plt.close()
 
 
