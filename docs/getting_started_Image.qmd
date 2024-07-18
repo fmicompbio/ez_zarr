@@ -354,12 +354,12 @@ img.plot(show_label_values=True,
 ```
 
 If you are interested in a specific object, you can use its value and
-the `label_value` argument (and optionally the `padding_pixels` and 
+the `label_value` argument (and optionally the `extend_pixels` and 
 `msk_alpha` arguments), to automatically select appropriate coordinates:
 
 ```{python}
 img.plot(label_value=877,
-         padding_pixels=10,
+         extend_pixels=10,
          msk_alpha=0.15,
          show_label_values=True,
          label_fontsize='xx-large',
@@ -378,7 +378,7 @@ and provide a list of values:
 ```{python}
 img.plot(label_value=877,
          restrict_to_label_values=[877,914],
-         padding_pixels=10,
+         extend_pixels=10,
          msk_alpha=0.15,
          show_label_values=True,
          label_fontsize='xx-large',
