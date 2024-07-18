@@ -118,6 +118,8 @@ def import_Fractal_plate(path: str, image_name: str = '0') -> "ImageList":
                         img_paths.append(img_path)
                         row_index.append(ord(row_path) - ord('A') + 1)
                         column_index.append(int(column_path))
+    if len(img_paths) == 0:
+        raise Exception(f"No images found in {path}.")
 
     # build layout
     layout = pd.DataFrame({'row_index': row_index,
