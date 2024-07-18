@@ -2,6 +2,7 @@
 jupyter: python3
 title: "Using `ez_zarr` to explore Fractal outputs"
 author: Silvia Barbiero, Michael Stadler
+toc: true
 ---
 
 # Goal

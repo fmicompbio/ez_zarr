@@ -2,6 +2,7 @@
 jupyter: python3
 title: "Using `ez_zarr` to explore individual OME-Zarr images"
 author: Silvia Barbiero, Michael Stadler, Charlotte Soneson
+toc: true
 ---
 
 # Goal
