@@ -1,6 +1,9 @@
 # Unit tests
-## hcs_wrappers
-::: tests.test_hcs_wrappers
+## ome_zarr
+::: tests.ome_zarr
 
 ## plotting
 ::: tests.test_plotting
+
+## hcs_wrappers
+::: tests.test_hcs_wrappers
