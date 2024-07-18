@@ -779,3 +779,42 @@ def test_imagelist_getitem(imgL: ome_zarr.ImageList):
     assert len(imgL3) == 2
     assert isinstance(imgL3.layout, pd.DataFrame)
 
+# ... getters and setters .................................................................
+def test_imagelist_get_paths(imgL2: ome_zarr.ImageList):
+    """Test `ome_zarr.ImageList.get_paths`."""
+    assert imgL2.get_paths() == imgL2.paths
+    assert len(imgL2) == len(imgL2.get_paths())
+
+def test_imagelist_get_names(imgL2: ome_zarr.ImageList):
+    """Test `ome_zarr.ImageList.get_names`."""
+    assert imgL2.get_names() == imgL2.names
+    assert len(imgL2) == len(imgL2.get_names())
+
+def test_imagelist_get_layout(imgL2: ome_zarr.ImageList):
+    """Test `ome_zarr.ImageList.get_layout`."""
+    assert imgL2.get_layout().to_dict() == imgL2.layout.to_dict()
+    assert isinstance(imgL2.get_layout(), pd.DataFrame)
+    assert len(imgL2) == imgL2.get_layout().shape[0]
+
+def test_imagelist_set_layout(imgL2: ome_zarr.ImageList):
+    """Test `ome_zarr.ImageList.set_layout`."""
+    df = copy.deepcopy(imgL2.get_layout())
+    assert isinstance(df, pd.DataFrame)
+    assert df.columns.to_list() == ['row_index', 'column_index']
+    with pytest.raises(Exception) as e_info:
+        imgL2.set_layout(df.iloc[[0]])
+    df['row_index'] = [4, 5]
+    imgL2.set_layout(layout=df)
+    assert imgL2.get_layout().to_dict() == df.to_dict()
+    imgL2.set_layout(nrow=7)
+    assert imgL2.nrow == 7
+    imgL2.set_layout(ncol=4, by_row=True)
+    assert imgL2.ncol == 4
+    imgL2.set_layout(nrow = 2, reset_names=True)
+    assert imgL2.get_names() == ['1_1', '2_1']
+    with pytest.warns(UserWarning):
+        imgL2.set_layout(layout='grid', nrow=2)
+    assert isinstance(imgL2.get_layout(), pd.DataFrame)
+    with pytest.raises(Exception) as e_info:
+        imgL2.set_layout(layout='error')
+
