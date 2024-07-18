@@ -745,3 +745,15 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
 
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
+
+# ome_zarr.ImageList ----------------------------------------------------------
+# ... helper functions ........................................................
+def test_imagelist_str(imgL: ome_zarr.ImageList):
+    """Test `ome_zarr.ImageList` object string representation."""
+    assert str(imgL) == repr(imgL)
+    assert str(imgL).startswith('ImageList of 1 image')
+    imgLmod = copy.deepcopy(imgL)
+    imgLmod.names = [''.join(imgL.names * 50)]
+    imgLmod.paths = ['/'.join(imgL.paths * 5)]
+    assert str(imgLmod) == repr(imgLmod)
+
