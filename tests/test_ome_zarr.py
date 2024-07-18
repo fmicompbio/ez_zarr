@@ -38,6 +38,36 @@ def imgL2():
     """A `ome_zarr.ImageList` object with two images"""
     return ome_zarr.ImageList(['tests/example_data/plate_ones_mip.zarr/B/03/0', 'tests/example_data/plate_ones_mip.zarr/B/03/0'])
 
+# ome_zarr helper functions ---------------------------------------------------
+def test_create_name_row_col():
+    """Test `ome_zarr.create_name_row_col` function."""
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.create_name_row_col(1)
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.create_name_row_col(1, 2, 3)
+    assert ome_zarr.create_name_row_col(1, 2) == '1_2'
+    assert ome_zarr.create_name_row_col(3, 4) == '3_4'
+
+def test_create_name_plate_A1():
+    """Test `ome_zarr.create_name_plate_A1` function."""
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.create_name_plate_A1(1)
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.create_name_plate_A1(1, 2, 3)
+    assert ome_zarr.create_name_plate_A1(1, 2) == 'A2'
+    assert ome_zarr.create_name_plate_A1(3, 4) == 'C4'
+    assert ome_zarr.create_name_plate_A1(5, 11) == 'E11'
+
+def test_create_name_plate_A01():
+    """Test `ome_zarr.create_name_plate_A01` function."""
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.create_name_plate_A01(1)
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.create_name_plate_A01(1, 2, 3)
+    assert ome_zarr.create_name_plate_A01(1, 2) == 'A02'
+    assert ome_zarr.create_name_plate_A01(3, 4) == 'C04'
+    assert ome_zarr.create_name_plate_A01(5, 11) == 'E11'
+
 
 # ome_zarr.Image ----------------------------------------------------
 # ... helper functions ..............................................
