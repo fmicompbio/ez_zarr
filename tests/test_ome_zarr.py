@@ -28,6 +28,16 @@ def img2d():
     """A `ome_zarr.Image` object representing a 2D image"""
     return ome_zarr.Image('tests/example_data/plate_ones_mip.zarr/B/03/0', name="test")
 
+@pytest.fixture
+def imgL():
+    """A `ome_zarr.ImageList` object with one image"""
+    return ome_zarr.ImageList(['tests/example_data/plate_ones_mip.zarr/B/03/0'])
+
+@pytest.fixture
+def imgL2():
+    """A `ome_zarr.ImageList` object with two images"""
+    return ome_zarr.ImageList(['tests/example_data/plate_ones_mip.zarr/B/03/0', 'tests/example_data/plate_ones_mip.zarr/B/03/0'])
+
 
 # ome_zarr.Image ----------------------------------------------------
 # ... helper functions ..............................................
