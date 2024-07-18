@@ -300,7 +300,7 @@ class Image:
                                           label_name: str,
                                           label_value: Union[int, float, str],
                                           label_pyramid_level: Union[int, str],
-                                          padding_pixels: Optional[int]=0) -> Union[tuple[tuple[int, ...], tuple[int, ...]], tuple[None, None]]:
+                                          extend_pixels: Optional[int]=0) -> Union[tuple[tuple[int, ...], tuple[int, ...]], tuple[None, None]]:
         """
         Given a label name and value, find the corner coordinates of the bounding box.
 
@@ -308,7 +308,7 @@ class Image:
             label_name (str): The name of the label image to extract the bounding box from.
             label_value (int, float, str): The value of the label to extract the bounding box for.
             label_pyramid_level (int, str): The pyramid level to extract the bounding box from.
-            padding_pixels (int): The number of pixels to add to each side for each axis of the bounding box.
+            extend_pixels (int): The number of pixels to add to each side for each axis of the bounding box.
         
         Returns:
             A tuple of upper-left and lower-right pixel coordinates for the bounding box
@@ -323,7 +323,7 @@ class Image:
         # digest arguments
         assert label_name in self.label_names, f'`label_name` must be in {self.label_names}'
         label_pyramid_level = self._digest_pyramid_level_argument(label_pyramid_level, label_name)
-        assert isinstance(padding_pixels, int), '`padding_pixels` must be an integer scalar'
+        assert isinstance(extend_pixels, int), '`extend_pixels` must be an integer scalar'
 
         # get label array
         lab_arr = self.get_array_by_coordinate(label_name=label_name,
@@ -337,8 +337,8 @@ class Image:
         lower_right = tuple([max(x) + 1 for x in value_coordinates])
 
         # padding
-        upper_left = tuple([max(0, upper_left[i] - padding_pixels) for i in range(len(upper_left))])
-        lower_right = tuple([min(lab_arr.shape[i], lower_right[i] + padding_pixels) for i in range(len(lower_right))])
+        upper_left = tuple([max(0, upper_left[i] - extend_pixels) for i in range(len(upper_left))])
+        lower_right = tuple([min(lab_arr.shape[i], lower_right[i] + extend_pixels) for i in range(len(lower_right))])
 
         # return result
         return tuple([upper_left, lower_right])
@@ -725,7 +725,7 @@ class Image:
              coordinate_unit: str='micrometer',
              label_name: Optional[str]=None,
              label_value: Optional[Union[int, float, str]]=None,
-             padding_pixels: int=0,
+             extend_pixels: int=0,
              pyramid_level: Optional[str]=None,
              pyramid_level_coord: Optional[str]=None,
              channels_labels: Optional[list[str]]=None,
@@ -759,7 +759,7 @@ class Image:
                 not `None`, `label_value` will automatically determine `upper_left_yx`,
                 `lower_right_yx` and `size_yx`. Any values given to those or
                 to `coordinate_unit` and `pyramid_level_coord` will be ignored.
-            padding_pixels (int): The number of pixels to add to the final
+            extend_pixels (int): The number of pixels to add to the final
                 image region coordinates on both sides of each axis. Only used
                 if `label_value` is not `None`.
             pyramid_level (str, optional): The pyramid level (resolution level),
@@ -827,7 +827,7 @@ class Image:
                 label_name=label_name,
                 label_value=label_value,
                 label_pyramid_level=label_pyramid_level,
-                padding_pixels=0
+                extend_pixels=0
             )
             if label_upper_left_yx is None:
                 raise ValueError(f"No label value {label_value} found in label '{label_name}', pyramid level '{label_pyramid_level}'")
@@ -848,8 +848,8 @@ class Image:
             pyramid_level_coord = None
 
             # padding
-            upper_left_yx = tuple([max(0, upper_left_yx[i] - padding_pixels) for i in range(2)])
-            lower_right_yx = tuple([min(self.array_dict[pyramid_level].shape[-2:][i], lower_right_yx[i] + padding_pixels) for i in range(2)])
+            upper_left_yx = tuple([max(0, upper_left_yx[i] - extend_pixels) for i in range(2)])
+            lower_right_yx = tuple([min(self.array_dict[pyramid_level].shape[-2:][i], lower_right_yx[i] + extend_pixels) for i in range(2)])
         
         # get image and label arrays
         scale_img_spatial = self.get_scale(
