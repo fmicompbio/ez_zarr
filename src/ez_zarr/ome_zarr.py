@@ -7,7 +7,8 @@ Classes:
     Image: Contains a single `.zgroup`, typicallly a single image and possibly derived labels or tables.
 """
 
-__all__ = ['Image', 'ImageList']
+__all__ = ['Image', 'ImageList', 'create_name_row_col', 'create_name_plate_A1',
+           'create_name_plate_A01', 'create_name_plate_A001']
 __version__ = '0.2.2'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 
@@ -19,9 +20,78 @@ import zarr
 import pandas as pd
 import importlib
 import warnings
-from typing import Union, Optional, Any
+from typing import Union, Optional, Callable, Any
 from ez_zarr.utils import convert_coordinates, resize_image
 
+
+# helper functions ------------------------------------------------------------
+def create_name_row_col(ri: int, ci: int) -> str:
+    """
+    Create name by pasting row and column indices, separated by '_'.
+
+    Parameters:
+        ri (int): Row index (1-based)
+        ci (int): Column index (1-based)
+    
+    Returns:
+        str: Name constructed as f"{ri}_{ci}"
+
+    Examples:
+        >>> create_name_row_col(1, 2)
+        '1_2'
+    """
+    return f"{ri}_{ci}"
+
+def create_name_plate_A1(ri: int, ci: int) -> str:
+    """
+    Create name corresponding the wells in a microwell plate.
+
+    Parameters:
+        ri (int): Row index (1-based)
+        ci (int): Column index (1-based)
+    
+    Returns:
+        str: Name (`ci` without pre-fixed zeros)
+
+    Examples:
+        >>> create_name_plate_A1(3, 4)
+        'C4'
+    """
+    return f"{chr(ord('A') + ri - 1)}{ci}"
+
+def create_name_plate_A01(ri: int, ci: int) -> str:
+    """
+    Create name corresponding the wells in a microwell plate.
+
+    Parameters:
+        ri (int): Row index (1-based)
+        ci (int): Column index (1-based)
+    
+    Returns:
+        str: Name (`ci` always using two digits, with pre-fixed zeros)
+
+    Examples:
+        >>> create_name_plate_A01(3, 4)
+        'C04'
+    """
+    return f"{chr(ord('A') + ri - 1)}{ci:02}"
+
+def create_name_plate_A001(ri: int, ci: int) -> str:
+    """
+    Create name corresponding the wells in a microwell plate.
+
+    Parameters:
+        ri (int): Row index (1-based)
+        ci (int): Column index (1-based)
+    
+    Returns:
+        str: Name (`ci` always using three digits, with pre-fixed zeros)
+
+    Examples:
+        >>> create_name_plate_A001(3, 4)
+        'C004'
+    """
+    return f"{chr(ord('A') + ri - 1)}{ci:03}"
 
 # Image class -----------------------------------------------------------------
 class Image:
