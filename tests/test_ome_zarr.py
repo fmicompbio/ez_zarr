@@ -757,3 +757,25 @@ def test_imagelist_str(imgL: ome_zarr.ImageList):
     imgLmod.paths = ['/'.join(imgL.paths * 5)]
     assert str(imgLmod) == repr(imgLmod)
 
+def test_imagelist_getitem(imgL: ome_zarr.ImageList):
+    """Test `ome_zarr.ImageList` object string representation."""
+    assert isinstance(imgL[0], ome_zarr.Image)
+    nm = imgL.names[0]
+    assert isinstance(imgL[nm], ome_zarr.Image)
+    assert imgL[0] == imgL[nm]
+    assert str(imgL) == str(imgL[[0]])
+    assert str(imgL) == str(imgL[[nm]])
+    imgL2 = imgL[[0, 0]]
+    assert isinstance(imgL2, ome_zarr.ImageList)
+    assert len(imgL2) == 2
+    assert imgL2.get_names() == [nm, nm]
+    with pytest.raises(Exception) as e_info:
+        imgL2[nm]
+    with pytest.raises(Exception) as e_info:
+        imgL2[[nm, nm]]
+    imgLnolayout = copy.deepcopy(imgL)
+    imgLnolayout.layout = None
+    imgL3 = imgLnolayout[[0, 0]]
+    assert len(imgL3) == 2
+    assert isinstance(imgL3.layout, pd.DataFrame)
+
