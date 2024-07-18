@@ -6,6 +6,7 @@ import pytest
 import shutil
 import json
 import copy
+from torch import isin
 import zarr
 import dask.array
 import numpy as np
@@ -818,3 +819,36 @@ def test_imagelist_set_layout(imgL2: ome_zarr.ImageList):
     with pytest.raises(Exception) as e_info:
         imgL2.set_layout(layout='error')
 
+# ... plotting ................................................................
+def test_imagelist_plot(imgL2: ome_zarr.ImageList, tmpdir: str):
+    """Test `ome_zarr.ImageList.plot`."""
+
+    imgL3 = copy.deepcopy(imgL2)
+    imgL3.layout['row_index'] = [1, 1]
+    imgL3.layout['column_index'] = [1, 1]
+    with pytest.raises(Exception) as e_info:
+        imgL3.plot()
+    
+    imgL2.set_layout(nrow=3)
+    
+    matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
+    with warnings.catch_warnings():
+        # suppress warning due to cannot show FigureCanvas
+        warnings.simplefilter('ignore')
+
+        # basic plot (no argument)
+        imgL2.plot()
+
+        # with known arguments
+        imgL2.plot(fig_title = "test",
+                   fig_width_inch=6,
+                   fig_height_inch=4,
+                   fig_dpi=100,
+                   fig_style='brightfield')
+
+        # with unknown arguments
+        imgL2.plot(label_name = "organoids",
+                   axis_style='frame')
+
+    plt.savefig(tmpdir.join('output.png'))
+    assert True # check if the plotting ran through
