@@ -68,6 +68,30 @@ def test_create_name_plate_A01():
     assert ome_zarr.create_name_plate_A01(3, 4) == 'C04'
     assert ome_zarr.create_name_plate_A01(5, 11) == 'E11'
 
+def test_import_Fractal_plate(tmpdir: str):
+    """Test `import_Fractal_plate` function."""
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.import_Fractal_plate()
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.import_Fractal_plate('tests/example_data')
+    imgL = ome_zarr.import_Fractal_plate('tests/example_data/plate_ones_mip.zarr')
+    assert isinstance(imgL, ome_zarr.ImageList)
+    assert len(imgL) == 1
+    assert imgL.names == ['B3']
+    assert imgL.paths == ['tests/example_data/plate_ones_mip.zarr/B/03/0']
+    assert imgL.nrow == 2
+    assert imgL.ncol == 3
+    assert imgL.layout.to_dict() == {'row_index': {0: 2}, 'column_index': {0: 3}}
+
+    shutil.copytree('tests/example_data/plate_ones_mip.zarr',
+                    str(tmpdir) + '/example_img')
+    assert tmpdir.join('/example_img/.zattrs').check()
+    shutil.move(str(tmpdir) + '/example_img/B/03',
+                str(tmpdir) + '/example_img/B/10')
+    imgL2 = ome_zarr.import_Fractal_plate(str(tmpdir) + '/example_img')
+    assert imgL2.nrow == 8
+    assert imgL2.ncol == 12
+
 
 # ome_zarr.Image ----------------------------------------------------
 # ... helper functions ..............................................
