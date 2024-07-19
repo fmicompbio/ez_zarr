@@ -72,7 +72,7 @@ img = ome_zarr.Image(path = img_directory, name = 'cardio-d14')
 img
 ```
 
-`img` represents a maximum intensity projection of one well from a high-content screening plate, processed using [Fractal](https://fractal-analytics-platform.github.io/fractal-tasks-core/).
+`img` represents a maximum intensity projection of one well from a high-content screening plate, processed using [Fractal](https://fractal-analytics-platform.github.io/).
 
 There are 5 `pyramid_levels` available (0 to 4), meaning that in addition to the full resolution data (level 0), we have four more levels that provide the data in 2-fold lower resolutions (see `pyramid_zyx_scalefactor`), for example for faster plotting.
 
