@@ -70,7 +70,7 @@ pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
 
 ## Software status
 [![unit-tests](https://github.com/fmicompbio/ez_zarr/actions/workflows/test_and_deploy.yaml/badge.svg)](https://github.com/fmicompbio/ez_zarr/actions/workflows/test_and_deploy.yaml)
-[![codecov](https://codecov.io/gh/fmicompbio/ez_zarr/graph/badge.svg?token=GEBLX8ENJ1)](https://codecov.io/gh/fmicompbio/ez_zarr)
+[![codecov](https://codecov.io/gh/fmicompbio/ez_zarr/graph/badge.svg)](https://codecov.io/gh/fmicompbio/ez_zarr)
 
 ## Contributors and License
 `ez_zarr` is released under the MIT License, and the copyright
