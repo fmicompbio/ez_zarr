@@ -1,6 +1,6 @@
 # Unit tests
 ## ome_zarr
-::: tests.ome_zarr
+::: tests.test_ome_zarr
 
 ## plotting
 ::: tests.test_plotting
