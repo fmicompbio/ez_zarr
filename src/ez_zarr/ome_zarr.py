@@ -123,8 +123,11 @@ def import_Fractal_plate(path: str, image_name: str = '0') -> "ImageList":
 
     # build layout
     layout = pd.DataFrame({'row_index': row_index,
-                           'column_index': column_index})
+                           'column_index': column_index,
+                           'img_paths': img_paths})
     layout = layout.sort_values(by=['row_index', 'column_index']).reset_index(drop=True)
+    img_paths = layout.img_paths.tolist()
+    layout = layout.drop('img_paths', axis='columns')
 
     # set nrow, ncol
     known_plate_dims = [(2, 3), (4, 6), (8, 12), (16, 24)]
