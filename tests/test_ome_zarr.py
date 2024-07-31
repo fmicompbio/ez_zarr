@@ -92,6 +92,23 @@ def test_import_Fractal_plate(tmpdir: str):
     assert imgL2.nrow == 8
     assert imgL2.ncol == 12
 
+    shutil.copytree('tests/example_data/plate_ones_mip.zarr',
+                    str(tmpdir) + '/example_img_multi')
+    assert tmpdir.join('/example_img_multi/.zattrs').check()
+    shutil.copytree(str(tmpdir) + '/example_img_multi/B/03',
+                    str(tmpdir) + '/example_img_multi/C/02')
+    shutil.copytree(str(tmpdir) + '/example_img_multi/B/03',
+                    str(tmpdir) + '/example_img_multi/G/06')
+    imgL3 = ome_zarr.import_Fractal_plate(str(tmpdir) + '/example_img_multi')
+    assert imgL3.nrow == 8
+    assert imgL3.ncol == 12
+    assert imgL3.layout.row_index.tolist() == [2, 3, 7]
+    assert imgL3.layout.column_index.tolist() == [3, 2, 6]
+    assert imgL3['B03'].get_path() == str(tmpdir) + '/example_img_multi/B/03/0'
+    assert imgL3['C02'].get_path() == str(tmpdir) + '/example_img_multi/C/02/0'
+    assert imgL3['G06'].get_path() == str(tmpdir) + '/example_img_multi/G/06/0'
+    assert imgL3.paths == [str(tmpdir) + '/example_img_multi/B/03/0', str(tmpdir) + '/example_img_multi/C/02/0', str(tmpdir) + '/example_img_multi/G/06/0']
+    assert imgL3.names == ['B03', 'C02', 'G06']
 
 # ome_zarr.Image ----------------------------------------------------
 # ... helper functions ..............................................
