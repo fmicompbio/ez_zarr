@@ -619,7 +619,7 @@ def test_get_array_by_coordinate(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     assert (img1b == img1a).all()
     assert (img1c == img1a).all()
 
-def test_get_array_pair_by_coordinate(img2d: ome_zarr.Image, tmpdir: str):
+def test_get_array_pair_by_coordinate(tmpdir: str):
     """Test `ome_zarr.Image` object get_array_pair_by_coordinate() method."""
 
     # using pyramid_level corresponding to a lower resolution intensity image
@@ -637,10 +637,30 @@ def test_get_array_pair_by_coordinate(img2d: ome_zarr.Image, tmpdir: str):
     zattr['multiscales'][0]['datasets'] = zattr['multiscales'][0]['datasets'][:2]
     with open(zattr_file, "w") as jsonfile:
         json.dump(zattr, jsonfile, indent=4)
-    # ... plot
+    # ... extract array pair
     imgtmp = ome_zarr.Image(str(tmpdir) + '/example_img')
     with pytest.raises(Exception) as e_info:
         imgtmp.get_array_pair_by_coordinate(pyramid_level='2', label_name='organoids')
+    # ... clean up
+    shutil.rmtree(str(tmpdir) + '/example_img')
+
+    # expected return values with multiple label_name values
+    # ... copy zarr fileset
+    assert tmpdir.check()
+    shutil.copytree('tests/example_data/plate_ones_mip.zarr/B/03/0',
+                    str(tmpdir) + '/example_img')
+    assert tmpdir.join('/example_img/1').check()
+    shutil.copytree(str(tmpdir) + '/example_img/labels/organoids',
+                    str(tmpdir) + '/example_img/labels/cells')
+    # ... initialize Image object
+    img2d = ome_zarr.Image(str(tmpdir) + '/example_img')
+    # ... extract array pair
+    img, lab = img2d.get_array_pair_by_coordinate(label_name=['organoids', 'cells'])
+    assert isinstance(img, np.ndarray)
+    assert isinstance(lab, dict)
+    assert list(lab.keys()) == ['organoids', 'cells']
+    assert isinstance(lab['organoids'], np.ndarray)
+    assert isinstance(lab['cells'], np.ndarray)
     # ... clean up
     shutil.rmtree(str(tmpdir) + '/example_img')
 
