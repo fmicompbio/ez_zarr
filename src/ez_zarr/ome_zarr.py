@@ -278,17 +278,23 @@ class Image:
                 minx = datasets[i]['coordinateTransformations'][0]['scale'][-1]
         return lev
 
-    def _digest_pyramid_level_argument(self, pyramid_level=None, label_name=None) -> str:
+    def _digest_pyramid_level_argument(self,
+                                       pyramid_level=None,
+                                       label_name=None,
+                                       default_to='lowest') -> str:
         """
         [internal] Interpret a `pyramid_level` argument in the context of a given Image object.
 
         Parameters:
             pyramid_level (int, str or None): pyramid level, coerced to str. If None,
-                the last pyramid level (typically the lowest-resolution one) will be returned.
+                the lowest-resolution pyramid level (or the highest-resolution one,
+                if `default_to='highest'`) will be returned.
             label_name (str or None): defines what `pyramid_level` refers to. If None,
                 it refers to the intensity image. Otherwise, it refers to a label with
-                the name given by `label_name`. For example, to select the 'nuclei' labels,
-                the argument would be set to `nuclei`.
+                the name given by `label_name`. For example, to select the 'nuclei'
+                labels, the argument would be set to `nuclei`.
+            default_to (str): Defines what pyramid level to return if `pyramid_level`
+                is `None`. Currently supported are `'lowest'` and `'highest'`.
 
         Returns:
             Integer index of the pyramid level.
@@ -296,11 +302,13 @@ class Image:
         if label_name is not None and label_name not in self.label_names:
             raise ValueError(f"invalid label name '{label_name}' - must be one of {self.label_names}")
         if pyramid_level == None: 
-            # no pyramid level given -> pick lowest resolution one
+            # no pyramid level given -> pick according to `default_to`
+            methods = {'lowest': self._find_path_of_lowest_resolution_level,
+                       'highest': self._find_path_of_highest_resolution_level}
             if label_name is None: # intensity image
-                pyramid_level = self._find_path_of_lowest_resolution_level(self.multiscales_image['datasets'])
+                pyramid_level = methods[default_to](self.multiscales_image['datasets'])
             else: # label image
-                pyramid_level = self._find_path_of_lowest_resolution_level(self.multiscales_labels[label_name]['datasets'])
+                pyramid_level = methods[default_to](self.multiscales_labels[label_name]['datasets'])
         else:
             # make sure it is a string
             pyramid_level = str(pyramid_level)
