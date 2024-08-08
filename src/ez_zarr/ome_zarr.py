@@ -427,54 +427,7 @@ class Image:
 
         # return
         return([upper_left_yx, lower_right_yx])
-    
-    def _get_bounding_box_for_label_value(self,
-                                          label_name: str,
-                                          label_value: Union[int, float, str],
-                                          label_pyramid_level: Union[int, str],
-                                          extend_pixels: Optional[int]=0) -> Union[tuple[tuple[int, ...], tuple[int, ...]], tuple[None, None]]:
-        """
-        Given a label name and value, find the corner coordinates of the bounding box.
-
-        Parameters:
-            label_name (str): The name of the label image to extract the bounding box from.
-            label_value (int, float, str): The value of the label to extract the bounding box for.
-            label_pyramid_level (int, str): The pyramid level to extract the bounding box from.
-            extend_pixels (int): The number of pixels to add to each side for each axis of the bounding box.
-        
-        Returns:
-            A tuple of upper-left and lower-right pixel coordinates for the bounding box
-            containing the label value, or `(None, None)` if the label value is not found.
-            For a 2D label image, this would be `((y1, x1), (y2, x2))`.
-        
-        Example:
-            Get the bounding box for the label value 1 in pyramid level 0:
-
-            >>> img._get_bounding_box_for_label_value(label_name='nuclei', label_value=1, label_pyramid_level=0)
-        """
-        # digest arguments
-        assert label_name in self.label_names, f'`label_name` must be in {self.label_names}'
-        label_pyramid_level = self._digest_pyramid_level_argument(label_pyramid_level, label_name)
-        assert isinstance(extend_pixels, int), '`extend_pixels` must be an integer scalar'
-
-        # get label array
-        lab_arr = self.get_array_by_coordinate(label_name=label_name,
-                                               pyramid_level=label_pyramid_level)
-
-        # find bounding box
-        value_coordinates = np.equal(lab_arr, label_value).nonzero()
-        if len(value_coordinates[0]) == 0:
-            return tuple([None, None])
-        upper_left = tuple([min(x) for x in value_coordinates])
-        lower_right = tuple([max(x) + 1 for x in value_coordinates])
-
-        # padding
-        upper_left = tuple([max(0, upper_left[i] - extend_pixels) for i in range(len(upper_left))])
-        lower_right = tuple([min(lab_arr.shape[i], lower_right[i] + extend_pixels) for i in range(len(lower_right))])
-
-        # return result
-        return tuple([upper_left, lower_right])
-    
+     
     # string representation ---------------------------------------------------
     def __str__(self):
         nch = self.nchannels_image
@@ -588,6 +541,88 @@ class Image:
         # return
         return scale
     
+    def get_bounding_box_for_label_value(self,
+                                         label_name: str,
+                                         label_value: Union[int, float, str],
+                                         label_pyramid_level: str,
+                                         extend_pixels: Optional[int]=0,
+                                         label_name_output: Optional[str]=None,
+                                         pyramid_level_output: Optional[str]=None) -> Union[tuple[tuple[int, ...], tuple[int, ...]], tuple[None, None]]:
+        """
+        Given a label name and value, find the corner coordinates of the bounding box.
+
+        Parameters:
+            label_name (str): The name of the label image to extract the bounding
+                box from.
+            label_value (int, float, str): The value of the label to extract the
+                bounding box for.
+            label_pyramid_level (int, str): The pyramid level to extract the bounding
+                box from.
+            extend_pixels (int): The number of pixels to add to each side for each
+                axis of the bounding box (before possible conversion to
+                `label_name_output` and `pyramid_level_output`).
+            label_name_output (str or None): The name of the label image to which
+                the returned bounding box coordinates refer to. If `None` (the
+                default), the coordinates refer to the intensity image.
+            pyramid_level_output (str or None): The pyramid level to which the
+                returned bounding box coordinates refer to. If `None` (the
+                default), the coordinates refer to the highest resolution pyramid
+                level.
+        
+        Returns:
+            A tuple of upper-left and lower-right pixel coordinates for the bounding
+            box containing the label value in the requested output space, or
+            `(None, None)` if the label value is not found.
+            For a 2D label image, this would be `((y1, x1), (y2, x2))`.
+        
+        Example:
+            Get the bounding box for the 'nuclei' label value 1 from pyramid
+            level 0,in the space of highest-resolution pyramid level of
+            the intensity image:
+
+            >>> img.get_bounding_box_for_label_value(label_name='nuclei', label_value=1, label_pyramid_level=0)
+        """
+        # digest arguments
+        assert label_name in self.label_names, f'`label_name` must be in {self.label_names}'
+        label_pyramid_level = self._digest_pyramid_level_argument(label_pyramid_level, label_name)
+        assert isinstance(extend_pixels, int), '`extend_pixels` must be an integer scalar'
+        assert isinstance(label_name_output, str) or label_name_output is None
+        pyramid_level_output = self._digest_pyramid_level_argument(
+            pyramid_level_output, label_name_output, default_to='highest')
+
+        # get label array
+        lab_arr = self.get_array_by_coordinate(label_name=label_name,
+                                               pyramid_level=label_pyramid_level)
+
+        # find bounding box
+        value_coordinates = np.equal(lab_arr, label_value).nonzero()
+        if len(value_coordinates[0]) == 0:
+            return tuple([None, None])
+        upper_left = tuple([min(x) for x in value_coordinates])
+        lower_right = tuple([max(x) + 1 for x in value_coordinates])
+
+        # padding
+        upper_left = tuple([max(0, upper_left[i] - extend_pixels) for i in range(len(upper_left))])
+        lower_right = tuple([min(lab_arr.shape[i], lower_right[i] + extend_pixels) for i in range(len(lower_right))])
+
+        # convert to output space
+        in_scale = self.get_scale(pyramid_level=label_pyramid_level,
+                                  label_name=label_name,
+                                  spatial_axes_only=True)
+        out_scale = self.get_scale(pyramid_level=pyramid_level_output,
+                                   label_name=label_name_output,
+                                   spatial_axes_only=True)
+        upper_left_out = convert_coordinates(coords_from=upper_left,
+                                             scale_from=in_scale,
+                                             scale_to=out_scale)
+        lower_right_out = convert_coordinates(coords_from=lower_right,
+                                              scale_from=in_scale,
+                                              scale_to=out_scale)
+
+        # return result
+        return tuple([tuple([round(x) for x in upper_left_out]),
+                      tuple([round(x) for x in lower_right_out])])
+   
     def get_array_by_coordinate(self,
                                 label_name: Optional[str]=None,
                                 upper_left_yx: Optional[tuple[int]]=None,
@@ -972,26 +1007,16 @@ class Image:
             label_pyramid_level = self._find_path_of_highest_resolution_level(
                 self.multiscales_labels[label_name]['datasets']
             )
-            label_upper_left_yx, label_lower_right_yx = self._get_bounding_box_for_label_value(
+            upper_left_yx, lower_right_yx = self.get_bounding_box_for_label_value(
                 label_name=label_name,
                 label_value=label_value,
                 label_pyramid_level=label_pyramid_level,
-                extend_pixels=0
+                extend_pixels=0,
+                label_name_output=None,
+                pyramid_level_output=pyramid_level
             )
-            if label_upper_left_yx is None:
-                raise ValueError(f"No label value {label_value} found in label '{label_name}', pyramid level '{label_pyramid_level}'")
-            upper_left_yx = convert_coordinates(
-                coords_from=label_upper_left_yx[-2:],
-                scale_from=self.get_scale(label_name=label_name,
-                                          pyramid_level=label_pyramid_level)[-2:],
-                scale_to=self.get_scale(pyramid_level=pyramid_level)[-2:]
-            )
-            lower_right_yx = convert_coordinates(
-                coords_from=label_lower_right_yx[-2:],
-                scale_from=self.get_scale(label_name=label_name,
-                                          pyramid_level=label_pyramid_level)[-2:],
-                scale_to=self.get_scale(pyramid_level=pyramid_level)[-2:]
-            )
+            upper_left_yx = upper_left_yx[-2:]
+            lower_right_yx = lower_right_yx[-2:]
             size_yx = None
             coordinate_unit = 'pixel'
             pyramid_level_coord = None
