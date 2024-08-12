@@ -789,13 +789,13 @@ def test_imagelist_str(imgL: ome_zarr.ImageList):
     """Test `ome_zarr.ImageList` object string representation."""
     assert str(imgL) == repr(imgL)
     assert str(imgL).startswith('ImageList of 1 image')
-    imgLmod = copy.deepcopy(imgL)
+    imgLmod = imgL
     imgLmod.names = [''.join(imgL.names * 50)]
     imgLmod.paths = ['/'.join(imgL.paths * 5)]
     assert str(imgLmod) == repr(imgLmod)
 
 def test_imagelist_getitem(imgL: ome_zarr.ImageList):
-    """Test `ome_zarr.ImageList` object string representation."""
+    """Test `ome_zarr.ImageList` subsetting."""
     assert isinstance(imgL[0], ome_zarr.Image)
     nm = imgL.names[0]
     assert isinstance(imgL[nm], ome_zarr.Image)
@@ -810,11 +810,29 @@ def test_imagelist_getitem(imgL: ome_zarr.ImageList):
         imgL2[nm]
     with pytest.raises(Exception) as e_info:
         imgL2[[nm, nm]]
-    imgLnolayout = copy.deepcopy(imgL)
+    imgLnolayout = imgL
     imgLnolayout.layout = None
     imgL3 = imgLnolayout[[0, 0]]
     assert len(imgL3) == 2
     assert isinstance(imgL3.layout, pd.DataFrame)
+
+def test_imagelist_getattr(imgL: ome_zarr.ImageList):
+    """Test `ome_zarr.ImageList` getting attributes of contained Image objects."""
+
+    # non-existing attribute
+    with pytest.raises(Exception) as e_info:
+        imgL.get_nonexisting
+    with pytest.raises(Exception) as e_info:
+        imgL.get_nonexisting()
+
+    # simple attributes
+    assert isinstance(imgL.name, list)
+    assert imgL.name == imgL.get_names()
+    assert imgL.path == imgL.get_paths()
+
+    # callable attributes
+    assert imgL.get_scale('0') == [img.get_scale('0') for img in imgL.images]
+    assert imgL.get_table_names() == [img.get_table_names() for img in imgL.images]
 
 # ... getters and setters .................................................................
 def test_imagelist_get_paths(imgL2: ome_zarr.ImageList):
@@ -859,7 +877,7 @@ def test_imagelist_set_layout(imgL2: ome_zarr.ImageList):
 def test_imagelist_plot(imgL2: ome_zarr.ImageList, tmpdir: str):
     """Test `ome_zarr.ImageList.plot`."""
 
-    imgL3 = copy.deepcopy(imgL2)
+    imgL3 = imgL2
     imgL3.layout['row_index'] = [1, 1]
     imgL3.layout['column_index'] = [1, 1]
     with pytest.raises(Exception) as e_info:
