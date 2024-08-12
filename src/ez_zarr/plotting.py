@@ -406,7 +406,7 @@ def plot_image(im: np.ndarray,
                 plt.imshow(msk,
                            interpolation='none',
                            cmap=get_shuffled_cmap(),
-                           alpha=np.multiply(msk_alpha, msk > 0))
+                           alpha=np.multiply(float(msk_alpha), msk > 0))
                 if show_label_values:
                     skim = importlib.import_module('skimage.measure')
                     props = skim.regionprops(msk)
