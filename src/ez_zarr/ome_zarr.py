@@ -1199,6 +1199,22 @@ class ImageList:
                                  names=[self.names[i] for i in idx],
                                  layout=layout_sub)
 
+    # call Image attributes ---------------------------------------------------
+    def __getattr__(self, name):
+        # remark: could catch "forbidden" attributes here
+        try:
+            attr = getattr(self.images[0], name)
+        except AttributeError:
+            raise AttributeError(f"'{type(self.images[0]).__name__}' objects have no attribute '{name}'")
+
+        if callable(attr):
+            def wrapper(*args, **kwargs):
+                return [getattr(img, name)(*args, **kwargs) for img in self.images]
+            return wrapper
+        else:
+            return [getattr(img, name) for img in self.images]
+
+
     # accessors ---------------------------------------------------------------
     def get_paths(self) -> list[str]:
         """Returns the paths of the images."""
