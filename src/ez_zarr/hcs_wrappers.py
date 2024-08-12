@@ -1359,11 +1359,10 @@ class FractalZarrSet:
         self.zarr_paths: list[str] = [f for f in os.listdir(self.path) if f[-5:] == '.zarr']
         if len(self.zarr_paths) == 0:
             raise ValueError(f'no `.zarr` filesets found in `{path}`')
+        self.zarr_paths.sort(reverse=True) # defined order (_mip.zarr before .zarr)
         self.zarr_mip_idx: Optional[int] = None
         self.zarr_3d_idx: Optional[int] = None
         if len(self.zarr_paths) == 2:
-            if self.zarr_paths[1].replace('_mip.zarr', '.zarr') == self.zarr_paths[0]:
-                self.zarr_paths.reverse()
             if self.zarr_paths[0].replace('_mip.zarr', '.zarr') == self.zarr_paths[1]:
                 # special case of 3D plate plus derived maximum intensity projection?
                 self.zarr_mip_idx = 0
