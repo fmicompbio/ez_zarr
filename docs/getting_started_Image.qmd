@@ -80,7 +80,7 @@ This OME-Zarr image also contains two segmentations (`empty` and `nuclei`), and 
 
 ## Get information from `img`
 
-You can obtain information on the content available in the image:
+You can obtain specific information on the content available in the image:
 ```{python}
 # path to the OME-Zarr image
 img.get_path()
@@ -105,6 +105,10 @@ img.get_scale(pyramid_level='0')
 ```{python}
 # ... for labels (z, y, x)
 img.get_scale(pyramid_level='0', label_name='nuclei')
+```
+```{python}
+# tree of folder and file structure in the zarr group
+img.tree()
 ```
 
 ## Extract a table from the OME-Zarr image
@@ -155,7 +159,7 @@ with plt.style.context('dark_background'):
     plt.close()
 ```
 
-With `plot()`, `ome_zarr.Image` provides a convenient function for this use case that
+With `plot()`, `ome_zarr.Image` provides a convenient function for this that
 automatically extracts the well image and plots it. Because it has access to the
 image metadata, it can also add for example a scale bar:
 
@@ -278,7 +282,7 @@ do this automatically.
 
 You can do it also manually by using `get_scale` to obtain the
 pixel sizes (in micrometer) from the image metadata, and
-`utils.convert_coordinates` from `ez_zarr` to do the actual conversion:
+`ez_zarr.utils.convert_coordinates` to do the actual conversion:
 
 ```{python}
 # let's define some pixel coordinates referring to pyramid level 4
@@ -311,14 +315,14 @@ zyx_px = utils.convert_coordinates(coords_from=zyx_um,
 print(f'starting coordinates converted back to pixel (pyramid level 4): {zyx_px}')
 ```
 
-These functions are also used by `plot_well()` internally to add
+These functions are also used by `plot()` internally to add
 a scale bar to the image plot, as we have seen above.
 
 ## Working with segmentation masks
 
-When segmentation masks (labels) are available, we can also extract them.
-For example, we can plot the labels with transparency on top of the image,
-by selecting the desired label using `label_name`:
+When segmentation masks (labels) are available, we can for example
+plot them with transparency on top of the image, by selecting the
+desired label using `label_name`:
 
 ```{python}
 img.plot(label_name='nuclei',
@@ -334,8 +338,27 @@ img.plot(label_name='nuclei',
 
 You may notice that the above will warn about no labels being available for
 the requested intensity image pyramid level. The `plot` method will
-automatically use the label with the closest resolution and upscale it
+automatically use the label with the closest resolution and scale it
 to match the intensity image. 
+
+For your convenience, it is also possible to specify multiple label
+names using a `list` (for example to reuse the same label name list
+when working with multiple images that have different labels).
+`plot()` will still only display a single label mask, namely the first
+one in the provided list that is available for the image (so the
+order of label names matters):
+
+```{python}
+img.plot(label_name=['whole_cells', 'nuclei', 'mitochondria'],
+         pyramid_level=0,
+         upper_left_yx=(130, 140),
+         lower_right_yx=(300, 310),
+         scalebar_micrometer=30,
+         scalebar_color='white',
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
 
 Using the `show_label_values` argument of `plotting.plot_image`, the
 label values can be added (optionally also using the `label_fontsize`
@@ -354,8 +377,8 @@ img.plot(show_label_values=True,
          fig_dpi=100)
 ```
 
-If you are interested in a specific object, you can use its value and
-the `label_value` argument (and optionally the `extend_pixels` and 
+If you are interested in a specific object, you can pass its value to
+the `label_value` argument (and optionally use the `extend_pixels` and 
 `msk_alpha` arguments), to automatically select appropriate coordinates:
 
 ```{python}
