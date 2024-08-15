@@ -722,6 +722,14 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
                    channels=[0],
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]])
+        img2d.plot(label_name=['non-existent', 'also-non-existent', 'organoids'],
+                   channels=[0],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]])
+        img2d.plot(label_name=['non-existent', 'also-non-existent'],
+                   channels=[0],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]])
 
         # automatically extract coordinates for label_value
         with pytest.warns(UserWarning):

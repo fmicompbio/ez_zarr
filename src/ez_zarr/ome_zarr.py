@@ -907,7 +907,7 @@ class Image:
              lower_right_yx: Optional[tuple[int]]=None,
              size_yx: Optional[tuple[int]]=None,
              coordinate_unit: str='micrometer',
-             label_name: Optional[str]=None,
+             label_name: Optional[Union[list[str], str]]=None,
              label_value: Optional[Union[int, float, str]]=None,
              extend_pixels: int=0,
              pyramid_level: Optional[str]=None,
@@ -934,9 +934,11 @@ class Image:
                 the size of the region of interest.
             coordinate_unit (str): The unit of the image coordinates, for
                 example 'micrometer' or 'pixel'.
-            label_name (str, optional): The name of the a segmentation mask
-                to be plotted semi-transparently over the intensity image.
-                If `None`, just the intensity image is plotted.
+            label_name (str or list of str, optional): The segmentation
+                mask name or names to be plotted semi-transparently over
+                the intensity image. If this is a list of multiple names, the
+                first one that is available for the image will be
+                used. If `None`, just the intensity image is plotted.
             label_value (int, float, str, optional): The value of the label,
                 for which bounding box coordinates should be extracted. 
                 The highest resolution pyramid level will be used.If
@@ -972,6 +974,14 @@ class Image:
             >>> img.plot(channels = [0], channel_colors = ['cyan'])
         """
         # digest arguments
+        if isinstance(label_name, list):
+            label_name = [ln for ln in label_name if ln in self.label_names]
+            if len(label_name) == 0:
+                label_name = None
+                print(f"None of given `label_name`s found in image {self.name}")
+            else:
+                label_name = label_name[0]
+                print(f"Using label_name='{label_name}' for image {self.name}")
         assert label_name == None or label_name in self.label_names, (
             f"Unknown label_name ({label_name}), should be `None` or one of "
             ', '.join(self.label_names)
