@@ -107,6 +107,8 @@ img.get_scale(pyramid_level='0')
 img.get_scale(pyramid_level='0', label_name='nuclei')
 ```
 ```{python}
+#| output: asis
+
 # tree of folder and file structure in the zarr group
 img.tree()
 ```
