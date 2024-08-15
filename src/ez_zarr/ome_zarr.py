@@ -901,6 +901,11 @@ class Image:
         else:
             return anndata.to_df()
 
+    # zarr group methods ---------------------------------------------------------
+    def tree(self, **kwargs: Any) -> Any:
+        """Print zarr tree using zarr.hierarchy.Group.tree()."""
+        return self.zarr_group.tree(**kwargs)
+
     # plotting methods -----------------------------------------------------------
     def plot(self,
              upper_left_yx: Optional[tuple[int]]=None,

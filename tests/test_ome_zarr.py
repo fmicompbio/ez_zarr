@@ -683,6 +683,14 @@ def test_get_table(img2d: ome_zarr.Image):
     assert isinstance(res2, pd.DataFrame)
     assert res2.shape == (4, 8)
 
+def test_tree(img2d: ome_zarr.Image):
+    """Test `Image.tree()`."""
+
+    res1 = img2d.tree()
+    assert print(res1) == None
+    res2 = img2d.tree(expand=True, level=2)
+    assert isinstance(res2, zarr.util.TreeViewer)
+
 def test_plot(img2d: ome_zarr.Image, tmpdir: str):
     """Test `Image.plot()`."""
 
