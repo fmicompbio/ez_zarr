@@ -67,7 +67,7 @@ def test_import_Fractal_plate(tmpdir: str):
     imgL = ome_zarr.import_Fractal_plate('tests/example_data/plate_ones_mip.zarr')
     assert isinstance(imgL, ome_zarr.ImageList)
     assert len(imgL) == 1
-    assert imgL.names == ['B3']
+    assert imgL.names == ['B03']
     assert imgL.paths == ['tests/example_data/plate_ones_mip.zarr/B/03/0']
     assert imgL.nrow == 2
     assert imgL.ncol == 3
