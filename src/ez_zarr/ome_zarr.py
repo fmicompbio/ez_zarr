@@ -7,7 +7,7 @@ Classes:
     Image: Contains a single `.zgroup`, typicallly a single image and possibly derived labels or tables.
 """
 
-__all__ = ['Image', 'ImageList', 'create_name_row_col', 'create_name_plate_A1',
+__all__ = ['Image', 'ImageList', 'create_name_row_col', 
            'create_name_plate_A01', 'import_Fractal_plate']
 __version__ = '0.3.1'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
@@ -41,23 +41,6 @@ def create_name_row_col(ri: int, ci: int) -> str:
         '1_2'
     """
     return f"{ri}_{ci}"
-
-def create_name_plate_A1(ri: int, ci: int) -> str:
-    """
-    Create name corresponding the wells in a microwell plate.
-
-    Parameters:
-        ri (int): Row index (1-based)
-        ci (int): Column index (1-based)
-    
-    Returns:
-        str: Name (`ci` without pre-fixed zeros)
-
-    Examples:
-        >>> create_name_plate_A1(3, 4)
-        'C4'
-    """
-    return f"{chr(ord('A') + ri - 1)}{ci}"
 
 def create_name_plate_A01(ri: int, ci: int) -> str:
     """
@@ -136,9 +119,7 @@ def import_Fractal_plate(path: str, image_name: str = '0') -> "ImageList":
     nrow, ncol = known_plate_dims[min([i for i in range(len(known_plate_dims)) if known_plate_dims[i][0] >= mx_row and known_plate_dims[i][1] >= mx_column])]
 
     # set fallback naming function
-    nm_func = create_name_plate_A1
-    if ncol > 9:
-        nm_func = create_name_plate_A01
+    nm_func = create_name_plate_A01
     
     # create ImageList object
     imgL = ImageList(paths = img_paths, layout=layout, nrow=nrow, ncol=ncol,
@@ -1136,8 +1117,7 @@ class ImageList:
                 `None` or when plotting empty images for row/column indices
                 that are not present in `layout`. `ez_zarr.ome_zarr` defines
                 a few pre-defined functions that can be used, such as
-                `create_name_row_col`, `create_name_plate_A1` and
-                `create_name_plate_A01`.
+                `create_name_row_col` and `create_name_plate_A01`.
                 
         Returns:
             An `ImageList` object.
