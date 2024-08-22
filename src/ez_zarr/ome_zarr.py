@@ -8,7 +8,7 @@ Classes:
 """
 
 __all__ = ['Image', 'ImageList', 'create_name_row_col', 
-           'import_plate']
+           'create_name_plate_A01', 'import_plate']
 __version__ = '0.3.2'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 
@@ -41,6 +41,23 @@ def create_name_row_col(ri: int, ci: int) -> str:
         '1_2'
     """
     return f"{ri}_{ci}"
+
+def create_name_plate_A01(ri: int, ci: int) -> str:
+    """
+    Create name corresponding the wells in a microwell plate.
+
+    Parameters:
+        ri (int): Row index (1-based)
+        ci (int): Column index (1-based)
+    
+    Returns:
+        str: Name (`ci` always using two digits, with pre-fixed zeros)
+
+    Examples:
+        >>> create_name_plate_A01(3, 4)
+        'C04'
+    """
+    return f"{chr(ord('A') + ri - 1)}{ci:02}"
 
 def import_plate(path: str, image_name: str = '0') -> "ImageList":
     """
@@ -115,7 +132,7 @@ def import_plate(path: str, image_name: str = '0') -> "ImageList":
     # create ImageList object
     imgL = ImageList(paths = img_paths, names = well_names,
                      layout=layout, nrow=nrow, ncol=ncol,
-                     fallback_name_function=create_name_row_col)
+                     fallback_name_function=create_name_plate_A01)
 
     # return
     return imgL

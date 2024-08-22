@@ -48,6 +48,16 @@ def test_create_name_row_col():
     assert ome_zarr.create_name_row_col(1, 2) == '1_2'
     assert ome_zarr.create_name_row_col(3, 4) == '3_4'
 
+def test_create_name_plate_A01():
+    """Test `ome_zarr.create_name_plate_A01` function."""
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.create_name_plate_A01(1)
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.create_name_plate_A01(1, 2, 3)
+    assert ome_zarr.create_name_plate_A01(1, 2) == 'A02'
+    assert ome_zarr.create_name_plate_A01(3, 4) == 'C04'
+    assert ome_zarr.create_name_plate_A01(5, 11) == 'E11'
+
 def test_import_plate(tmpdir: str):
     """Test `import_plate` function."""
     with pytest.raises(Exception) as e_info:
