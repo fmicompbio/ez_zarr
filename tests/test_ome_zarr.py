@@ -48,23 +48,13 @@ def test_create_name_row_col():
     assert ome_zarr.create_name_row_col(1, 2) == '1_2'
     assert ome_zarr.create_name_row_col(3, 4) == '3_4'
 
-def test_create_name_plate_A01():
-    """Test `ome_zarr.create_name_plate_A01` function."""
+def test_import_plate(tmpdir: str):
+    """Test `import_plate` function."""
     with pytest.raises(Exception) as e_info:
-        ome_zarr.create_name_plate_A01(1)
+        ome_zarr.import_plate()
     with pytest.raises(Exception) as e_info:
-        ome_zarr.create_name_plate_A01(1, 2, 3)
-    assert ome_zarr.create_name_plate_A01(1, 2) == 'A02'
-    assert ome_zarr.create_name_plate_A01(3, 4) == 'C04'
-    assert ome_zarr.create_name_plate_A01(5, 11) == 'E11'
-
-def test_import_Fractal_plate(tmpdir: str):
-    """Test `import_Fractal_plate` function."""
-    with pytest.raises(Exception) as e_info:
-        ome_zarr.import_Fractal_plate()
-    with pytest.raises(Exception) as e_info:
-        ome_zarr.import_Fractal_plate('tests/example_data')
-    imgL = ome_zarr.import_Fractal_plate('tests/example_data/plate_ones_mip.zarr')
+        ome_zarr.import_plate('tests/example_data')
+    imgL = ome_zarr.import_plate('tests/example_data/plate_ones_mip.zarr')
     assert isinstance(imgL, ome_zarr.ImageList)
     assert len(imgL) == 1
     assert imgL.names == ['B03']
@@ -78,7 +68,18 @@ def test_import_Fractal_plate(tmpdir: str):
     assert tmpdir.join('/example_img/.zattrs').check()
     shutil.move(str(tmpdir) + '/example_img/B/03',
                 str(tmpdir) + '/example_img/B/10')
-    imgL2 = ome_zarr.import_Fractal_plate(str(tmpdir) + '/example_img')
+    with pytest.raises(Exception) as e_info:
+        imgL2 = ome_zarr.import_plate(str(tmpdir) + '/example_img')
+    # add B10 to omero attributes
+    zattr_file = str(tmpdir) + '/example_img/.zattrs'
+    with open(zattr_file) as f:
+       zattr = json.load(f)
+    zattr['plate']['columns'].append({'name': '10'})
+    zattr['plate']['wells'].append({'columnIndex': 1, 'path': 'B/10', 'rowIndex': 0})
+    with open(zattr_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    with pytest.warns(UserWarning):
+        imgL2 = ome_zarr.import_plate(str(tmpdir) + '/example_img')
     assert imgL2.nrow == 8
     assert imgL2.ncol == 12
 
@@ -89,7 +90,22 @@ def test_import_Fractal_plate(tmpdir: str):
                     str(tmpdir) + '/example_img_multi/C/02')
     shutil.copytree(str(tmpdir) + '/example_img_multi/B/03',
                     str(tmpdir) + '/example_img_multi/G/06')
-    imgL3 = ome_zarr.import_Fractal_plate(str(tmpdir) + '/example_img_multi')
+    imgL3 = ome_zarr.import_plate(str(tmpdir) + '/example_img_multi')
+    assert len(imgL3) == 1
+    assert imgL3.names == ['B03']
+    # add additional images to metadata
+    zattr_file = str(tmpdir) + '/example_img_multi/.zattrs'
+    with open(zattr_file) as f:
+       zattr = json.load(f)
+    zattr['plate']['columns'].append({'name': '02'})
+    zattr['plate']['rows'].append({'name': 'C'})
+    zattr['plate']['wells'].append({'columnIndex': 1, 'path': 'C/02', 'rowIndex': 1})
+    zattr['plate']['columns'].append({'name': '06'})
+    zattr['plate']['rows'].append({'name': 'G'})
+    zattr['plate']['wells'].append({'columnIndex': 2, 'path': 'G/06', 'rowIndex': 2})
+    with open(zattr_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    imgL3 = ome_zarr.import_plate(str(tmpdir) + '/example_img_multi')
     assert imgL3.nrow == 8
     assert imgL3.ncol == 12
     assert imgL3.layout.row_index.tolist() == [2, 3, 7]

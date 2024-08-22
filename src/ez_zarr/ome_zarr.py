@@ -44,13 +44,16 @@ def create_name_row_col(ri: int, ci: int) -> str:
 
 def import_plate(path: str, image_name: str = '0') -> "ImageList":
     """
-    Create an ImageList object from a OME-Zarr image set created by Fractal.
+    Create an ImageList object from a OME-Zarr image set corresponding
+    to a plate.
 
     Description:
         The image set is assumed to correspond to images corresponding to
         the wells of a microwell plate, and the folder names below `path`
         are expected to correspond to plate rows and columns, respectively
         (example the image in 'path/B/03/0' corresponds to well 'B03').
+        Row and column names are read from the plate metadata
+        (https://ngff.openmicroscopy.org/latest/index.html#plate-md).
 
     Parameters:
         path (str): Path to a folder containing the well images.
@@ -59,7 +62,7 @@ def import_plate(path: str, image_name: str = '0') -> "ImageList":
         ImageList object
 
     Examples:
-        >>> imgL = import_Fractal_plate('path/to/images')
+        >>> imgL = import_plate('path/to/images')
         >>> imgL
         ImageList of 2 images
         paths: path/to/images/B/03/0, path/to/images/C/03/0
@@ -71,29 +74,37 @@ def import_plate(path: str, image_name: str = '0') -> "ImageList":
     assert os.path.isdir(path), f"Path {path} does not exist."
     assert isinstance(image_name, str), f"image_name ({image_name}) must be a string."
 
-    # list image paths
+    # list image paths from metadata
     img_paths = []
     row_index = []
     column_index = []
-    for row_path in os.listdir(path):
-        if len(row_path) == 1 and ord(row_path) >= ord('A') and ord(row_path) <= ord('P'):
-            for column_path in os.listdir(os.path.join(path, row_path)):
-                if all([ch in ['0','1','2','3','4','5','6','7','8','9'] for ch in column_path]) and int(column_path) >= 1 and int(column_path) <= 24:
-                    img_path = os.path.join(path, row_path, column_path, image_name)
-                    if os.path.isdir(img_path):
-                        img_paths.append(img_path)
-                        row_index.append(ord(row_path) - ord('A') + 1)
-                        column_index.append(int(column_path))
+    well_names = []
+
+    plate_zarr = zarr.open(store = path, mode='r')
+    plate_metadata = plate_zarr.attrs.asdict()['plate']
+    for well in plate_metadata['wells']:
+        img_path = os.path.join(path, well['path'], image_name)
+        if os.path.isdir(img_path):
+            img_paths.append(img_path)
+            row_name = plate_metadata['rows'][well['rowIndex']]['name']
+            column_name = plate_metadata['columns'][well['columnIndex']]['name']
+            well_names.append(row_name + column_name)
+            row_index.append(ord(row_name) - ord('A') + 1)
+            column_index.append(int(column_name))
+        else:
+            warnings.warn(f"Image path {img_path} does not exist.")
     if len(img_paths) == 0:
         raise Exception(f"No images found in {path}.")
 
     # build layout
     layout = pd.DataFrame({'row_index': row_index,
                            'column_index': column_index,
-                           'img_paths': img_paths})
+                           'img_paths': img_paths,
+                           'well_names': well_names})
     layout = layout.sort_values(by=['row_index', 'column_index']).reset_index(drop=True)
     img_paths = layout.img_paths.tolist()
-    layout = layout.drop('img_paths', axis='columns')
+    well_names = layout.well_names.tolist()
+    layout = layout.drop(['img_paths', 'well_names'], axis='columns')
 
     # set nrow, ncol
     known_plate_dims = [(2, 3), (4, 6), (8, 12), (16, 24)]
@@ -101,12 +112,10 @@ def import_plate(path: str, image_name: str = '0') -> "ImageList":
     mx_column = max(layout['column_index'])
     nrow, ncol = known_plate_dims[min([i for i in range(len(known_plate_dims)) if known_plate_dims[i][0] >= mx_row and known_plate_dims[i][1] >= mx_column])]
 
-    # set fallback naming function
-    nm_func = create_name_plate_A01
-    
     # create ImageList object
-    imgL = ImageList(paths = img_paths, layout=layout, nrow=nrow, ncol=ncol,
-                     by_row=True, fallback_name_function=nm_func)
+    imgL = ImageList(paths = img_paths, names = well_names,
+                     layout=layout, nrow=nrow, ncol=ncol,
+                     fallback_name_function=create_name_row_col)
 
     # return
     return imgL
