@@ -8,8 +8,8 @@ Classes:
 """
 
 __all__ = ['Image', 'ImageList', 'create_name_row_col', 
-           'create_name_plate_A01', 'import_Fractal_plate']
-__version__ = '0.3.1'
+           'import_plate']
+__version__ = '0.3.2'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 
 
