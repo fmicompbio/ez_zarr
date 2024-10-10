@@ -9,6 +9,10 @@ toc: true
 
 The aim of `ez_zarr` is to provide easy, high-level access to microscopy data, stored in OME-Zarr format according to the [NGFF](https://ngff.openmicroscopy.org/latest/) specifications.
 
+In addition to the python package, we also provide an R package
+that automatically generates and wraps a python environment with
+`ez_zarr` and all dependencies, available at https://github.com/fmicompbio/ezzarr.
+
 The `ome_zarr.Image` class represents an individual image and provides methods to obtain metadata, extract image or label arrays and visualize these. Below we illustrate the use of `ome_zarr.Image` objects by examples.
 
 # Using `ome_zarr.Image` objects

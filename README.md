@@ -11,6 +11,10 @@ The goal is that users can write simple scripts working with plates,
 wells and fields of view, without having to understand how these
 are represented within an OME-Zarr fileset.
 
+In addition to the python package, we also provide an R package
+that automatically generates and wraps a python environment with
+`ez_zarr` and all dependencies, available at https://github.com/fmicompbio/ezzarr.
+
 ## Example
 You can use `ez_zarr` from the command line to get information about an OME-Zarr fileset:
 ```
