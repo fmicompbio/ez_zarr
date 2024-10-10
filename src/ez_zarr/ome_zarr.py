@@ -1005,11 +1005,11 @@ class Image:
             print("setting `channel_ranges` based on length of `channels`")
             kwargs['channel_ranges'] = [[0.01, 0.95] for i in range(len(kwargs['channels']))]
 
-        # get coordiantes by `label_value` if needed
+        # get coordinates by `label_value` if needed
         if label_value != None:
             if upper_left_yx != None or lower_right_yx != None or size_yx != None:
                 warnings.warn("Ignoring provided coordinates since `label_value` was provided.")
-            label_pyramid_level = self._find_path_of_highest_resolution_level(
+            label_pyramid_level = self._find_path_of_lowest_resolution_level(
                 self.multiscales_labels[label_name]['datasets']
             )
             upper_left_yx, lower_right_yx = self.get_bounding_box_for_label_value(
