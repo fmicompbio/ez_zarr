@@ -79,7 +79,8 @@ def test_import_plate(tmpdir: str):
     shutil.move(str(tmpdir) + '/example_img/B/03',
                 str(tmpdir) + '/example_img/B/10')
     with pytest.raises(Exception) as e_info:
-        imgL2 = ome_zarr.import_plate(str(tmpdir) + '/example_img')
+        with pytest.warns(UserWarning):
+            imgL2 = ome_zarr.import_plate(str(tmpdir) + '/example_img')
     # add B10 to omero attributes
     zattr_file = str(tmpdir) + '/example_img/.zattrs'
     with open(zattr_file) as f:
