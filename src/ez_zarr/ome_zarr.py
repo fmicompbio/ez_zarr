@@ -562,7 +562,7 @@ class Image:
         Returns:
             A tuple of upper-left and lower-right pixel coordinates for the bounding
             box containing the label value in the requested output space, or
-            `(None, None)` if the label value is not found.
+            Throws an error if the label value is not found.
             For a 2D label image, this would be `((y1, x1), (y2, x2))`.
         
         Example:
@@ -587,7 +587,7 @@ class Image:
         # find bounding box
         value_coordinates = np.equal(lab_arr, label_value).nonzero()
         if len(value_coordinates[0]) == 0:
-            return tuple([None, None])
+            raise ValueError(f'Label value {label_value} not found in label {label_name}')
         upper_left = tuple([min(x) for x in value_coordinates])
         lower_right = tuple([max(x) + 1 for x in value_coordinates])
 

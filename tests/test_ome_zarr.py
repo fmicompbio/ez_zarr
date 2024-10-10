@@ -416,7 +416,8 @@ def test_get_bounding_box_for_label_value(img2d: ome_zarr.Image):
     assert img2d.get_bounding_box_for_label_value(label_value=1, label_name='organoids', label_pyramid_level='0', label_name_output='organoids', pyramid_level_output='0') == ((0, 200, 100), (1, 401, 301))
     assert img2d.get_bounding_box_for_label_value(label_value=2, label_name='organoids', label_pyramid_level='0', label_name_output='organoids', pyramid_level_output='0') == ((0, 600, 0), (1, 1001, 401))
     assert img2d.get_bounding_box_for_label_value(label_value=3, label_name='organoids', label_pyramid_level='0', label_name_output='organoids', pyramid_level_output='0') == ((0, 400, 400), (1, 1001, 1001))
-    assert img2d.get_bounding_box_for_label_value(label_value=4, label_name='organoids', label_pyramid_level='0', label_name_output='organoids', pyramid_level_output='0') == (None, None)
+    with pytest.raises(Exception) as e_info:
+       img2d.get_bounding_box_for_label_value(label_value=4, label_name='organoids', label_pyramid_level='0', label_name_output='organoids', pyramid_level_output='0')
 
 def test_image_str(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `ome_zarr.Image` object string representation."""
