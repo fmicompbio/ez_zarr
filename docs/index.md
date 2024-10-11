@@ -41,7 +41,7 @@ A more extensive example is available from [here](https://fmicompbio.github.io/e
 
 `ez_zarr` is hosted on GitHub at [github.com/fmicompbio/ez_zarr](https://github.com/fmicompbio/ez_zarr) and the documentation can be found at [fmicompbio.github.io/ez_zarr](https://fmicompbio.github.io/ez_zarr/).
 
-The release version of `ez_zarr` can be installed using:
+The release version of `ez_zarr` can be installed using pip:
 ```
 pip install ez-zarr
 ```
@@ -49,6 +49,11 @@ pip install ez-zarr
 The current (development) version of `ez_zarr` can be installed from github.com using:
 ```
 pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
+```
+
+Alternatively, you can install `ez_zarr` using conda from the `conda-forge` channel by:
+```
+conda install -c conda-forge --override-channels ez-zarr
 ```
 
 ## Software status

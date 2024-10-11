@@ -58,11 +58,12 @@ plate_3d
 A more extensive example is available from [here](https://fmicompbio.github.io/ez_zarr/getting_started_Image/), also available as an [ipynb notebook](https://fmicompbio.github.io/ez_zarr/getting_started_Image.ipynb).
 
 ## Install
+### Using `pip`
 [![PyPI - Version](https://img.shields.io/pypi/v/ez-zarr.svg?logo=pypi&label=PyPI&logoColor=gold)](https://pypi.org/project/ez-zarr/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ez-zarr.svg?logo=python&label=Python&logoColor=gold)](https://pypi.org/project/ez-zarr/)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/ez-zarr)
 
-The release version of `ez_zarr` can be installed using:
+The release version of `ez_zarr` can be installed using pip:
 ```
 pip install ez-zarr
 ```
@@ -70,6 +71,16 @@ pip install ez-zarr
 The current (development) `ez_zarr` can be installed from github.com using:
 ```
 pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
+```
+
+### Using `conda`
+| Downloads | Version | Platforms |
+| --- | --- | --- |
+| [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr) |
+
+Alternatively, you can install `ez-zarr` from the `conda-forge` channel using:
+```
+conda install -c conda-forge --override-channels ez-zarr
 ```
 
 ## Software status
