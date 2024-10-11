@@ -74,9 +74,9 @@ pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
 ```
 
 ### Using `conda`
-| Downloads | Version | Platforms |
-| --- | --- | --- |
-| [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr) |
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr)
+[![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr)
+[![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/ez-zarr.svg)](https://anaconda.org/conda-forge/ez-zarr)
 
 Alternatively, you can install `ez-zarr` from the `conda-forge` channel using:
 ```
