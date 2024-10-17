@@ -6,7 +6,7 @@ __author__ = 'Silvia Barbiero, Michael Stadler'
 
 
 # imports ---------------------------------------------------------------------
-from typing import Union, Optional
+from typing import Union, Optional, Callable
 from copy import deepcopy
 import dask.array
 import numpy as np
@@ -225,6 +225,7 @@ def plot_image(im: np.ndarray,
                z_projection_method: str='maximum',
                pad_to_yx: list[int]=[0, 0],
                pad_value: int=0,
+               image_transform: Optional[Callable]=None,
                axis_style: str='none',
                spacing_yx: Optional[list[float]]=None,
                title: Optional[str]=None,
@@ -292,6 +293,8 @@ def plot_image(im: np.ndarray,
             pad_to_yx (list[int]): If the image or label mask are smaller, pad
                 them by `pad_value` to this total y and x size. 
             pad_value (int): Value to use for constant-value image padding.
+            image_transform (Callable): A function to transform the image values
+                before conversion to RGB and plotting. If `None`, no transform is applied.
             axis_style (str): A string scalar defining how to draw the axis. Should
                 be one of 'none' (no axis, the default), 'pixel' (show pixel labels),
                 'frame' (show just a frame around the plot without ticks)
@@ -395,6 +398,10 @@ def plot_image(im: np.ndarray,
                                 output_shape=pad_to_yx,
                                 constant_value=pad_value)
         
+        # transform image
+        if not image_transform is None:
+            im = image_transform(im)
+
         # convert (ch,y,x) to rgb (y,x,3) and plot
         im_rgb = convert_to_rgb(im=im[channels],
                                 channel_colors=channel_colors,
