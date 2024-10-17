@@ -134,7 +134,7 @@ def pad_image(im: Union[dask.array.Array, np.ndarray],
     pad_size = tuple([(pad_before[i], pad_after[i]) for i in range(len(pad_total))])
     
     # add padding
-    im = np.pad(im, pad_width=pad_size, mode='constant', constant_values=0)
+    im = np.pad(im, pad_width=pad_size, mode='constant', constant_values=constant_value)
     return im
 
 def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
