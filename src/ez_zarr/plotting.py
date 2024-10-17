@@ -229,10 +229,12 @@ def plot_image(im: np.ndarray,
                axis_style: str='none',
                spacing_yx: Optional[list[float]]=None,
                title: Optional[str]=None,
+               title_fontsize: Union[float, str]='large',
                scalebar_pixel: int=0,
                scalebar_color: str='white',
                scalebar_position: str='bottomright',
                scalebar_label: Optional[str]=None,
+               scalebar_fontsize: Union[float, str]='large',
                call_show: bool=True,
                fig_width_inch: float=24.0,
                fig_height_inch: float=16.0,
@@ -305,6 +307,9 @@ def plot_image(im: np.ndarray,
                 `axis_style='micrometer'`.
             title (str): String to add as a title on top of the image. If `None`
                 (the default), no title will be added.
+            title_fontsize (float or str): Font size of the title. Values accepted
+                by `matplotlib.axes.Axes.text` are supported, such a the size
+                in points (e.g. `12.5`) or a relative size (e.g. `'xx-large'`).
             scalebar_pixel (int): If non-zero, draw a scalebar of size `scalebar_pixel`
                 in the corner of the image defined by `scalebar_position`.
             scalebar_color (str): Scalebar color.
@@ -312,6 +317,9 @@ def plot_image(im: np.ndarray,
                 'topright', 'bottomleft' or 'bottomright'
             scalebar_label (str): If not `None` (default), a string scalar to show
                 as a label for the scale bar.
+            scalebar_fontsize (float or str): Font size of the scalebar label. Values
+                accepted by `matplotlib.axes.Axes.text` are supported, such a the size
+                in points (e.g. `12.5`) or a relative size (e.g. `'xx-large'`).
             call_show (bool): If `True`, the call to `matplotlib.pyplot.imshow` is
                 embedded between `matplotlib.pyplot.figure` and
                 `matplotlib.pyplot.show`/`matplotlib.pyplot.close` calls.
@@ -442,26 +450,26 @@ def plot_image(im: np.ndarray,
             else:
                 raise ValueError(f"Unknown `axis_style` ({axis_style}), should be one of 'none', 'pixel', 'frame' or 'micrometer'")
             if title != None:
-                plt.title(title)
+                plt.title(title, fontsize=title_fontsize)
             if scalebar_pixel != 0:
                 img_yx = im_rgb.shape[0:2]
                 d = min([round(img_yx[i] * 0.05) for i in range(2)]) # 5% margin
-                scalebar_height = round(img_yx[0] * 0.01)
+                scalebar_height = round(img_yx[0] * 0.0075)
                 if scalebar_position == 'bottomright':
                     pos_xy = (img_yx[1] - d - scalebar_pixel, img_yx[0] - d)
-                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] - scalebar_height + d/6)
+                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] - scalebar_height - d/10)
                     va_text = 'bottom'
                 elif scalebar_position == 'bottomleft':
                     pos_xy = (d, img_yx[0] - d)
-                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] - scalebar_height + d/6)
+                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] - scalebar_height - d/10)
                     va_text = 'bottom'
                 elif scalebar_position == 'topleft':
                     pos_xy = (d, d + scalebar_height)
-                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] + 0.75*d)
+                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] + 0.5*d)
                     va_text = 'top'
                 elif scalebar_position == 'topright':
                     pos_xy = (img_yx[1] - d - scalebar_pixel, d - scalebar_height)
-                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] + 0.75*d)
+                    pos_text_xy = (pos_xy[0] + scalebar_pixel/2, pos_xy[1] + 0.5*d)
                     va_text = 'top'
                 else:
                     raise ValueError(f"Unknown scalebar_position ({scalebar_position}), should be one of 'bottomright', 'bottomleft', 'topright', or 'topleft'")
@@ -473,7 +481,8 @@ def plot_image(im: np.ndarray,
                 ax.add_patch(rect) # add the patch to the axes
                 if scalebar_label != None:
                     plt.text(x=pos_text_xy[0], y=pos_text_xy[1], s=scalebar_label,
-                             color=scalebar_color, ha='center', va=va_text)
+                             color=scalebar_color, ha='center', va=va_text,
+                             fontsize=scalebar_fontsize)
 
         # create the plot
         if call_show:
