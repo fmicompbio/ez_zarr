@@ -123,13 +123,14 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
                     scalebar_pixel=100,
                     scalebar_position=pos,
                     scalebar_label='test')
-        # axis_style
+        # axis_style and image_transform
         for st in ['none', 'pixel', 'frame', 'micrometer']:
             plot_image(im=npa4d, msk=None,
                        channels=[1],
                        channel_colors=['white'],
                        channel_ranges=[[0.01, 0.99]],
                        title='test', call_show=False,
+                       image_transform=np.log1p,
                        axis_style=st,
                        spacing_yx=[0.325, 0.325])
         # image with masks
