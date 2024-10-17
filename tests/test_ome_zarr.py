@@ -7,7 +7,6 @@ import shutil
 import json
 import copy
 import zarr
-import dask.array
 import numpy as np
 import warnings
 import matplotlib
@@ -290,45 +289,52 @@ def test_extract_scale_spacings(img2d: ome_zarr.Image):
         {'path': 7, 'coordinateTransformations': [{'scale': [1, 2, 0.5]}]}
     ) == [7, [1.0, 2.0, 0.5]]
 
+def test_compare_multiscale_dicts():
+    """Test `Image._compare_multiscale_dicts`."""
+
+    datasets = [{'path': 1, 'coordinateTransformations': [{'type': 'scale',
+    'scale': [1.0, 0.325, 0.325]}]},
+                {'path': 2, 'coordinateTransformations': [{'type': 'scale',
+    'scale': [1.0, 0.65, 0.65]}]},
+                {'path': 0, 'coordinateTransformations': [{'type': 'scale',
+    'scale': [1.0, 0.1625, 0.1625]}]}]
+
+    assert ome_zarr.Image._compare_multiscale_dicts(datasets[0], datasets[0]) == 0
+    assert ome_zarr.Image._compare_multiscale_dicts(datasets[0], datasets[1]) == -1
+    assert ome_zarr.Image._compare_multiscale_dicts(datasets[1], datasets[2]) == 1
+
+
 def test_find_path_of_lowest_level(img2d: ome_zarr.Image):
     """Test `Image._find_path_of_lowest_resolution_level`."""
     
-    # input with missing axes
-    assert img2d._find_path_of_lowest_resolution_level({}) == None
+    # non-existing label_name
+    with pytest.raises(Exception) as e_info:
+        img2d._find_path_of_lowest_resolution_level(label_name='error')
     
     # example input
-    assert img2d._find_path_of_lowest_resolution_level(img2d.multiscales_image['datasets']) == '2'
-    assert img2d._find_path_of_lowest_resolution_level(img2d.multiscales_labels['organoids']['datasets']) == '2'
+    assert img2d._find_path_of_lowest_resolution_level() == '2'
+    assert img2d._find_path_of_lowest_resolution_level(label_name='organoids') == '2'
     
     # synthetic input
-    assert img2d._find_path_of_lowest_resolution_level(
-        [{'path': 0, 'coordinateTransformations': [{'scale': [0.2, 0.2]}]},
-         {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.4]}]}
-        ]) == '1'
-    assert img2d._find_path_of_lowest_resolution_level(
-        [{'path': 0, 'coordinateTransformations': [{'scale': [0.1, 0.2]}]},
-         {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.1]}]}
-        ]) == '0'
+    assert img2d._extract_paths_by_decreasing_resolution(
+        [{'path': 0, 'coordinateTransformations': [{'scale': [0.2, 0.2, 0.2]}]},
+         {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.4, 0.1]}]}
+        ]) == ['1', '0']
+    assert img2d._extract_paths_by_decreasing_resolution(
+        [{'path': 0, 'coordinateTransformations': [{'scale': [0.1, 0.1]}]},
+         {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.2]}]}
+        ]) == ['0', '1']
 
 def test_find_path_of_highest_resolution_level(img2d: ome_zarr.Image):
     """Test `Image._find_path_of_highest_resolution_level`."""
 
-    # input with missing axes
-    assert img2d._find_path_of_highest_resolution_level({}) == None
+    # non-existing label_name
+    with pytest.raises(Exception) as e_info:
+        img2d._find_path_of_highest_resolution_level(label_name='error')
     
     # example input
-    assert img2d._find_path_of_highest_resolution_level(img2d.multiscales_image['datasets']) == '0'
-    assert img2d._find_path_of_highest_resolution_level(img2d.multiscales_labels['organoids']['datasets']) == '0'
-    
-    # synthetic input
-    assert img2d._find_path_of_highest_resolution_level(
-        [{'path': 0, 'coordinateTransformations': [{'scale': [0.2, 0.2]}]},
-         {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.4]}]}
-        ]) == '0'
-    assert img2d._find_path_of_highest_resolution_level(
-        [{'path': 0, 'coordinateTransformations': [{'scale': [0.1, 0.2]}]},
-         {'path': 1, 'coordinateTransformations': [{'scale': [0.1, 0.1]}]}
-        ]) == '1'
+    assert img2d._find_path_of_highest_resolution_level() == '0'
+    assert img2d._find_path_of_highest_resolution_level(label_name='organoids') == '0'
 
 def test_digest_pyramid_level_argument(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     """Test `Image._digest_pyramid_level_argument`."""

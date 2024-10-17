@@ -17,10 +17,12 @@ __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 import os
 import numpy as np
 import zarr
+import dask.array as da
 import pandas as pd
 import importlib
 import warnings
 from typing import Union, Optional, Callable, Any
+from functools import cmp_to_key
 from ez_zarr.utils import convert_coordinates, resize_image
 
 
@@ -186,8 +188,13 @@ class Image:
         # load info about available scales in image and labels
         if not 'multiscales' in self.zarr_group.attrs:
             raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
+        # ... load multiscales dictionaries
         self.multiscales_image: dict[str, Any] = self._load_multiscale_info(self.zarr_group, skip_checks)
         self.multiscales_labels: dict[str, dict[str, Any]] = {x: self._load_multiscale_info(self.zarr_group.labels[x], skip_checks) for x in self.label_names}
+        # ... extract pyramid levels by decreasing resolution
+        self.pyramid_levels_image: list[str] = Image._extract_paths_by_decreasing_resolution(self.multiscales_image['datasets'])
+        self.pyramid_levels_labels: dict[str, list[str]] = {x: Image._extract_paths_by_decreasing_resolution(self.multiscales_labels[x]['datasets']) for x in self.label_names}
+        # ... axes units
         self.axes_unit_image: str = self._load_axes_unit(self.multiscales_image)
         self.axes_unit_labels: dict[str, str] = {x: self._load_axes_unit(self.multiscales_labels[x]) for x in self.label_names}
 
@@ -249,24 +256,40 @@ class Image:
         return [dataset_dict['path'], dataset_dict['coordinateTransformations'][0]['scale']]
     
     @staticmethod
-    def _find_path_of_lowest_resolution_level(datasets: list[dict[str, Any]]) -> Optional[str]:
-        lev = None
-        maxx = 0 # maximal x pixel size (lowest resolution)
-        for i in range(len(datasets)):
-            if datasets[i]['coordinateTransformations'][0]['scale'][-1] > maxx:
-                lev = str(datasets[i]['path'])
-                maxx = datasets[i]['coordinateTransformations'][0]['scale'][-1]
-        return lev
+    def _compare_multiscale_dicts(a: dict[str, Any], b: dict[str, Any]) -> int:
+        t1 = a['coordinateTransformations'][0]['scale']
+        t2 = b['coordinateTransformations'][0]['scale']
+        sum_of_votes = sum([1 if t1[i] > t2[i] else -1 if t1[i] < t2[i] else 0 for i in range(len(t1))])
+        if sum_of_votes > 0:
+            return 1  # t1 > t2 (t1 is lower resolution)
+        elif sum_of_votes < 0:
+            return -1 # t1 < t2 (t1 is higher resolution)
+        else:
+            return 0  # t1 = t2 (equal resolution)
 
     @staticmethod
-    def _find_path_of_highest_resolution_level(datasets: list[dict[str, Any]]) -> Optional[str]:
-        lev = None
-        minx = float('inf') # minimal x pixel size (highest resolution)
-        for i in range(len(datasets)):
-            if datasets[i]['coordinateTransformations'][0]['scale'][-1] < minx:
-                lev = str(datasets[i]['path'])
-                minx = datasets[i]['coordinateTransformations'][0]['scale'][-1]
-        return lev
+    def _extract_paths_by_decreasing_resolution(datasets: list[dict[str, Any]]) -> list[str]:
+        datasets_sorted = sorted(datasets, key=cmp_to_key(lambda x, y: Image._compare_multiscale_dicts(x, y)))
+        return [str(x['path']) for x in datasets_sorted]
+
+    def _find_path_of_lowest_resolution_level(self, label_name: Optional[str] = None) -> str:
+        if label_name:
+            if label_name in self.label_names:
+                return self.pyramid_levels_labels[label_name][-1]
+            else:
+                raise ValueError(f"Label name '{label_name}' not found in Image object.")
+        else:
+            return self.pyramid_levels_image[-1]
+
+
+    def _find_path_of_highest_resolution_level(self, label_name: Optional[str] = None) -> str:
+        if label_name:
+            if label_name in self.label_names:
+                return self.pyramid_levels_labels[label_name][0]
+            else:
+                raise ValueError(f"Label name '{label_name}' not found in Image object.")
+        else:
+            return self.pyramid_levels_image[0]
 
     def _digest_pyramid_level_argument(self,
                                        pyramid_level=None,
@@ -295,10 +318,7 @@ class Image:
             # no pyramid level given -> pick according to `default_to`
             methods = {'lowest': self._find_path_of_lowest_resolution_level,
                        'highest': self._find_path_of_highest_resolution_level}
-            if label_name is None: # intensity image
-                pyramid_level = methods[default_to](self.multiscales_image['datasets'])
-            else: # label image
-                pyramid_level = methods[default_to](self.multiscales_labels[label_name]['datasets'])
+            pyramid_level = methods[default_to](label_name)
         else:
             # make sure it is a string
             pyramid_level = str(pyramid_level)
@@ -1009,9 +1029,10 @@ class Image:
         if label_value != None:
             if upper_left_yx != None or lower_right_yx != None or size_yx != None:
                 warnings.warn("Ignoring provided coordinates since `label_value` was provided.")
-            label_pyramid_level = self._find_path_of_lowest_resolution_level(
-                self.multiscales_labels[label_name]['datasets']
-            )
+            for label_pyramid_level in reversed(self.pyramid_levels_labels[label_name]):
+                curr_array = self.get_array_by_coordinate(label_name=label_name, pyramid_level=label_pyramid_level)
+                if da.any(da.equal(curr_array, label_value)).compute():
+                    break
             upper_left_yx, lower_right_yx = self.get_bounding_box_for_label_value(
                 label_name=label_name,
                 label_value=label_value,
