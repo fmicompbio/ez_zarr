@@ -1031,7 +1031,7 @@ class Image:
                 warnings.warn("Ignoring provided coordinates since `label_value` was provided.")
             for label_pyramid_level in reversed(self.pyramid_levels_labels[label_name]):
                 curr_array = self.get_array_by_coordinate(label_name=label_name, pyramid_level=label_pyramid_level)
-                if da.any(da.equal(curr_array, label_value)).compute():
+                if da.isin(label_value, curr_array).compute():
                     break
             upper_left_yx, lower_right_yx = self.get_bounding_box_for_label_value(
                 label_name=label_name,
