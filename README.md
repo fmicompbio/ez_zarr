@@ -1,4 +1,10 @@
+<img src="docs/ez_zarr.png" align="right" alt="ez-zarr" width="150"/>
+
+<br>
+
 # ez_zarr
+
+<br>
 
 ## Goals
 The aim of `ez_zarr` is to provide easy, high-level access
