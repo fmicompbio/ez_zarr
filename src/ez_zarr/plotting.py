@@ -276,12 +276,17 @@ def plot_image(im: np.ndarray,
                 in points (e.g. `12.5`) or a relative size (e.g. `'xx-large'`).
             channels (list[int]): The image channel(s) to be plotted. For example,
                 to plot the first and third channel of a 4-channel image with
-                shape (4,1,500,600), you can use `channels=[0, 2]`.
+                shape (4,1,500,600), you can use `channels=[0, 2]`. If several
+                channels are given, they will be mapped to colors using
+                `channel_colors`. In the case of a single channel, `channel_colors`
+                can also be the name of a supported colormap.
             channel_colors (list[str]): A list with python color strings
                 (e.g. 'red') defining the color for each channel in `channels`.
                 For example, to map the selected `channels=[0, 2]` to
                 cyan and magenta, respectively, you can use
-                `channel_colors=['cyan', 'magenta']`.
+                `channel_colors=['cyan', 'magenta']`. If a single channel is
+                given (e.g. `channels=[0]`), this can also be one of the following
+                colormaps: 'viridis', 'plasma', 'inferno', 'magma', 'cividis'.
             channel_ranges (list[list[float]]): A list of 2-element lists
                 (e.g. [0.01, 0.95]) giving the the value ranges that should
                 be mapped to colors for each channel. If the given numerical
@@ -361,6 +366,10 @@ def plot_image(im: np.ndarray,
         assert all([ch <= nch for ch in channels]), (
             f"Invalid `channels` parameter, must be less or equal to {nch}"
         )
+        assert len(channels) == len(channel_colors), (
+            f"`channels` and `channel_colors` must have the same length, "
+            f"but are {len(channels)} and {len(channel_colors)}"
+        )
         assert axis_style != 'micrometer' or spacing_yx != None, (
             f"For `axis_style='micrometer', the parameter `spacing_yx` needs to be provided."
         )
@@ -410,14 +419,22 @@ def plot_image(im: np.ndarray,
         if not image_transform is None:
             im = image_transform(im)
 
-        # convert (ch,y,x) to rgb (y,x,3) and plot
-        im_rgb = convert_to_rgb(im=im[channels],
-                                channel_colors=channel_colors,
-                                channel_ranges=channel_ranges)
+        # convert (ch,y,x) to rgb (y,x,3)
+        if len(channels) == 1 and channel_colors[0] in ['viridis', 'plasma', 'inferno',
+                                                        'magma', 'cividis']:
+            # map to colormap
+            im_rgb = np.squeeze(im[channels], axis=0)
+            cmap = channel_colors[0]
+        else:
+            # map to rgb
+            im_rgb = convert_to_rgb(im=im[channels],
+                                    channel_colors=channel_colors,
+                                    channel_ranges=channel_ranges)
+            cmap = None
 
         # define nested function with main plotting code
         def _do_plot():
-            plt.imshow(im_rgb)
+            plt.imshow(im_rgb, cmap=cmap)
             if not msk is None and np.max(msk) > 0:
                 plt.imshow(msk,
                            interpolation='none',

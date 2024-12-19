@@ -9,7 +9,7 @@ Classes:
 
 __all__ = ['Image', 'ImageList', 'create_name_row_col', 
            'create_name_plate_A01', 'import_plate']
-__version__ = '0.3.4'
+__version__ = '0.3.5'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 
 

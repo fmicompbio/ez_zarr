@@ -104,6 +104,20 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
 
     with pytest.raises(Exception) as e_info:
         plot_image(im=npa4d, msk=None,
+                   channels=[0, 1],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]],
+                   title='test')
+
+    with pytest.raises(Exception) as e_info:
+        plot_image(im=npa4d, msk=None,
+                   channels=[0, 1],
+                   channel_colors=['viridis', 'inferno'],
+                   channel_ranges=[[0.01, 0.99]],
+                   title='test')
+
+    with pytest.raises(Exception) as e_info:
+        plot_image(im=npa4d, msk=None,
                    channels=[1],
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]],
@@ -133,6 +147,12 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
                        image_transform=np.log1p,
                        axis_style=st,
                        spacing_yx=[0.325, 0.325])
+        # single channel with colormap
+        plot_image(im=npa4d, msk=None,
+                    channels=[1],
+                    channel_colors=['inferno'],
+                    channel_ranges=[[0.01, 0.99]],
+                    title='test', call_show=False)
         # image with masks
         plot_image(im=npa4d, msk=npa3d,
                    channels=[1],
