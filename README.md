@@ -100,3 +100,17 @@ is with the Friedrich Miescher Insitute for Biomedical Research
 
 `ez_zarr` is being developed at the Friedrich Miescher Institute for
 Biomedical Research by [@silvbarb](https://github.com/silvbarb), [@csoneson](https://github.com/csoneson) and [@mbstadler](https://github.com/mbstadler).
+
+## Need help? 
+If you run into problems when using `ez_zarr`, please first check whether the 
+answer is available in the [help pages for the individual functions underneath 'Documentation'](https://fmicompbio.github.io/ez_zarr/) or in 
+the ['Getting started' vignette](https://fmicompbio.github.io/ez_zarr/getting_started_Image/).
+If not, please [open an issue](https://github.com/fmicompbio/ez_zarr/issues/new) 
+and explain your problem. Try to provide a reproducible example, and always 
+include the code you used, that will make it much easier for us to help.
+
+## Contributions
+If you would like to contribute to `ez_zarr`, you can do so by sending a pull 
+request to this repository. If the contribution involves changes in the 
+functionality provided by `ez_zarr`, we encourage you to first open an issue 
+to discuss the intended contribution. 
