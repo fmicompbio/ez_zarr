@@ -175,10 +175,10 @@ class Image:
         self.ndim = self.array_dict[list(self.array_dict.keys())[0]].ndim
         self.label_names = []
         if 'labels' in list(self.zarr_group.group_keys()):
-            self.label_names = [x for x in self.zarr_group.labels.group_keys()]
+            self.label_names = [x for x in self.zarr_group['labels'].group_keys()]
         self.table_names = []
         if 'tables' in list(self.zarr_group.group_keys()):
-            self.table_names = [x for x in self.zarr_group.tables.group_keys()]
+            self.table_names = [x for x in self.zarr_group['tables'].group_keys()]
 
         if not skip_checks:
             # make sure that it does not contain any further groups
@@ -190,7 +190,7 @@ class Image:
             raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
         # ... load multiscales dictionaries
         self.multiscales_image: dict[str, Any] = self._load_multiscale_info(self.zarr_group, skip_checks)
-        self.multiscales_labels: dict[str, dict[str, Any]] = {x: self._load_multiscale_info(self.zarr_group.labels[x], skip_checks) for x in self.label_names}
+        self.multiscales_labels: dict[str, dict[str, Any]] = {x: self._load_multiscale_info(self.zarr_group['labels'][x], skip_checks) for x in self.label_names}
         # ... extract pyramid levels by decreasing resolution
         self.pyramid_levels_image: list[str] = Image._extract_paths_by_decreasing_resolution(self.multiscales_image['datasets'])
         self.pyramid_levels_labels: dict[str, list[str]] = {x: Image._extract_paths_by_decreasing_resolution(self.multiscales_labels[x]['datasets']) for x in self.label_names}
