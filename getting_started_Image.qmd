@@ -1,0 +1,458 @@
+---
+jupyter: python3
+title: "Using `ez_zarr` to explore individual OME-Zarr images"
+author: Silvia Barbiero, Michael Stadler, Charlotte Soneson
+toc: true
+---
+
+# Goal
+
+The aim of `ez_zarr` is to provide easy, high-level access to microscopy data, stored in OME-Zarr format according to the [NGFF](https://ngff.openmicroscopy.org/latest/) specifications.
+
+In addition to the python package, we also provide an R package
+that automatically generates and wraps a python environment with
+`ez_zarr` and all dependencies, available at https://github.com/fmicompbio/ezzarr.
+
+The `ome_zarr.Image` class represents an individual image and provides methods to obtain metadata, extract image or label arrays and visualize these. Below we illustrate the use of `ome_zarr.Image` objects by examples.
+
+# Using `ome_zarr.Image` objects
+
+Note: If you prefer to run these examples interactively, you can also download them as an [ipynb notebook](https://fmicompbio.github.io/ez_zarr/getting_started_Image.ipynb).
+
+Here are some examples of how you can use `ome_zarr.Image` objects defined in `ez_zarr`:
+
+## Download example data
+
+To run the code below, you will first need to download some image data.
+You can do this for example by running the following from a terminal:
+```{.bash}
+# Download small Fractal output from Zenodo
+curl -o temp.zip https://zenodo.org/records/10519143/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip
+
+# Unzip and remove the temporary zip file
+unzip temp.zip
+rm temp.zip
+```
+
+or directly from within a python notebook or session using:
+```{python}
+import requests
+import zipfile
+import os
+
+# for info on data see: https://zenodo.org/records/10257149
+url = 'https://zenodo.org/records/10519143/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip'
+
+# download
+response = requests.get(url)
+with open('temp.zip', 'wb') as temp_zip:
+    temp_zip.write(response.content)
+
+# unzip to current directory
+with zipfile.ZipFile('temp.zip', 'r') as zip_ref:
+    zip_ref.extractall('.')
+
+# clean up
+os.remove('temp.zip')
+```
+
+## Load packages
+
+```{python}
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+import numpy as np
+from skimage import color
+
+from ez_zarr import ome_zarr, plotting, utils
+```
+
+## Open OME-Zarr file set
+
+We open a single OME-Zarr image:
+```{python}
+img_directory = '20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0'
+img = ome_zarr.Image(path = img_directory, name = 'cardio-d14')
+img
+```
+
+`img` represents a maximum intensity projection of one well from a high-content screening plate, processed using [Fractal](https://fractal-analytics-platform.github.io/).
+
+There are 5 `pyramid_levels` available (0 to 4), meaning that in addition to the full resolution data (level 0), we have four more levels that provide the data in 2-fold lower resolutions (see `pyramid_zyx_scalefactor`), for example for faster plotting.
+
+This OME-Zarr image also contains two segmentations (`empty` and `nuclei`), and for one measurements have been extracted and saved in the table `nuclei`. In addition, there are some further tables, such as `FOV_ROI_table`, which contains the coordinates of the fields of view, or `nuclei_ROI_table`, which contains the bounding box coordinates for the segmented nuclei.
+
+## Get information from `img`
+
+You can obtain specific information on the content available in the image:
+```{python}
+# path to the OME-Zarr image
+img.get_path()
+```
+```{python}
+# available channels
+img.get_channels()
+```
+```{python}
+# available labels
+img.get_label_names()
+```
+```{python}
+# available tables
+img.get_table_names()
+```
+```{python}
+# zyx pixel spacing in micrometers for pyramid levels
+# ... for images (channels, z, y, x)
+img.get_scale(pyramid_level='0')
+```
+```{python}
+# ... for labels (z, y, x)
+img.get_scale(pyramid_level='0', label_name='nuclei')
+```
+```{python}
+# tree of folder and file structure in the zarr group
+print(img.tree(expand=True, level=3))
+```
+
+## Extract a table from the OME-Zarr image
+
+At the time of writing, tabular data is not yet covered in the NGFF standard. The tables stored within this OME-Zarr image are formatted as described in the [Fractal documentation](https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/).
+
+As mentioned the goal of `ez_zarr` is to abstract the internal structure and make it simple to obtain these tables as a `pandas.DataFrame` :
+```{python}
+#| output: false
+df = img.get_table(table_name='FOV_ROI_table')
+df
+```
+```{python}
+#| echo: false
+#| output: asis
+
+# output table as md (instead of html to better play with mkdocs)
+print(df.to_markdown())
+```
+
+or `anndata.AnnData` object:
+```{python}
+ann = img.get_table(table_name='FOV_ROI_table', as_AnnData=True)
+ann
+```
+
+## Visualize the image
+
+`get_array_by_coordinate()` extracts a rectangular region of interest 
+from an image by coordinates. If no coordinates or other arguments are given,
+it returns the whole image at the lowest available resolution:
+
+```{python}
+arr = img.get_array_by_coordinate()
+print(arr.shape) # (ch, z, y, x)
+```
+
+Such an image array can be easily plotted using `matplotlib.pyplot.imshow`:
+
+```{python}
+with plt.style.context('dark_background'):
+    fig = plt.figure(figsize=(4, 4))
+    fig.set_dpi(100)
+
+    plt.imshow(arr[0,0], cmap='gray', vmin=100, vmax=600)
+    plt.title(img.name)
+    plt.show()
+    plt.close()
+```
+
+With `plot()`, `ome_zarr.Image` provides a convenient function for this that
+automatically extracts the well image and plots it. Because it has access to the
+image metadata, it can also add for example a scale bar:
+
+```{python}
+img.plot(channels=[0],
+         channel_colors=['white'],
+         channel_ranges=[[100, 600]],
+         title=img.name,
+         scalebar_micrometer=150,
+         scalebar_color='yellow',
+         scalebar_position='topleft',
+         scalebar_label=True,
+         fig_width_inch=5,
+         fig_height_inch=4,
+         fig_dpi=100)
+```
+
+`plot()` uses internally `ez_zarr.plotting.plot_image()`
+which is a convenient wrapper around `matplotlib.pyplot.imshow`.
+`plot_image()` can also be used directly if you want to work with image arrays
+(for examples, see section "Working with segmentation masks" below).
+
+## Zoom in
+
+Let's first show the coordinate axes for our image:
+
+```{python}
+img.plot(axis_style='micrometer',
+         fig_width_inch=5,
+         fig_height_inch=4,
+         fig_dpi=100)
+```
+
+Now we can zoom in by coordinates:
+
+```{python}
+img.plot(upper_left_yx=(130, 140),
+         lower_right_yx=(300, 310),
+         scalebar_micrometer=30,
+         scalebar_color='magenta',
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+So far, we have been automatically using the lowest resolution
+pyramid level version of the data, and the micrometer coordinates above
+have been automatically converted to the corresponding pixel coordinates.
+
+If we want to get the same image region at a higher resolution,
+we can use the `pyramid_level` argument:
+
+```{python}
+img.plot(pyramid_level=0,
+         upper_left_yx=(130, 140),
+         lower_right_yx=(300, 310),
+         scalebar_micrometer=30,
+         scalebar_color='magenta',
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+You can see from the scale bar that again conversion from micrometer
+to pixel coordinates are performed automatically.
+
+If you prefer to work with pixel coordinates, for example for
+slicing numpy arrays, `get_array_by_coordinate` or `plot` also support that.
+
+Let's first look at the full image at low resolution again, now using pixel coordinates for the axes:
+
+```{python}
+img.plot(axis_style='pixel',
+         fig_width_inch=5,
+         fig_height_inch=4,
+         fig_dpi=100)
+```
+
+
+Now we zoom in using pixel coordinates (`coordinate_unit='pixel'`):
+
+```{python}
+img.plot(coordinate_unit='pixel',
+         upper_left_yx=(50, 56),
+         lower_right_yx=(115, 121),
+         scalebar_micrometer=30,
+         scalebar_color='magenta',
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+Again, we were automatically using the lowest resolution of the image,
+and we can use `pyramid_level` to select a higher resolution. When
+working with pixel coordinates, we will need to specify that our
+coordinates still refer to the currently selected `pyramid_level` (4),
+in order to obtain the same region of the image. This can be done
+using the `pyramid_level_coord` argument:
+
+```{python}
+img.plot(coordinate_unit='pixel',
+         pyramid_level=0,       # extract image from this level
+         pyramid_level_coord=4, # coordinates refer to this level
+         upper_left_yx=(50, 56),
+         lower_right_yx=(115, 121),
+         scalebar_micrometer=30,
+         scalebar_color='magenta',
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+## Coordinate conversions (usually done internally)
+
+As mentioned the pixel coordinates depend on the `pyramid_level`.
+The image metadata makes it easy to convert between pixel coordinates
+and micrometer coordinates, or pixel coordinates referring to different
+pyramid levels. The `get_array_by_coordinate` and `plot` methods
+do this automatically.
+
+You can do it also manually by using `get_scale` to obtain the
+pixel sizes (in micrometer) from the image metadata, and
+`ez_zarr.utils.convert_coordinates` to do the actual conversion:
+
+```{python}
+# let's define some pixel coordinates referring to pyramid level 4
+zyx_4 = (1, 230, 180)
+print(f'starting coordinates (pixels in pyramid level 4): {zyx_4}')
+
+# get pixel scale at pyramid level 4 (z, y, x)
+s_4 = img.get_scale(pyramid_level=4, spatial_axes_only=True)
+print(f'pixel scale (pyramid level 4, micrometer): {s_4}')
+
+# convert from pyramid level 4 to 2
+s_2 = img.get_scale(pyramid_level=2, spatial_axes_only=True)
+print(f'pixel scale (pyramid level 2, micrometer): {s_2}')
+zyx_2 = utils.convert_coordinates(coords_from=zyx_4,
+                                  scale_from=s_4,
+                                  scale_to=s_2)
+print(f'starting coordinates converted to pyramid level 2 (pixel): {zyx_2}')
+
+# convert from pixel to micrometers
+# remark: scales are in micrometer -> the target scale is 1.0 for each axis
+zyx_um = utils.convert_coordinates(coords_from=zyx_4,
+                                   scale_from=s_4,
+                                   scale_to=[1.0, 1.0, 1.0])
+print(f'starting coordinates converted to micrometer: {zyx_um}')
+
+# convert back from micrometers to pixels
+zyx_px = utils.convert_coordinates(coords_from=zyx_um,
+                                   scale_from=[1.0, 1.0, 1.0],
+                                   scale_to=s_4)
+print(f'starting coordinates converted back to pixel (pyramid level 4): {zyx_px}')
+```
+
+These functions are also used by `plot()` internally to add
+a scale bar to the image plot, as we have seen above.
+
+## Working with segmentation masks
+
+When segmentation masks (labels) are available, we can for example
+plot them with transparency on top of the image, by selecting the
+desired label using `label_name`:
+
+```{python}
+img.plot(label_name='nuclei',
+         pyramid_level=0,
+         upper_left_yx=(130, 140),
+         lower_right_yx=(300, 310),
+         scalebar_micrometer=30,
+         scalebar_color='white',
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+You may notice that the above will warn about no labels being available for
+the requested intensity image pyramid level. The `plot` method will
+automatically use the label with the closest resolution and scale it
+to match the intensity image. 
+
+For your convenience, it is also possible to specify multiple label
+names using a `list` (for example to reuse the same label name list
+when working with multiple images that have different labels).
+`plot()` will still only display a single label mask, namely the first
+one in the provided list that is available for the image (so the
+order of label names matters):
+
+```{python}
+img.plot(label_name=['whole_cells', 'nuclei', 'mitochondria'],
+         pyramid_level=0,
+         upper_left_yx=(130, 140),
+         lower_right_yx=(300, 310),
+         scalebar_micrometer=30,
+         scalebar_color='white',
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+Using the `show_label_values` argument of `plotting.plot_image`, the
+label values can be added (optionally also using the `label_fontsize`
+and `label_text_colour` argument to ):
+
+```{python}
+img.plot(show_label_values=True,
+         label_fontsize='small',
+         label_text_colour='white',
+         label_name='nuclei',
+         pyramid_level=0,
+         upper_left_yx=(130, 140),
+         lower_right_yx=(300, 310),
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+If you are interested in a specific object, you can pass its value to
+the `label_value` argument (and optionally use the `extend_pixels` and 
+`msk_alpha` arguments), to automatically select appropriate coordinates:
+
+```{python}
+img.plot(label_value=877,
+         extend_pixels=10,
+         msk_alpha=0.15,
+         show_label_values=True,
+         label_fontsize='xx-large',
+         label_text_colour='black',
+         label_name='nuclei',
+         pyramid_level=0,
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+If you want to restrict the plot to the exact are within that specific
+object (or objects), you can use the `restrict_to_label_values` argument
+and provide a list of values:
+
+```{python}
+img.plot(label_value=877,
+         restrict_to_label_values=[877,914],
+         extend_pixels=10,
+         msk_alpha=0.15,
+         show_label_values=True,
+         label_fontsize='xx-large',
+         label_text_colour='black',
+         label_name='nuclei',
+         pyramid_level=0,
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
+## Calculations on the image data
+
+To save memory, images are stored on disk and only loaded when needed (for implementation details see the [`dask` Array documentation](https://docs.dask.org/en/stable/array.html)).
+
+This can be demonstrated by `type(arr)`:
+
+```{python}
+type(arr) # note that the image is an 'on-disk' array
+```
+
+To force loading of the data into memory as a `numpy` array, you can call `np.array(arr)`:
+
+```{python}
+type(np.array(arr)) # triggers loading it into memory
+```
+
+In general, you can use `dask` arrays like `numpy` arrays.
+For example, we can threshold the image: 
+
+```{python}
+# threshold (will also trigger loading into memory)
+arr_mask = arr[0,0]>300
+type(arr_mask)
+
+# plot 
+plotting.plot_image(im=arr[:,0], msk=arr_mask, msk_alpha=0.5,
+                    fig_width_inch=6, fig_height_inch=6, fig_dpi=100)
+```
+
+This is of course not a recommended way to segment this image, but rather meant
+to demonstrate that the `dask` arrays can be used just like `numpy` arrays.
+
+# Session info
+
+```{python}
+import session_info
+session_info.show()
+```

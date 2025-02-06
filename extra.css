@@ -1,0 +1,14 @@
+.md-grid {
+    max-width: 90%;
+}
+
+/* for info on customization of the mkdocs styles, see:
+   https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#customization */
+/* .language-python {
+    --md-code-bg-color: #f5f5f5;
+} */
+
+.language-text {
+    --md-code-bg-color: transparent;
+    border: 1px solid #dadada;
+}
