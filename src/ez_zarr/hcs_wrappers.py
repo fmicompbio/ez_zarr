@@ -1,5 +1,7 @@
 """Wrap OME-Zarr filesets in a class.
 
+Disclaimer: The `hcs_wrappers` module described here is only provided for legacy reasons and not being further developed. For new projects, we recommend to use the `ome_zarr` module instead.
+
 Represent an OME-Zarr fileset as a class to give high-level
 access to its contents.
 
