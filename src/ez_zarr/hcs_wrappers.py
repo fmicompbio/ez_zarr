@@ -136,7 +136,7 @@ class FractalZarr:
             # no well given -> pick first one
             return self.wells[0]['path']
         elif as_path:
-            return os.path.join(well[:1].upper(), well[1:])
+            return os.path.join(well[:1].upper(), well[1:]).replace("\\", "/")
         else:
             return well
 
@@ -146,7 +146,7 @@ class FractalZarr:
             include_wells = [include_wells]
         if len(include_wells) == 0: 
             # no wells given -> include all wells
-            include_wells = [x['path'] for x in self.wells]
+            include_wells = [x['path'].replace("\\", "/") for x in self.wells]
         else:
             # transform well names from 'B03' format to path format 'B/03'
             include_wells = [self._digest_well_argument(w) for w in include_wells]

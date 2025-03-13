@@ -67,7 +67,7 @@ def test_import_plate(tmpdir: str):
     assert isinstance(imgL, ome_zarr.ImageList)
     assert len(imgL) == 1
     assert imgL.names == ['B03']
-    assert imgL.paths == ['tests/example_data/plate_ones_mip.zarr/B/03/0']
+    assert [x.replace("\\", "/") for x in imgL.paths] == ['tests/example_data/plate_ones_mip.zarr/B/03/0']
     assert imgL.nrow == 2
     assert imgL.ncol == 3
     assert imgL.layout.to_dict() == {'row_index': {0: 2}, 'column_index': {0: 3}}
