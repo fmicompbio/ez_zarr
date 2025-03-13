@@ -76,9 +76,9 @@ img = ome_zarr.Image(path = img_directory, name = 'cardio-d14')
 img
 ```
 
-`img` represents a maximum intensity projection of one well from a high-content screening plate, processed using [Fractal](https://fractal-analytics-platform.github.io/).
+`img` represents a maximum intensity projection of one well from a high-content screening plate, processed using [Fractal](https://fractal-analytics-platform.github.io/). In addition to such images with two spatial dimensions, `ez-zarr` supports OME-Zarr images with any number of dimensions, automatically projecting images with more than two spatial dimensions for plotting.
 
-There are 5 `pyramid_levels` available (0 to 4), meaning that in addition to the full resolution data (level 0), we have four more levels that provide the data in 2-fold lower resolutions (see `pyramid_zyx_scalefactor`), for example for faster plotting.
+In `img`, there are 5 `pyramid_levels` available (0 to 4), meaning that in addition to the full resolution data (level 0), we have four more levels that provide the data in 2-fold lower resolutions (see `pyramid_zyx_scalefactor`), for example for faster plotting.
 
 This OME-Zarr image also contains two segmentations (`empty` and `nuclei`), and for one measurements have been extracted and saved in the table `nuclei`. In addition, there are some further tables, such as `FOV_ROI_table`, which contains the coordinates of the fields of view, or `nuclei_ROI_table`, which contains the bounding box coordinates for the segmented nuclei.
 
