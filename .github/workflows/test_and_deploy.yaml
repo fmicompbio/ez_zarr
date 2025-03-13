@@ -9,22 +9,27 @@ on:
 
 jobs:
   test:
-    name: ${{ matrix.platform }} py${{ matrix.python-version }}
-    runs-on: ${{ matrix.platform }}
+    name: ${{ matrix.config.platform }} py${{ matrix.config.python-version }}
+    runs-on: ${{ matrix.config.platform }}
     strategy:
       matrix:
-      #  platform: [ubuntu-latest, windows-latest, macos-latest]
-        platform: [ubuntu-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        config:
+        - { platform: 'ubuntu-latest', python-version: '3.9' }
+        - { platform: 'ubuntu-latest', python-version: '3.10' }
+        - { platform: 'ubuntu-latest', python-version: '3.11' }
+        - { platform: 'ubuntu-latest', python-version: '3.12' }
+        - { platform: 'ubuntu-latest', python-version: '3.13' }
+        - { platform: 'windows-latest', python-version: '3.13' }
+        - { platform: 'macos-latest', python-version: '3.13' }
 
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.config.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.config.python-version }}
           cache-dependency-path: 'pyproject.toml'
           cache: 'pip'
 
