@@ -120,10 +120,10 @@ def test_import_plate(tmpdir: str):
     assert imgL3.ncol == 12
     assert imgL3.layout.row_index.tolist() == [2, 3, 7]
     assert imgL3.layout.column_index.tolist() == [3, 2, 6]
-    assert imgL3['B03'].get_path().replace("\\", "/") == str(tmpdir) + '/example_img_multi/B/03/0'
-    assert imgL3['C02'].get_path().replace("\\", "/") == str(tmpdir) + '/example_img_multi/C/02/0'
-    assert imgL3['G06'].get_path().replace("\\", "/") == str(tmpdir) + '/example_img_multi/G/06/0'
-    assert [x.replace("\\", "/") for x in imgL3.paths] == [str(tmpdir) + '/example_img_multi/B/03/0', str(tmpdir) + '/example_img_multi/C/02/0', str(tmpdir) + '/example_img_multi/G/06/0']
+    assert imgL3['B03'].get_path().replace("\\", "/") == str(tmpdir).replace("\\", "/") + '/example_img_multi/B/03/0'
+    assert imgL3['C02'].get_path().replace("\\", "/") == str(tmpdir).replace("\\", "/") + '/example_img_multi/C/02/0'
+    assert imgL3['G06'].get_path().replace("\\", "/") == str(tmpdir).replace("\\", "/") + '/example_img_multi/G/06/0'
+    assert [x.replace("\\", "/") for x in imgL3.paths] == [str(tmpdir).replace("\\", "/") + '/example_img_multi/B/03/0', str(tmpdir).replace("\\", "/") + '/example_img_multi/C/02/0', str(tmpdir).replace("\\", "/") + '/example_img_multi/G/06/0']
     assert imgL3.names == ['B03', 'C02', 'G06']
 
 # ome_zarr.Image ----------------------------------------------------
