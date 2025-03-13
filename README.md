@@ -93,6 +93,9 @@ conda install -c conda-forge --override-channels ez-zarr
 [![unit-tests](https://github.com/fmicompbio/ez_zarr/actions/workflows/test_and_deploy.yaml/badge.svg)](https://github.com/fmicompbio/ez_zarr/actions/workflows/test_and_deploy.yaml)
 [![codecov](https://codecov.io/gh/fmicompbio/ez_zarr/graph/badge.svg)](https://codecov.io/gh/fmicompbio/ez_zarr)
 
+## Supported versions of `zarr`
+`ez-zarr` currently supports version 2 of the `zarr` package, and thus version 2 of the `zarr` format. Also supporting version 3 is on our roadmap and currently depends on `anndata` supporting that version (expected in `anndata` version 0.12.0).
+
 ## Contributors and License
 `ez_zarr` is released under the MIT License, and the copyright
 is with the Friedrich Miescher Insitute for Biomedical Research
