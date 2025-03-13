@@ -54,14 +54,14 @@ def plate_set2():
 def test_digest_well_argument(plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr._digest_well_argument`."""
     assert plate_3d._digest_well_argument(None) == 'B/03'
-    assert plate_3d._digest_well_argument('B03').replace("\\", "/") == 'B/03'
+    assert plate_3d._digest_well_argument('B03') == 'B/03'
     assert plate_3d._digest_well_argument('B03', as_path=False) == 'B03'
 
 def test_digest_include_wells_argument(plate_3d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr._digest_include_wells_argument`."""
     assert plate_3d._digest_include_wells_argument([]) == ['B/03']
-    assert [x.replace("\\", "/") for x in plate_3d._digest_include_wells_argument(['B03'])] == ['B/03']
-    assert [x.replace("\\", "/") for x in plate_3d._digest_include_wells_argument('B03')] == ['B/03']
+    assert plate_3d._digest_include_wells_argument(['B03']) == ['B/03']
+    assert plate_3d._digest_include_wells_argument('B03') == ['B/03']
 
 def test_digest_pyramid_level_argument(plate_3d: hcs_wrappers.FractalZarr, plate_2d: hcs_wrappers.FractalZarr):
     """Test `FractalZarr._digest_pyramid_level_argument`."""
