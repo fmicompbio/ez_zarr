@@ -64,6 +64,8 @@ plate_3d
 A more extensive example is available from [here](https://fmicompbio.github.io/ez_zarr/getting_started_Image/), also available as an [ipynb notebook](https://fmicompbio.github.io/ez_zarr/getting_started_Image.ipynb).
 
 ## Install
+`ez_zarr` is available for all major platforms (macOS, Linux and Windows) and modern versions of python. It can be installed using `pip` or `conda`:
+
 ### Using `pip`
 [![PyPI - Version](https://img.shields.io/pypi/v/ez-zarr.svg?logo=pypi&label=PyPI&logoColor=gold)](https://pypi.org/project/ez-zarr/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ez-zarr.svg?logo=python&label=Python&logoColor=gold)](https://pypi.org/project/ez-zarr/)
