@@ -1097,6 +1097,19 @@ class Image:
             index = [slice(None)] * img.ndim
             index[time_dim[0]] = time_index
             img = img[tuple(index)]
+        # same for label image
+        if label_name != None:
+            time_dim_lab = [i for i in range(len(self.channel_info_labels[label_name])) if self.channel_info_labels[label_name][i] == 't']
+            if len(time_dim_lab) == 1:
+                # make sure that only one timepoint is selected
+                assert type(time_index) is int
+                # check that provided time_index is valid
+                if time_index >= lab.shape[time_dim_lab[0]]:
+                    raise ValueError("time_index is too large")
+                # select a single timepoint and squeeze time axis
+                index = [slice(None)] * lab.ndim
+                index[time_dim_lab[0]] = time_index
+                lab = lab[tuple(index)]
         
         # calculate scalebar length in pixel in x direction
         if scalebar_micrometer != 0:
