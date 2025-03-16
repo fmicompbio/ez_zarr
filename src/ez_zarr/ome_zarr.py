@@ -930,6 +930,7 @@ class Image:
              channels_labels: Optional[list[str]]=None,
              scalebar_micrometer: int=0,
              show_scalebar_label: bool=True,
+             time_index: int=0,
              **kwargs: Any) -> None:
         """
         Plot an image.
@@ -977,6 +978,9 @@ class Image:
             scalebar_micrometer (int): If non-zero, add a scale bar corresponding
                 to `scalebar_micrometer` to the image.
             show_scalebar_label (bool):  If `True`, add micrometer label to scale bar.
+            time_index (int): If the image contains a time axis, this argument
+                determines which time point (provided as the index to retain
+                along the time axis) is plotted. 
             **kwargs: Additional arguments for `plotting.plot_image`, for example
                 'channels', 'channel_colors', 'channel_ranges', 'z_projection_method',
                 'show_label_values', 'label_text_colour', 'label_fontsize', etc.
@@ -1080,6 +1084,20 @@ class Image:
             )
             lab = lab[label_name] # extract label array from dict
 
+        # if there is a time axis, select a single timepoint and 
+        # remove the time axis for plotting
+        time_dim = [i for i in range(len(self.channel_info_image)) if self.channel_info_image[i] == 't']
+        if len(time_dim) == 1:
+            # make sure that only one timepoint is selected
+            assert type(time_index) is int
+            # check that provided time_index is valid
+            if time_index >= img.shape[time_dim[0]]:
+                raise ValueError("time_index is too large")
+            # select a single timepoint and squeeze time axis
+            index = [slice(None)] * img.ndim
+            index[time_dim[0]] = time_index
+            img = img[tuple(index)]
+        
         # calculate scalebar length in pixel in x direction
         if scalebar_micrometer != 0:
             kwargs['scalebar_pixel'] = convert_coordinates(
