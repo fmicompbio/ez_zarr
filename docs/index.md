@@ -76,6 +76,11 @@ The release version of `ez_zarr` can be installed using pip:
 pip install ez-zarr
 ```
 
+To install also the dependencies required for running unit tests or to download the example data and run the examples given in the documentation, install `ez_zarr` with the `dev` and `doc` extras, respectively:
+```
+pip install ez-zarr[dev,doc]
+```
+
 The current (development) version of `ez_zarr` can be installed from github.com using:
 ```
 pip install git+ssh://git@github.com/fmicompbio/ez_zarr.git
