@@ -36,6 +36,7 @@ rm temp.zip
 
 or directly from within a python notebook or session using:
 ```{python}
+import pandas as pd
 import requests
 import zipfile
 import os
@@ -449,6 +450,54 @@ plotting.plot_image(im=arr[:,0], msk=arr_mask, msk_alpha=0.5,
 
 This is of course not a recommended way to segment this image, but rather meant
 to demonstrate that the `dask` arrays can be used just like `numpy` arrays.
+
+Extracting arrays and plotting them directly with `plotting.plot_image` is also
+the recommended way to do more complex tasks that are not directly supported by
+the arguments in `Image.plot`. For example, you could subset a 3D image to select
+just one or several z-planes of interest, instead of using the automated projection
+(`z_projection_method` argument of `plotting.plot_image`).
+
+# Working with multiple images
+
+In some cases, you may want to handle a set of images, such as images corresponding
+to the well of an high-content screening plate. Such data is represented in `ez_zarr`
+by `ome_zarr.ImageList` objects, and can be created from a folder containing multiple
+images using the `ome_zarr.import_plate` function:
+
+```{python}
+img_directory = '20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr'
+imgL = ome_zarr.import_plate(img_directory)
+imgL
+```
+
+Note that as our example data only contains a single well, this image list contains
+only a single image.
+
+```{python}
+len(imgL)
+```
+
+All methods available to `ome_zarr.Image` can also be used for `ome_zarr.ImageList`
+objects, and some have special behavior, for example the plot method that arranges
+the wells in plate layout (automatically determined to be compatible with the
+observed wells):
+
+```{python}
+imgL.plot()
+```
+
+The detected layout can be returned as a `pandas.DataFrame`:
+```{python}
+imgL.get_layout()
+```
+
+... and also set manually:
+```{python}
+layout_df = pd.DataFrame.from_dict({'row_index': [1], 'column_index': [1]})
+imgL.set_layout(layout_df)
+imgL.plot()
+```
+
 
 # Session info
 

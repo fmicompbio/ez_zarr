@@ -228,12 +228,15 @@ class Image:
 
     @staticmethod
     def _load_axes_unit(multiscale_dict: dict[str, Any]) -> str:
-        supported_units = ['micrometer', 'pixel']
+        supported_units = {'micrometer':'micrometer',
+                           'micron':'micrometer',
+                           'pixel':'pixel',
+                           'unit':'pixel'}
         unit_set = set([x['unit'] for x in multiscale_dict['axes'] if x['type'] == 'space' and 'unit' in x])
-        if len(unit_set) == 0 or (len(unit_set) == 1 and 'unit' in unit_set):
+        if len(unit_set) == 0:
             return 'pixel'
         elif len(unit_set) == 1 and list(unit_set)[0] in supported_units:
-            return list(unit_set)[0]
+            return supported_units[list(unit_set)[0]]
         else:
             raise ValueError(f"unsupported unit in multiscale_info: {multiscale_dict}")
     
