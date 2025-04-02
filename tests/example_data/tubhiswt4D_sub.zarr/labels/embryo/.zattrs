@@ -1,0 +1,80 @@
+{
+    "image-label": {
+        "source": {
+            "image": "../../"
+        },
+        "version": "0.4"
+    },
+    "multiscales": [
+        {
+            "axes": [
+                {
+                    "name": "t",
+                    "type": "time",
+                    "unit": "seconds"
+                },
+                {
+                    "name": "z",
+                    "type": "space",
+                    "unit": "micrometer"
+                },
+                {
+                    "name": "y",
+                    "type": "space",
+                    "unit": "micrometer"
+                },
+                {
+                    "name": "x",
+                    "type": "space",
+                    "unit": "micrometer"
+                }
+            ],
+            "datasets": [
+                {
+                    "coordinateTransformations": [
+                        {
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "type": "scale"
+                        }
+                    ],
+                    "path": "0"
+                },
+                {
+                    "coordinateTransformations": [
+                        {
+                            "scale": [
+                                1.0,
+                                1.0,
+                                2.0,
+                                2.0
+                            ],
+                            "type": "scale"
+                        }
+                    ],
+                    "path": "1"
+                },
+                {
+                    "coordinateTransformations": [
+                        {
+                            "scale": [
+                                1.0,
+                                1.0,
+                                4.0,
+                                4.0
+                            ],
+                            "type": "scale"
+                        }
+                    ],
+                    "path": "2"
+                }
+            ],
+            "name": "embryo",
+            "version": "0.4"
+        }
+    ]
+}
