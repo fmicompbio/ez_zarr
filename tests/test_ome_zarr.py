@@ -30,7 +30,7 @@ def img2d():
 @pytest.fixture
 def img4d():
     """A `ome_zarr.Image` object representing a 4D image"""
-    return ome_zarr.Image('tests/example_data/tubhiswt4D_sub.zarr')
+    return ome_zarr.Image('tests/example_data_5d/tubhiswt4D_sub.zarr')
 
 @pytest.fixture
 def imgL():
@@ -502,7 +502,7 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, img4d: ome_za
 
     # 4D image with labels
     assert isinstance(img4d, ome_zarr.Image)
-    assert img4d.path == 'tests/example_data/tubhiswt4D_sub.zarr'
+    assert img4d.path == 'tests/example_data_5d/tubhiswt4D_sub.zarr'
     assert img4d.name == 'tubhiswt4D_sub.zarr'
     assert isinstance(img4d.zarr_group, zarr.Group)
     assert all([isinstance(x, zarr.Array) for x in img4d.array_dict.values()])
