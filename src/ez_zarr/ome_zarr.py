@@ -1093,9 +1093,6 @@ class Image:
         if len(time_dim) == 1:
             # make sure that only one timepoint is selected
             assert type(time_index) is int
-            # check that provided time_index is valid
-            if time_index >= img.shape[time_dim[0]]:
-                raise ValueError("time_index is too large")
             # select a single timepoint and squeeze time axis
             index = [slice(None)] * img.ndim
             index[time_dim[0]] = time_index
@@ -1106,9 +1103,6 @@ class Image:
             if len(time_dim_lab) == 1:
                 # make sure that only one timepoint is selected
                 assert type(time_index) is int
-                # check that provided time_index is valid
-                if time_index >= lab.shape[time_dim_lab[0]]:
-                    raise ValueError("time_index is too large")
                 # select a single timepoint and squeeze time axis
                 index = [slice(None)] * lab.ndim
                 index[time_dim_lab[0]] = time_index
