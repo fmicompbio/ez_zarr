@@ -521,7 +521,7 @@ img5d.channel_info_image
 The time axis contains three entries:
 
 ```{python}
-img5d.tree(expand=True)
+print(img5d.tree(expand=True, level=3))
 ```
 
 We can plot selected timepoints by specifying the `time_index` argument of `Image.plot()`:
