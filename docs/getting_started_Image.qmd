@@ -529,7 +529,10 @@ We can plot selected timepoints by specifying the `time_index` argument of `Imag
 ```{python}
 img5d.plot(time_index=0,
            pyramid_level=0,
-           label_name="embryo")
+           label_name="embryo",
+           fig_width_inch=6,
+           fig_height_inch=6,
+           fig_dpi=100)
 ```
 
 # Working with multiple images
