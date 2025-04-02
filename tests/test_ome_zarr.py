@@ -867,6 +867,19 @@ def test_plot(img2d: ome_zarr.Image, img4d: ome_zarr.Image, tmpdir: str):
                        scalebar_micrometer=50,
                        show_scalebar_label=True)
 
+        # ... try to select too large timepoint (error)
+        with pytest.raises(Exception) as e_info:
+            img4d.plot(label_name='embryo',
+                       pyramid_level=None,
+                       pyramid_level_coord=None,
+                       channels_labels=['channel_0'],
+                       channel_colors=['white'],
+                       channel_ranges=[[0.01, 0.99]],
+                       z_projection_method='maximum',
+                       time_index = 10,
+                       scalebar_micrometer=50,
+                       show_scalebar_label=True)
+
 
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
