@@ -504,11 +504,11 @@ with tempfile.TemporaryDirectory() as temp_dir:
 
     # locate the extracted folder
     extracted_folder = os.path.join(temp_dir, "ez_zarr-main", "tests",
-                                    "example_data_5d", "tubhiswt4D_sub.zarr")
+                                    "example_data_5d")
 
     # move the image to current working directory
     if os.path.exists(extracted_folder):
-        shutil.copytree(extracted_folder, ".", dirs_exist_ok=True)
+        shutil.copytree(extracted_folder, ".")
 ```
 
 Now we open the image:
