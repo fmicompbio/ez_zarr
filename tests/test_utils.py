@@ -35,7 +35,8 @@ def test_rescale_image():
         utils.rescale_image(im1, [1, 1], [2, 2], 'intensity', 4)
     
     # expected results
-    assert np.all(utils.rescale_image(im1, [2, 2], [1, 1]) == np.zeros((20, 20)))
+    assert np.all(utils.rescale_image(im1, [2, 2], [1, 1], verbose=True) == np.zeros((20, 20)))
+    assert np.all(utils.rescale_image(im1, [2, 2], [1, 1], im_type="label", verbose=True) == np.zeros((20, 20)))
     assert np.all(utils.rescale_image(im1, [2, 2], [4, 9]) == np.zeros((5, 2)))
     assert np.all(utils.rescale_image(im2, [1, 3.5, 7.7], [1, 3.5, 7.7], number_nonspatial_axes=1) == im2)
     with pytest.warns(UserWarning):
