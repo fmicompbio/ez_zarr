@@ -161,6 +161,13 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
                    channels=[1],
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]],
+                   title='test', call_show=True)
+        plot_image(im=npa4d, msk=npa3d,
+                   restrict_to_label_values=[1],
+                   pad_to_yx=[1000,1000],
+                   channels=[1],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]],
                    title='test', call_show=True,
                    verbose=True)
         plot_image(im=npa4d, msk=npa3d,
