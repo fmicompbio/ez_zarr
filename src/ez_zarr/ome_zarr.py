@@ -414,7 +414,7 @@ class Image:
             >>> img._digest_bounding_box(pyramid_level=0)
         """
         # digest arguments
-        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, label_name, verbose)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, label_name, verbose=verbose)
 
         # get image array
         if label_name:
