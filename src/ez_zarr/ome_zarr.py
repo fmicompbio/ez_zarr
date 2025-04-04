@@ -202,8 +202,8 @@ class Image:
         self.pyramid_levels_image: list[str] = Image._extract_paths_by_decreasing_resolution(self.multiscales_image['datasets'])
         self.pyramid_levels_labels: dict[str, list[str]] = {x: Image._extract_paths_by_decreasing_resolution(self.multiscales_labels[x]['datasets']) for x in self.label_names}
         # ... axes units
-        self.axes_unit_image: str = self._load_axes_unit(self.multiscales_image, verbose)
-        self.axes_unit_labels: dict[str, str] = {x: self._load_axes_unit(self.multiscales_labels[x], verbose) for x in self.label_names}
+        self.axes_unit_image: str = self._load_axes_unit(self.multiscales_image, verbose, context="intensity image")
+        self.axes_unit_labels: dict[str, str] = {x: self._load_axes_unit(self.multiscales_labels[x], verbose, context=f"label {x}") for x in self.label_names}
 
         # load channel metadata
         # ... label dimensions, e.g. "czyx"
@@ -234,9 +234,10 @@ class Image:
         return info
 
     @staticmethod
-    def _load_axes_unit(multiscale_dict: dict[str, Any], verbose: bool = False) -> str:
+    def _load_axes_unit(multiscale_dict: dict[str, Any], verbose: bool = False, context: str = "") -> str:
         supported_units = {'micrometer':'micrometer',
                            'micron':'micrometer',
+                           'um':'micrometer',
                            'pixel':'pixel',
                            'unit':'pixel'}
         unit_set = set([x['unit'] for x in multiscale_dict['axes'] if x['type'] == 'space' and 'unit' in x])
@@ -247,7 +248,7 @@ class Image:
         else:
             raise ValueError(f"unsupported unit in multiscale_info: {multiscale_dict}")
         if verbose:
-            print(f"Identified/inferred axes unit: {retval}")
+            print(f"Identified/inferred axes unit ({context}): {retval}")
         return retval
     
     @staticmethod
