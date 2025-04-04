@@ -49,7 +49,8 @@ def _setup_for_resizing(im: np.ndarray,
                         number_nonspatial_axes: int,
                         scale_from: Optional[list[float]]=None,
                         scale_to: Optional[list[float]]=None,
-                        output_shape: Optional[tuple[int]]=None) -> tuple[list[int], np.ndarray, int, bool]:
+                        output_shape: Optional[tuple[int]]=None,
+                        verbose: bool=False) -> tuple[list[int], np.ndarray, int, bool]:
     # Digest arguments
     assert isinstance(im, np.ndarray), "`im` must be a numpy array"
     assert scale_from is None or len(scale_from) == im.ndim, f"`scale_from` must be of length {im.ndim}"
@@ -74,9 +75,13 @@ def _setup_for_resizing(im: np.ndarray,
     if im_type == 'intensity':
         interpolation_order = 1
         do_anti_aliasing = True
+        if verbose:
+            print("Setting interpolation_order to 1, enabling antialiasing")
     elif im_type == 'label':
         interpolation_order = 0
         do_anti_aliasing = False
+        if verbose:
+            print("Setting interpolation_order to 0, disabling antialiasing")
     
     # return results
     return (non_spatial_axes, reshaped_im, interpolation_order, do_anti_aliasing)
@@ -85,7 +90,8 @@ def rescale_image(im: np.ndarray,
                   scale_from: list[float],
                   scale_to: list[float],
                   im_type: str='intensity',
-                  number_nonspatial_axes: int=0) -> np.ndarray:
+                  number_nonspatial_axes: int=0,
+                  verbose: bool=False) -> np.ndarray:
     """
     Rescale an image (2 to 5-dimensional arrays, possibly with non-spatial axes).
 
@@ -106,6 +112,7 @@ def rescale_image(im: np.ndarray,
             non-spatial dimensions, such as time or channel. Rescaling is
             performed only on the spatial axes, separately for each value
             or combination of values of the non-spatial axes.
+        verbose (bool): Whether to print out information messages.
     
     Returns:
         The rescaled image as a `numpy.ndarray`.
@@ -124,7 +131,8 @@ def rescale_image(im: np.ndarray,
         scale_from=scale_from,
         scale_to=scale_to,
         im_type=im_type,
-        number_nonspatial_axes=number_nonspatial_axes)
+        number_nonspatial_axes=number_nonspatial_axes,
+        verbose=verbose)
 
     # Calculate the rescaling factors
     scale_factors = [from_ / to for from_, to in zip(scale_from, scale_to)]
@@ -151,7 +159,8 @@ def rescale_image(im: np.ndarray,
 def resize_image(im: np.ndarray,
                  output_shape: tuple[int],
                  im_type: str='intensity',
-                 number_nonspatial_axes: int=0) -> np.ndarray:
+                 number_nonspatial_axes: int=0,
+                 verbose: bool=False) -> np.ndarray:
     """
     Resize an image (2 to 5-dimensional arrays, possibly with non-spatial axes).
 
@@ -168,6 +177,7 @@ def resize_image(im: np.ndarray,
             non-spatial dimensions, such as time or channel. Rescaling is
             performed only on the spatial axes, separately for each value
             or combination of values of the non-spatial axes.
+        verbose (bool): Whether to print out information messages.
     
     Returns:
         The rescaled image as a `numpy.ndarray`.
@@ -185,7 +195,8 @@ def resize_image(im: np.ndarray,
         im=im,
         output_shape=output_shape,
         im_type=im_type,
-        number_nonspatial_axes=number_nonspatial_axes)
+        number_nonspatial_axes=number_nonspatial_axes,
+        verbose=verbose)
 
     # Rescale the spatial dimensions separately for each non-spatial element
     resized_im = np.stack([resize(image=reshaped_im[i],

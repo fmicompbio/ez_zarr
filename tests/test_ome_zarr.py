@@ -105,7 +105,8 @@ def test_import_plate(tmpdir: str):
                     str(tmpdir) + '/example_img_multi/C/02')
     shutil.copytree(str(tmpdir) + '/example_img_multi/B/03',
                     str(tmpdir) + '/example_img_multi/G/06')
-    imgL3 = ome_zarr.import_plate(str(tmpdir) + '/example_img_multi')
+    imgL3 = ome_zarr.import_plate(str(tmpdir) + '/example_img_multi', 
+                                  verbose=True)
     assert len(imgL3) == 1
     assert imgL3.names == ['B03']
     # add additional images to metadata
@@ -243,7 +244,8 @@ def test_load_axes_unit(img2d: ome_zarr.Image):
 
     # test loading
     # ... inensity image
-    out_axes_unit_image = img2d._load_axes_unit(img2d.multiscales_image)
+    out_axes_unit_image = img2d._load_axes_unit(img2d.multiscales_image, 
+                                                verbose=True)
     assert out_axes_unit_image == 'micrometer'
     # ... labels
     out_axes_unit_labels = {x: img2d._load_axes_unit(img2d.multiscales_labels[x]) for x in img2d.label_names}
@@ -318,7 +320,7 @@ def test_find_path_of_lowest_level(img2d: ome_zarr.Image):
         img2d._find_path_of_lowest_resolution_level(label_name='error')
     
     # example input
-    assert img2d._find_path_of_lowest_resolution_level() == '2'
+    assert img2d._find_path_of_lowest_resolution_level(verbose=True) == '2'
     assert img2d._find_path_of_lowest_resolution_level(label_name='organoids') == '2'
     
     # synthetic input
@@ -339,7 +341,7 @@ def test_find_path_of_highest_resolution_level(img2d: ome_zarr.Image):
         img2d._find_path_of_highest_resolution_level(label_name='error')
     
     # example input
-    assert img2d._find_path_of_highest_resolution_level() == '0'
+    assert img2d._find_path_of_highest_resolution_level(verbose=True) == '0'
     assert img2d._find_path_of_highest_resolution_level(label_name='organoids') == '0'
 
 def test_digest_pyramid_level_argument(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
@@ -395,17 +397,20 @@ def test_digest_bounding_box(img2d: ome_zarr.Image):
 
     # expected results
     # ... full array
-    assert img2d._digest_bounding_box() == [(0, 0), (270, 320)]
+    assert img2d._digest_bounding_box(verbose=True) == [(0, 0), (270, 320)]
     # ... corners from different inputs
     assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
                                       lower_right_yx=(20, 50),
-                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+                                      coordinate_unit='pixel',
+                                      verbose=True) == [(5, 10), (20, 50)]
     assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
                                       size_yx=(15, 40),
-                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+                                      coordinate_unit='pixel',
+                                      verbose=True) == [(5, 10), (20, 50)]
     assert img2d._digest_bounding_box(size_yx=(15, 40),
                                       lower_right_yx=(20, 50),
-                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+                                      coordinate_unit='pixel',
+                                      verbose=True) == [(5, 10), (20, 50)]
     # ... different pyramid levels
     assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
                                       lower_right_yx=(20, 50),
@@ -999,7 +1004,8 @@ def test_imagelist_plot(imgL2: ome_zarr.ImageList, tmpdir: str):
                    fig_width_inch=6,
                    fig_height_inch=4,
                    fig_dpi=100,
-                   fig_style='brightfield')
+                   fig_style='brightfield',
+                   verbose=True)
 
         # with unknown arguments
         imgL2.plot(label_name = "organoids",

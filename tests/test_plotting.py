@@ -77,7 +77,8 @@ def test_convert_to_rgb(npa3d: np.ndarray):
     rng = np.quantile(npa3d[1], [0.01, 0.5])
     rgb = convert_to_rgb(im=npa3d[[0,1]],
                          channel_colors=['yellow', 'red'],
-                         channel_ranges=[[0.01, 0.5], rng])
+                         channel_ranges=[[0.01, 0.5], rng],
+                         verbose=True)
     assert isinstance(rgb, np.ndarray)
     assert rgb.shape == (npa3d.shape[1], npa3d.shape[2], 3)
     assert rgb.dtype == np.uint8
@@ -146,19 +147,29 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
                        title='test', call_show=False,
                        image_transform=np.log1p,
                        axis_style=st,
-                       spacing_yx=[0.325, 0.325])
+                       spacing_yx=[0.325, 0.325],
+                       verbose=True)
         # single channel with colormap
         plot_image(im=npa4d, msk=None,
                     channels=[1],
                     channel_colors=['inferno'],
                     channel_ranges=[[0.01, 0.99]],
-                    title='test', call_show=False)
+                    title='test', call_show=False,
+                    verbose=True)
         # image with masks
         plot_image(im=npa4d, msk=npa3d,
                    channels=[1],
                    channel_colors=['white'],
                    channel_ranges=[[0.01, 0.99]],
                    title='test', call_show=True)
+        plot_image(im=npa4d, msk=npa3d,
+                   restrict_to_label_values=[1],
+                   pad_to_yx=[1000,1000],
+                   channels=[1],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]],
+                   title='test', call_show=True,
+                   verbose=True)
         plot_image(im=npa4d, msk=npa3d,
                    channels=[1],
                    channel_colors=['white'],
@@ -169,7 +180,8 @@ def test_plot_image(npa4d: np.ndarray, npa3d: np.ndarray, tmpdir: str):
         # brightfield image
         plot_image(im=npa4d[slice(0,1)],
                    call_show=True,
-                   fig_style='brightfield')
+                   fig_style='brightfield',
+                   verbose=True)
         # 2D image
         plot_image(im=npa4d[0, 0],
                    call_show=True)
