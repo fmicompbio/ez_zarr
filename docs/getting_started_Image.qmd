@@ -480,10 +480,14 @@ just one or several z-planes of interest, instead of using the automated project
 Images that include a time dimension can also be handled using `ez_zarr`. For
 plotting such images, you have to specify which time index to plot.
 
-For illustration, we first download a small example image that is part of
-the `ez_zarr` GitHub repository. It contains free image data showing a
-C. elegans embryo from Josh Bembenek available at
-[openmicroscopy.org](https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/data.html):
+For illustration, we first download a small example image (showing a tubulin 
+histone GFP coexpressing C. elegans embryo) that is part of
+the `ez_zarr` GitHub repository. The original data set was acquired on a 
+multiphoton workstation by Josh Bembenek, and is freely available from
+[openmicroscopy.org](https://docs.openmicroscopy.org/ome-model/5.6.3/ome-tiff/data.html).
+The data set included in `ez_zarr` is a subset of the original image (2 timepoints, 
+1 channel, 2 z-planes). In addition, a manual segmentation label was added for 
+illustration purposes.
 
 ```{python}
 # download an image with a time axis
