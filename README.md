@@ -101,7 +101,7 @@ conda install -c conda-forge --override-channels ez-zarr
 [![codecov](https://codecov.io/gh/fmicompbio/ez_zarr/graph/badge.svg)](https://codecov.io/gh/fmicompbio/ez_zarr)
 
 ## Supported versions of `zarr`
-`ez-zarr` currently supports version 2 of the `zarr` package, and thus version 2 of the `zarr` format. Also supporting version 3 is on our roadmap and currently depends on `anndata` supporting that version (expected in `anndata` version 0.12.0).
+`ez-zarr` currently supports OME-Zarr v0.4 (corresponding to version 2 of the `zarr` format, and thus version 2 of the `zarr` python package). Also supporting OME-Zarr v0.5 (`zarr` version 3) is on our roadmap and currently depends on `anndata` supporting `zarr` v3 (expected in `anndata` version 0.12.0).
 
 ## Contributors and License
 `ez_zarr` is released under the MIT License, and the copyright
