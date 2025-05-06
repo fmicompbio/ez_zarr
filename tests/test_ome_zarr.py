@@ -470,6 +470,29 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, img4d: ome_za
     img_no_omero = ome_zarr.Image(str(tmpdir) + '/example_img')
     assert img_no_omero.channels == [{'label': 'channel-1', 'color': '00FFFF'}, {'label': 'channel-2', 'color': '00FFFF'}]
     shutil.move(zattr_file + '.orig', zattr_file)
+    # ... unsupported version
+    zattr_file = str(tmpdir) + '/example_img/.zattrs'
+    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    with open(zattr_file) as f:
+       zattr = json.load(f)
+    zattr['multiscales'][0]['version'] = "0.3"
+    with open(zattr_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.Image(str(tmpdir) + '/example_img')
+    shutil.move(zattr_file + '.orig', zattr_file)
+    # ... missing version
+    zattr_file = str(tmpdir) + '/example_img/.zattrs'
+    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    with open(zattr_file) as f:
+       zattr = json.load(f)
+    del zattr['multiscales'][0]['version']
+    with open(zattr_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    with pytest.warns(UserWarning):
+        img_no_version = ome_zarr.Image(str(tmpdir) + '/example_img')
+    assert img_no_version.ndim == 4
+    shutil.move(zattr_file + '.orig', zattr_file)
     # ... clean up
     shutil.rmtree(str(tmpdir) + '/example_img')
 

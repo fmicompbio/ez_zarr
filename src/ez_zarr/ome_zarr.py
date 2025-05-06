@@ -178,8 +178,6 @@ class Image:
         else:
             self.name = os.path.basename(self.path)
         self.zarr_group: zarr.Group = zarr.open_group(store=self.path, mode='r')
-        self.array_dict: dict[str, zarr.Array] = {x[0]: x[1] for x in self.zarr_group.arrays()}
-        self.ndim = self.array_dict[list(self.array_dict.keys())[0]].ndim
         self.label_names = []
         if 'labels' in list(self.zarr_group.group_keys()):
             self.label_names = [x for x in self.zarr_group.labels.group_keys()]
@@ -187,14 +185,25 @@ class Image:
         if 'tables' in list(self.zarr_group.group_keys()):
             self.table_names = [x for x in self.zarr_group.tables.group_keys()]
 
+        # get version info and check that the version is supported
+        if 'multiscales' not in self.zarr_group.attrs:
+            raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
+        if 'version' in list(self.zarr_group.attrs['multiscales'][0].keys()):
+            omezarr_version = self.zarr_group.attrs['multiscales'][0]['version']
+            if omezarr_version != "0.4":
+                raise ValueError(f"OME-Zarr version {omezarr_version} is not supported, should be 0.4")
+        else:
+            warnings.warn("Could not determine OME-Zarr version")
+
         if not skip_checks:
             # make sure that it does not contain any further groups
             if len([x for x in self.zarr_group.group_keys() if x not in ['labels', 'tables']]) > 0:
                 raise ValueError(f"{self.path} contains further groups")
             
+        self.array_dict: dict[str, zarr.Array] = {x[0]: x[1] for x in self.zarr_group.arrays()}
+        self.ndim = self.array_dict[list(self.array_dict.keys())[0]].ndim
+
         # load info about available scales in image and labels
-        if not 'multiscales' in self.zarr_group.attrs:
-            raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
         # ... load multiscales dictionaries
         self.multiscales_image: dict[str, Any] = self._load_multiscale_info(self.zarr_group, skip_checks)
         self.multiscales_labels: dict[str, dict[str, Any]] = {x: self._load_multiscale_info(self.zarr_group.labels[x], skip_checks) for x in self.label_names}
