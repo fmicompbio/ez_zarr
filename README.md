@@ -111,6 +111,13 @@ is with the Friedrich Miescher Insitute for Biomedical Research
 `ez_zarr` is being developed at the Friedrich Miescher Institute for
 Biomedical Research by [@silvbarb](https://github.com/silvbarb), [@csoneson](https://github.com/csoneson) and [@mbstadler](https://github.com/mbstadler).
 
+## Citing ez-zarr
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07882/status.svg)](https://doi.org/10.21105/joss.07882)
+
+If you are using ez-zarr in published research, please cite the paper: 
+
+Barbiero et al., (2025). ez-zarr: A Python package for easy access and visualisation of OME-Zarr filesets. Journal of Open Source Software, 10(109), 7882, https://doi.org/10.21105/joss.07882
+
 ## Need help? 
 If you run into problems when using `ez_zarr`, please first check whether the 
 answer is available in the [help pages for the individual functions underneath 'Documentation'](https://fmicompbio.github.io/ez_zarr/) or in 
