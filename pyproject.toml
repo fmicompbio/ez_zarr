@@ -38,7 +38,7 @@ dependencies = [
     "dask",
     "numpy",
     "pandas",
-    "zarr",
+    "zarr<3.0.0a0",
     "matplotlib",
     "scikit-image"
 ]
@@ -46,6 +46,7 @@ requires-python = ">=3.9"
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov"]
+doc = ["requests", "session-info"]
 
 [project.urls]
 Homepage = "https://github.com/fmicompbio/ez_zarr"

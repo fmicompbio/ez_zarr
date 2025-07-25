@@ -64,6 +64,8 @@ plate_3d
 A more extensive example is available from [here](https://fmicompbio.github.io/ez_zarr/getting_started_Image/), also available as an [ipynb notebook](https://fmicompbio.github.io/ez_zarr/getting_started_Image.ipynb).
 
 ## Install
+`ez_zarr` is available for all major platforms (macOS, Linux and Windows) and modern versions of python. It can be installed using `pip` or `conda`:
+
 ### Using `pip`
 [![PyPI - Version](https://img.shields.io/pypi/v/ez-zarr.svg?logo=pypi&label=PyPI&logoColor=gold)](https://pypi.org/project/ez-zarr/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ez-zarr.svg?logo=python&label=Python&logoColor=gold)](https://pypi.org/project/ez-zarr/)
@@ -72,6 +74,11 @@ A more extensive example is available from [here](https://fmicompbio.github.io/e
 The release version of `ez_zarr` can be installed using pip:
 ```
 pip install ez-zarr
+```
+
+To install also the dependencies required for running unit tests or to download the example data and run the examples given in the documentation, install `ez_zarr` with the `dev` and `doc` extras, respectively:
+```
+pip install "ez-zarr[dev,doc]"
 ```
 
 The current (development) version of `ez_zarr` can be installed from github.com using:
@@ -92,6 +99,9 @@ conda install -c conda-forge --override-channels ez-zarr
 ## Software status
 [![unit-tests](https://github.com/fmicompbio/ez_zarr/actions/workflows/test_and_deploy.yaml/badge.svg)](https://github.com/fmicompbio/ez_zarr/actions/workflows/test_and_deploy.yaml)
 [![codecov](https://codecov.io/gh/fmicompbio/ez_zarr/graph/badge.svg)](https://codecov.io/gh/fmicompbio/ez_zarr)
+
+## Supported versions of `zarr`
+`ez-zarr` currently supports OME-Zarr v0.4 (corresponding to version 2 of the `zarr` format, and thus version 2 of the `zarr` python package). Also supporting OME-Zarr v0.5 (`zarr` version 3) is on our roadmap and currently depends on `anndata` supporting `zarr` v3 (expected in `anndata` version 0.12.0).
 
 ## Contributors and License
 `ez_zarr` is released under the MIT License, and the copyright

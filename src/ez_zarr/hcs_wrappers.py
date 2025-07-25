@@ -1,5 +1,7 @@
 """Wrap OME-Zarr filesets in a class.
 
+Disclaimer: The `hcs_wrappers` module described here is only provided for legacy reasons and not being further developed. For new projects, we recommend to use the `ome_zarr` module instead.
+
 Represent an OME-Zarr fileset as a class to give high-level
 access to its contents.
 
@@ -136,7 +138,7 @@ class FractalZarr:
             # no well given -> pick first one
             return self.wells[0]['path']
         elif as_path:
-            return os.path.join(well[:1].upper(), well[1:])
+            return os.path.join(well[:1].upper(), well[1:]).replace("\\", "/")
         else:
             return well
 
@@ -146,7 +148,7 @@ class FractalZarr:
             include_wells = [include_wells]
         if len(include_wells) == 0: 
             # no wells given -> include all wells
-            include_wells = [x['path'] for x in self.wells]
+            include_wells = [x['path'].replace("\\", "/") for x in self.wells]
         else:
             # transform well names from 'B03' format to path format 'B/03'
             include_wells = [self._digest_well_argument(w) for w in include_wells]

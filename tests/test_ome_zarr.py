@@ -28,6 +28,11 @@ def img2d():
     return ome_zarr.Image('tests/example_data/plate_ones_mip.zarr/B/03/0', name="test")
 
 @pytest.fixture
+def img4d():
+    """A `ome_zarr.Image` object representing a 4D image"""
+    return ome_zarr.Image('tests/example_data_5d/tubhiswt4D_sub.zarr')
+
+@pytest.fixture
 def imgL():
     """A `ome_zarr.ImageList` object with one image"""
     return ome_zarr.ImageList(['tests/example_data/plate_ones_mip.zarr/B/03/0'])
@@ -67,7 +72,7 @@ def test_import_plate(tmpdir: str):
     assert isinstance(imgL, ome_zarr.ImageList)
     assert len(imgL) == 1
     assert imgL.names == ['B03']
-    assert imgL.paths == ['tests/example_data/plate_ones_mip.zarr/B/03/0']
+    assert [x.replace("\\", "/") for x in imgL.paths] == ['tests/example_data/plate_ones_mip.zarr/B/03/0']
     assert imgL.nrow == 2
     assert imgL.ncol == 3
     assert imgL.layout.to_dict() == {'row_index': {0: 2}, 'column_index': {0: 3}}
@@ -100,7 +105,8 @@ def test_import_plate(tmpdir: str):
                     str(tmpdir) + '/example_img_multi/C/02')
     shutil.copytree(str(tmpdir) + '/example_img_multi/B/03',
                     str(tmpdir) + '/example_img_multi/G/06')
-    imgL3 = ome_zarr.import_plate(str(tmpdir) + '/example_img_multi')
+    imgL3 = ome_zarr.import_plate(str(tmpdir) + '/example_img_multi', 
+                                  verbose=True)
     assert len(imgL3) == 1
     assert imgL3.names == ['B03']
     # add additional images to metadata
@@ -120,10 +126,10 @@ def test_import_plate(tmpdir: str):
     assert imgL3.ncol == 12
     assert imgL3.layout.row_index.tolist() == [2, 3, 7]
     assert imgL3.layout.column_index.tolist() == [3, 2, 6]
-    assert imgL3['B03'].get_path() == str(tmpdir) + '/example_img_multi/B/03/0'
-    assert imgL3['C02'].get_path() == str(tmpdir) + '/example_img_multi/C/02/0'
-    assert imgL3['G06'].get_path() == str(tmpdir) + '/example_img_multi/G/06/0'
-    assert imgL3.paths == [str(tmpdir) + '/example_img_multi/B/03/0', str(tmpdir) + '/example_img_multi/C/02/0', str(tmpdir) + '/example_img_multi/G/06/0']
+    assert imgL3['B03'].get_path().replace("\\", "/") == str(tmpdir).replace("\\", "/") + '/example_img_multi/B/03/0'
+    assert imgL3['C02'].get_path().replace("\\", "/") == str(tmpdir).replace("\\", "/") + '/example_img_multi/C/02/0'
+    assert imgL3['G06'].get_path().replace("\\", "/") == str(tmpdir).replace("\\", "/") + '/example_img_multi/G/06/0'
+    assert [x.replace("\\", "/") for x in imgL3.paths] == [str(tmpdir).replace("\\", "/") + '/example_img_multi/B/03/0', str(tmpdir).replace("\\", "/") + '/example_img_multi/C/02/0', str(tmpdir).replace("\\", "/") + '/example_img_multi/G/06/0']
     assert imgL3.names == ['B03', 'C02', 'G06']
 
 # ome_zarr.Image ----------------------------------------------------
@@ -238,14 +244,15 @@ def test_load_axes_unit(img2d: ome_zarr.Image):
 
     # test loading
     # ... inensity image
-    out_axes_unit_image = img2d._load_axes_unit(img2d.multiscales_image)
+    out_axes_unit_image = img2d._load_axes_unit(img2d.multiscales_image, 
+                                                verbose=True)
     assert out_axes_unit_image == 'micrometer'
     # ... labels
     out_axes_unit_labels = {x: img2d._load_axes_unit(img2d.multiscales_labels[x]) for x in img2d.label_names}
     assert 'organoids' in out_axes_unit_labels
     assert out_axes_unit_labels['organoids'] == 'micrometer'
 
-def test_load_channel_info(img3d: ome_zarr.Image, img2d: ome_zarr.Image):
+def test_load_channel_info(img3d: ome_zarr.Image, img2d: ome_zarr.Image, img4d: ome_zarr.Image):
     """Test `Image._load_channel_info`."""
 
     # input with missing axes
@@ -255,6 +262,7 @@ def test_load_channel_info(img3d: ome_zarr.Image, img2d: ome_zarr.Image):
     # example input
     assert img2d._load_channel_info(img2d.multiscales_image) == 'czyx'
     assert img3d._load_channel_info(img3d.multiscales_image) == 'czyx'
+    assert img4d._load_channel_info(img4d.multiscales_image) == 'tczyx'
     
     # synthetic input
     assert img2d._load_channel_info(
@@ -312,7 +320,7 @@ def test_find_path_of_lowest_level(img2d: ome_zarr.Image):
         img2d._find_path_of_lowest_resolution_level(label_name='error')
     
     # example input
-    assert img2d._find_path_of_lowest_resolution_level() == '2'
+    assert img2d._find_path_of_lowest_resolution_level(verbose=True) == '2'
     assert img2d._find_path_of_lowest_resolution_level(label_name='organoids') == '2'
     
     # synthetic input
@@ -333,7 +341,7 @@ def test_find_path_of_highest_resolution_level(img2d: ome_zarr.Image):
         img2d._find_path_of_highest_resolution_level(label_name='error')
     
     # example input
-    assert img2d._find_path_of_highest_resolution_level() == '0'
+    assert img2d._find_path_of_highest_resolution_level(verbose=True) == '0'
     assert img2d._find_path_of_highest_resolution_level(label_name='organoids') == '0'
 
 def test_digest_pyramid_level_argument(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
@@ -389,17 +397,20 @@ def test_digest_bounding_box(img2d: ome_zarr.Image):
 
     # expected results
     # ... full array
-    assert img2d._digest_bounding_box() == [(0, 0), (270, 320)]
+    assert img2d._digest_bounding_box(verbose=True) == [(0, 0), (270, 320)]
     # ... corners from different inputs
     assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
                                       lower_right_yx=(20, 50),
-                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+                                      coordinate_unit='pixel',
+                                      verbose=True) == [(5, 10), (20, 50)]
     assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
                                       size_yx=(15, 40),
-                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+                                      coordinate_unit='pixel',
+                                      verbose=True) == [(5, 10), (20, 50)]
     assert img2d._digest_bounding_box(size_yx=(15, 40),
                                       lower_right_yx=(20, 50),
-                                      coordinate_unit='pixel') == [(5, 10), (20, 50)]
+                                      coordinate_unit='pixel',
+                                      verbose=True) == [(5, 10), (20, 50)]
     # ... different pyramid levels
     assert img2d._digest_bounding_box(upper_left_yx=(5, 10),
                                       lower_right_yx=(20, 50),
@@ -432,7 +443,7 @@ def test_image_str(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     assert str(img3d) == repr(img3d)
 
 # ... constructor ...................................................
-def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
+def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, img4d: ome_zarr.Image, tmpdir: str):
     """Test `ome_zarr.Image` object constructor."""
 
     # non-conforming input
@@ -459,6 +470,29 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
     img_no_omero = ome_zarr.Image(str(tmpdir) + '/example_img')
     assert img_no_omero.channels == [{'label': 'channel-1', 'color': '00FFFF'}, {'label': 'channel-2', 'color': '00FFFF'}]
     shutil.move(str(tmpdir) + 'zattr.orig', zattr_file)
+    # ... unsupported version
+    zattr_file = str(tmpdir) + '/example_img/.zattrs'
+    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    with open(zattr_file) as f:
+       zattr = json.load(f)
+    zattr['multiscales'][0]['version'] = "0.3"
+    with open(zattr_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.Image(str(tmpdir) + '/example_img')
+    shutil.move(zattr_file + '.orig', zattr_file)
+    # ... missing version
+    zattr_file = str(tmpdir) + '/example_img/.zattrs'
+    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    with open(zattr_file) as f:
+       zattr = json.load(f)
+    del zattr['multiscales'][0]['version']
+    with open(zattr_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    with pytest.warns(UserWarning):
+        img_no_version = ome_zarr.Image(str(tmpdir) + '/example_img')
+    assert img_no_version.ndim == 4
+    shutil.move(zattr_file + '.orig', zattr_file)
     # ... clean up
     shutil.rmtree(str(tmpdir) + '/example_img')
 
@@ -494,10 +528,26 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
     assert isinstance(img3d.channels, list)
     assert all([isinstance(img3d.channels[i], dict) for i in range(img3d.nchannels_image)])
 
+    # 4D image with labels
+    assert isinstance(img4d, ome_zarr.Image)
+    assert img4d.path == 'tests/example_data_5d/tubhiswt4D_sub.zarr'
+    assert img4d.name == 'tubhiswt4D_sub.zarr'
+    assert isinstance(img4d.zarr_group, zarr.Group)
+    assert all([isinstance(x, zarr.Array) for x in img4d.array_dict.values()])
+    assert img4d.ndim == 5
+    assert img4d.label_names == ['embryo']
+    assert img4d.table_names == []
+    assert img4d.axes_unit_image == 'micrometer'
+    assert img4d.channel_info_image == 'tczyx'
+    assert img4d.channel_info_labels == {'embryo': 'tzyx'}
+    assert img4d.nchannels_image == 1
+    assert isinstance(img4d.channels, list)
+    assert all([isinstance(img4d.channels[i], dict) for i in range(img4d.nchannels_image)])
+
 # ... accesssors ....................................................
 def test_get_path(img2d: ome_zarr.Image):
     """Test `get_path()` method of `ome_zarr.Image` object."""
-    assert img2d.get_path() == 'tests/example_data/plate_ones_mip.zarr/B/03/0'
+    assert img2d.get_path().replace("\\", "/") == 'tests/example_data/plate_ones_mip.zarr/B/03/0'
     assert img2d.get_path() == img2d.path
 
 def test_get_channels(img3d: ome_zarr.Image):
@@ -715,7 +765,7 @@ def test_tree(img2d: ome_zarr.Image):
     #res2 = img2d.tree(expand=True, level=2)
     #assert isinstance(res2, zarr.util.TreeViewer)
 
-def test_plot(img2d: ome_zarr.Image, tmpdir: str):
+def test_plot(img2d: ome_zarr.Image, img4d: ome_zarr.Image, tmpdir: str):
     """Test `Image.plot()`."""
 
     matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
@@ -785,7 +835,7 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
             img2d.plot(label_name='organoids',
                        label_value=99)
 
-        # using label_name without matching pyrmaid level
+        # using label_name without matching pyramid level
         # ... copy zarr fileset
         assert tmpdir.check()
         shutil.copytree('tests/example_data/plate_ones_mip.zarr/B/03/0',
@@ -819,6 +869,45 @@ def test_plot(img2d: ome_zarr.Image, tmpdir: str):
         ###       what does pyramid_level_coord refer to?
         ###       solution: remove pyramid_level_coord argument?
         ###       not needed: can use coordinate_unit="micrometer"
+
+        # 4d dataset
+        img4d.plot(label_name='embryo',
+                   pyramid_level=None,
+                   pyramid_level_coord=None,
+                   channels_labels=['channel_0'],
+                   channel_colors=['white'],
+                   channel_ranges=[[0.01, 0.99]],
+                   z_projection_method='maximum',
+                   time_index = 0,
+                   scalebar_micrometer=50,
+                   show_scalebar_label=True)
+
+        # ... try to select multiple timepoints (error)
+        with pytest.raises(Exception) as e_info:
+            img4d.plot(label_name='embryo',
+                       pyramid_level=None,
+                       pyramid_level_coord=None,
+                       channels_labels=['channel_0'],
+                       channel_colors=['white'],
+                       channel_ranges=[[0.01, 0.99]],
+                       z_projection_method='maximum',
+                       time_index = [0, 1],
+                       scalebar_micrometer=50,
+                       show_scalebar_label=True)
+
+        # ... try to select too large timepoint (error)
+        with pytest.raises(Exception) as e_info:
+            img4d.plot(label_name='embryo',
+                       pyramid_level=None,
+                       pyramid_level_coord=None,
+                       channels_labels=['channel_0'],
+                       channel_colors=['white'],
+                       channel_ranges=[[0.01, 0.99]],
+                       z_projection_method='maximum',
+                       time_index = 10,
+                       scalebar_micrometer=50,
+                       show_scalebar_label=True)
+
 
     plt.savefig(tmpdir.join('output.png'))
     assert True # check if the plotting ran through
@@ -938,7 +1027,8 @@ def test_imagelist_plot(imgL2: ome_zarr.ImageList, tmpdir: str):
                    fig_width_inch=6,
                    fig_height_inch=4,
                    fig_dpi=100,
-                   fig_style='brightfield')
+                   fig_style='brightfield',
+                   verbose=True)
 
         # with unknown arguments
         imgL2.plot(label_name = "organoids",

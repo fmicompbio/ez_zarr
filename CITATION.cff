@@ -1,0 +1,50 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Barbiero
+  given-names: Silvia
+  orcid: "https://orcid.org/0000-0001-7177-6947"
+- family-names: Soneson
+  given-names: Charlotte
+  orcid: "https://orcid.org/0000-0003-3833-2169"
+- family-names: Liberali
+  given-names: Prisca
+  orcid: "https://orcid.org/0000-0003-0695-6081"
+- family-names: Stadler
+  given-names: Michael B.
+  orcid: "https://orcid.org/0000-0002-2269-4934"
+contact:
+- family-names: Stadler
+  given-names: Michael B.
+  orcid: "https://orcid.org/0000-0002-2269-4934"
+doi: 10.5281/zenodo.15370320
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Barbiero
+    given-names: Silvia
+    orcid: "https://orcid.org/0000-0001-7177-6947"
+  - family-names: Soneson
+    given-names: Charlotte
+    orcid: "https://orcid.org/0000-0003-3833-2169"
+  - family-names: Liberali
+    given-names: Prisca
+    orcid: "https://orcid.org/0000-0003-0695-6081"
+  - family-names: Stadler
+    given-names: Michael B.
+    orcid: "https://orcid.org/0000-0002-2269-4934"
+  date-published: 2025-05-17
+  doi: 10.21105/joss.07882
+  issn: 2475-9066
+  issue: 109
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 7882
+  title: "ez-zarr: A Python package for easy access and visualisation of
+    OME-Zarr filesets"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.07882"
+  volume: 10
+title: "ez-zarr: A Python package for easy access and visualisation of
+  OME-Zarr filesets"

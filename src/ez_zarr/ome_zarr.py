@@ -61,7 +61,8 @@ def create_name_plate_A01(ri: int, ci: int) -> str:
     """
     return f"{chr(ord('A') + ri - 1)}{ci:02}"
 
-def import_plate(path: str, image_name: str = '0') -> "ImageList":
+def import_plate(path: str, image_name: str = '0',
+                 verbose: bool = False) -> "ImageList":
     """
     Create an ImageList object from a OME-Zarr image set corresponding
     to a plate.
@@ -76,6 +77,8 @@ def import_plate(path: str, image_name: str = '0') -> "ImageList":
 
     Parameters:
         path (str): Path to a folder containing the well images.
+        image_name (str): The name of the image to read for each well. 
+        verbose (bool): Whether to print out information messages.
     
     Returns:
         ImageList object
@@ -130,6 +133,8 @@ def import_plate(path: str, image_name: str = '0') -> "ImageList":
     mx_row = max(layout['row_index'])
     mx_column = max(layout['column_index'])
     nrow, ncol = known_plate_dims[min([i for i in range(len(known_plate_dims)) if known_plate_dims[i][0] >= mx_row and known_plate_dims[i][1] >= mx_column])]
+    if verbose:
+        print(f"Identified plate format: {nrow} x {ncol}")
 
     # create ImageList object
     imgL = ImageList(paths = img_paths, names = well_names,
@@ -146,7 +151,8 @@ class Image:
     # constructor and helper functions ----------------------------------------
     def __init__(self, path: str,
                  name: Optional[str]=None,
-                 skip_checks: Optional[bool]=False) -> None:
+                 skip_checks: Optional[bool]=False,
+                 verbose: bool=False) -> None:
         """
         Initializes an OME-Zarr image from its path, containing a
         single zarr group, possibly with multiple resolution levels,
@@ -155,7 +161,8 @@ class Image:
         Parameters:
             path (str): Path containing the OME-Zarr image.
             name (str, optional): Optional name for the image.
-            skip_checks (bool, optional): If `True`, no checks are performed
+            skip_checks (bool, optional): If `True`, no checks are performed.
+            verbose (bool): Whether to print information messages.
         
         Examples:
             Get an object corresponding to an image.
@@ -171,8 +178,6 @@ class Image:
         else:
             self.name = os.path.basename(self.path)
         self.zarr_group: zarr.Group = zarr.open_group(store=self.path, mode='r')
-        self.array_dict: dict[str, zarr.Array] = {x[0]: x[1] for x in self.zarr_group.arrays()}
-        self.ndim = self.array_dict[list(self.array_dict.keys())[0]].ndim
         self.label_names = []
         if 'labels' in list(self.zarr_group.group_keys()):
             self.label_names = [x for x in self.zarr_group['labels'].group_keys()]
@@ -180,14 +185,25 @@ class Image:
         if 'tables' in list(self.zarr_group.group_keys()):
             self.table_names = [x for x in self.zarr_group['tables'].group_keys()]
 
+        # get version info and check that the version is supported
+        if 'multiscales' not in self.zarr_group.attrs:
+            raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
+        if 'version' in list(self.zarr_group.attrs['multiscales'][0].keys()):
+            omezarr_version = self.zarr_group.attrs['multiscales'][0]['version']
+            if omezarr_version != "0.4":
+                raise ValueError(f"OME-Zarr version {omezarr_version} is not supported, should be 0.4")
+        else:
+            warnings.warn("Could not determine OME-Zarr version")
+
         if not skip_checks:
             # make sure that it does not contain any further groups
             if len([x for x in self.zarr_group.group_keys() if x not in ['labels', 'tables']]) > 0:
                 raise ValueError(f"{self.path} contains further groups")
             
+        self.array_dict: dict[str, zarr.Array] = {x[0]: x[1] for x in self.zarr_group.arrays()}
+        self.ndim = self.array_dict[list(self.array_dict.keys())[0]].ndim
+
         # load info about available scales in image and labels
-        if not 'multiscales' in self.zarr_group.attrs:
-            raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
         # ... load multiscales dictionaries
         self.multiscales_image: dict[str, Any] = self._load_multiscale_info(self.zarr_group, skip_checks)
         self.multiscales_labels: dict[str, dict[str, Any]] = {x: self._load_multiscale_info(self.zarr_group['labels'][x], skip_checks) for x in self.label_names}
@@ -195,8 +211,8 @@ class Image:
         self.pyramid_levels_image: list[str] = Image._extract_paths_by_decreasing_resolution(self.multiscales_image['datasets'])
         self.pyramid_levels_labels: dict[str, list[str]] = {x: Image._extract_paths_by_decreasing_resolution(self.multiscales_labels[x]['datasets']) for x in self.label_names}
         # ... axes units
-        self.axes_unit_image: str = self._load_axes_unit(self.multiscales_image)
-        self.axes_unit_labels: dict[str, str] = {x: self._load_axes_unit(self.multiscales_labels[x]) for x in self.label_names}
+        self.axes_unit_image: str = self._load_axes_unit(self.multiscales_image, verbose, context="intensity image")
+        self.axes_unit_labels: dict[str, str] = {x: self._load_axes_unit(self.multiscales_labels[x], verbose, context=f"label {x}") for x in self.label_names}
 
         # load channel metadata
         # ... label dimensions, e.g. "czyx"
@@ -227,15 +243,22 @@ class Image:
         return info
 
     @staticmethod
-    def _load_axes_unit(multiscale_dict: dict[str, Any]) -> str:
-        supported_units = ['micrometer', 'pixel']
+    def _load_axes_unit(multiscale_dict: dict[str, Any], verbose: bool = False, context: str = "") -> str:
+        supported_units = {'micrometer':'micrometer',
+                           'micron':'micrometer',
+                           'um':'micrometer',
+                           'pixel':'pixel',
+                           'unit':'pixel'}
         unit_set = set([x['unit'] for x in multiscale_dict['axes'] if x['type'] == 'space' and 'unit' in x])
-        if len(unit_set) == 0 or (len(unit_set) == 1 and 'unit' in unit_set):
-            return 'pixel'
+        if len(unit_set) == 0:
+            retval = 'pixel'
         elif len(unit_set) == 1 and list(unit_set)[0] in supported_units:
-            return list(unit_set)[0]
+            retval = supported_units[list(unit_set)[0]]
         else:
             raise ValueError(f"unsupported unit in multiscale_info: {multiscale_dict}")
+        if verbose:
+            print(f"Identified/inferred axes unit ({context}): {retval}")
+        return retval
     
     @staticmethod
     def _load_channel_info(multiscale_dict: dict[str, Any]) -> str:
@@ -272,29 +295,38 @@ class Image:
         datasets_sorted = sorted(datasets, key=cmp_to_key(lambda x, y: Image._compare_multiscale_dicts(x, y)))
         return [str(x['path']) for x in datasets_sorted]
 
-    def _find_path_of_lowest_resolution_level(self, label_name: Optional[str] = None) -> str:
+    def _find_path_of_lowest_resolution_level(self, label_name: Optional[str] = None, 
+                                              verbose: bool = False) -> str:
         if label_name:
             if label_name in self.label_names:
-                return self.pyramid_levels_labels[label_name][-1]
+                plev = self.pyramid_levels_labels[label_name][-1]
             else:
                 raise ValueError(f"Label name '{label_name}' not found in Image object.")
         else:
-            return self.pyramid_levels_image[-1]
+            plev = self.pyramid_levels_image[-1]
+        if verbose:
+            print(f"Returning lowest resolution pyramid level: {plev}")
+        return plev
 
 
-    def _find_path_of_highest_resolution_level(self, label_name: Optional[str] = None) -> str:
+    def _find_path_of_highest_resolution_level(self, label_name: Optional[str] = None,
+                                               verbose: bool = False) -> str:
         if label_name:
             if label_name in self.label_names:
-                return self.pyramid_levels_labels[label_name][0]
+                plev = self.pyramid_levels_labels[label_name][0]
             else:
                 raise ValueError(f"Label name '{label_name}' not found in Image object.")
         else:
-            return self.pyramid_levels_image[0]
+            plev = self.pyramid_levels_image[0]
+        if verbose:
+            print(f"Returning highest resolution pyramid level: {plev}")
+        return plev
 
     def _digest_pyramid_level_argument(self,
                                        pyramid_level=None,
                                        label_name=None,
-                                       default_to='lowest') -> str:
+                                       default_to='lowest',
+                                       verbose: bool = False) -> str:
         """
         [internal] Interpret a `pyramid_level` argument in the context of a given Image object.
 
@@ -308,6 +340,7 @@ class Image:
                 labels, the argument would be set to `nuclei`.
             default_to (str): Defines what pyramid level to return if `pyramid_level`
                 is `None`. Currently supported are `'lowest'` and `'highest'`.
+            verbose (bool): Whether to print out information messages.
 
         Returns:
             Integer index of the pyramid level.
@@ -318,7 +351,7 @@ class Image:
             # no pyramid level given -> pick according to `default_to`
             methods = {'lowest': self._find_path_of_lowest_resolution_level,
                        'highest': self._find_path_of_highest_resolution_level}
-            pyramid_level = methods[default_to](label_name)
+            pyramid_level = methods[default_to](label_name, verbose)
         else:
             # make sure it is a string
             pyramid_level = str(pyramid_level)
@@ -345,7 +378,8 @@ class Image:
                              coordinate_unit: str='micrometer',
                              label_name: Optional[str]=None,
                              pyramid_level: Optional[str]=None,
-                             pyramid_level_coord: Optional[str]=None) -> list[tuple[int, ...]]:
+                             pyramid_level_coord: Optional[str]=None,
+                             verbose: bool=False) -> list[tuple[int, ...]]:
         """
         Solves for the bounding box defined by upper-left, lower-right or size.
 
@@ -378,6 +412,7 @@ class Image:
                 `lower_right_yx` and `size_yx`) refer to if `coordinate_unit="pixel"`
                 (it is ignored otherwise). By default, this is `None`, which will
                 use `pyramid_level`.
+            verbose (bool): Whether to print out information messages.
         
         Returns:
             A list of upper-left and lower-right tuple coordinates for the bounding box: `[(y1, x1), (y2, x2)]`. These coordinates
@@ -389,7 +424,7 @@ class Image:
             >>> img._digest_bounding_box(pyramid_level=0)
         """
         # digest arguments
-        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, label_name)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, label_name, verbose=verbose)
 
         # get image array
         if label_name:
@@ -403,11 +438,17 @@ class Image:
             if size_yx:
                 assert all([x > 0 for x in size_yx]), 'size_yx values need to be positive'
                 if not upper_left_yx:
+                    if verbose:
+                        print("Inferring upper_left_yx")
                     upper_left_yx = tuple(lower_right_yx[i] - size_yx[i] for i in range(2))
                 elif not lower_right_yx:
+                    if verbose:
+                        print("Inferring lower_right_yx")
                     lower_right_yx = tuple(upper_left_yx[i] + size_yx[i] for i in range(2))
             assert all([upper_left_yx[i] < lower_right_yx[i] for i in range(len(upper_left_yx))]), 'upper_left_yx needs to be less than lower_right_yx'
         elif num_unknowns == 3:
+            if verbose:
+                print("Returning the full image")
             upper_left_yx = (0, 0)
             lower_right_yx = (arr.shape[-2], arr.shape[-1])
             coordinate_unit = 'pixel'
@@ -425,11 +466,15 @@ class Image:
                 if pyramid_level_coord is None:
                     pyramid_level_coord = pyramid_level
                 else:
-                    pyramid_level_coord = self._digest_pyramid_level_argument(pyramid_level_coord, label_name)
-                scale_from = self.get_scale(pyramid_level_coord, label_name)
+                    pyramid_level_coord = self._digest_pyramid_level_argument(pyramid_level=pyramid_level_coord, 
+                                                                              label_name=label_name, default_to="lowest",
+                                                                              verbose=verbose)
+                scale_from = self.get_scale(pyramid_level=pyramid_level_coord, label_name=label_name,
+                                            verbose=verbose)
             else:
                 raise ValueError("`coordinate_unit` needs to be 'micrometer' or 'pixel'")
-            scale_to = self.get_scale(pyramid_level, label_name)
+            scale_to = self.get_scale(pyramid_level=pyramid_level, label_name=label_name,
+                                      verbose=verbose)
 
             # convert and round to int
             upper_left_yx = tuple(int(round(x)) for x in convert_coordinates(upper_left_yx, scale_from[-2:], scale_to[-2:]))
@@ -509,7 +554,8 @@ class Image:
     def get_scale(self,
                   pyramid_level: str,
                   label_name: Optional[str]=None,
-                  spatial_axes_only: bool=False) -> list[float]:
+                  spatial_axes_only: bool=False,
+                  verbose: bool=False) -> list[float]:
         """
         Get the scale of a given pyramid level.
 
@@ -520,6 +566,7 @@ class Image:
                 to refer to the intensity image.
             spatial_axes_only (bool): If True, only the scales for spatial
                 dimensions are returned.
+            verbose (bool): Whether to print out information messages.
         
         Returns:
             A list with the axis scales of the given pyramid level.
@@ -530,7 +577,9 @@ class Image:
             >>> scale = img.get_scale('level_0', 'nuclei')
         """
         # digest arguments
-        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, label_name)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level=pyramid_level, 
+                                                            label_name=label_name, default_to="lowest",
+                                                            verbose=verbose)
 
         # extract scale
         if label_name:
@@ -557,7 +606,8 @@ class Image:
                                          label_pyramid_level: str,
                                          extend_pixels: Optional[int]=0,
                                          label_name_output: Optional[str]=None,
-                                         pyramid_level_output: Optional[str]=None) -> Union[tuple[tuple[int, ...], tuple[int, ...]], tuple[None, None]]:
+                                         pyramid_level_output: Optional[str]=None,
+                                         verbose: bool=False) -> Union[tuple[tuple[int, ...], tuple[int, ...]], tuple[None, None]]:
         """
         Given a label name and value, find the corner coordinates of the bounding box.
 
@@ -578,6 +628,7 @@ class Image:
                 returned bounding box coordinates refer to. If `None` (the
                 default), the coordinates refer to the highest resolution pyramid
                 level.
+            verbose (bool): Whether to print out information messages.
         
         Returns:
             A tuple of upper-left and lower-right pixel coordinates for the bounding
@@ -594,11 +645,12 @@ class Image:
         """
         # digest arguments
         assert label_name in self.label_names, f'`label_name` must be in {self.label_names}'
-        label_pyramid_level = self._digest_pyramid_level_argument(label_pyramid_level, label_name)
+        label_pyramid_level = self._digest_pyramid_level_argument(pyramid_level=label_pyramid_level, 
+                                                                  label_name=label_name, verbose=verbose)
         assert isinstance(extend_pixels, int), '`extend_pixels` must be an integer scalar'
         assert isinstance(label_name_output, str) or label_name_output is None
         pyramid_level_output = self._digest_pyramid_level_argument(
-            pyramid_level_output, label_name_output, default_to='highest')
+            pyramid_level_output, label_name_output, default_to='highest', verbose=verbose)
 
         # get label array
         lab_arr = self.get_array_by_coordinate(label_name=label_name,
@@ -618,10 +670,12 @@ class Image:
         # convert to output space
         in_scale = self.get_scale(pyramid_level=label_pyramid_level,
                                   label_name=label_name,
-                                  spatial_axes_only=True)
+                                  spatial_axes_only=True,
+                                  verbose=verbose)
         out_scale = self.get_scale(pyramid_level=pyramid_level_output,
                                    label_name=label_name_output,
-                                   spatial_axes_only=True)
+                                   spatial_axes_only=True,
+                                   verbose=verbose)
         upper_left_out = convert_coordinates(coords_from=upper_left,
                                              scale_from=in_scale,
                                              scale_to=out_scale)
@@ -641,7 +695,8 @@ class Image:
                                 coordinate_unit: str='micrometer',
                                 pyramid_level: Optional[str]=None,
                                 pyramid_level_coord: Optional[str]=None,
-                                as_NumPy: bool=False) -> Union[zarr.Array, np.ndarray]:
+                                as_NumPy: bool=False,
+                                verbose: bool=False) -> Union[zarr.Array, np.ndarray]:
         """
         Extract a (sub)array from an image (intensity image or label) by coordinates.
 
@@ -674,6 +729,7 @@ class Image:
             as_NumPy (bool): If `True`, return the image as a `numpy.ndarray`
                 object (e.g. c,z,y,x). Otherwise, return the (on-disk) `dask`
                 array of the same dimensions.
+            verbose (bool): Whether to print out information messages.
         
         Returns:
             The extracted array, either as an on-disk `zarr.Array`,
@@ -685,7 +741,8 @@ class Image:
             >>> img.get_array_by_coordinate()
         """
         # digest arguments
-        pyramid_level = self._digest_pyramid_level_argument(pyramid_level, label_name)
+        pyramid_level = self._digest_pyramid_level_argument(pyramid_level=pyramid_level, 
+                                                            label_name=label_name, verbose=verbose)
 
         # load image
         if label_name:
@@ -701,7 +758,8 @@ class Image:
             coordinate_unit=coordinate_unit,
             label_name=label_name,
             pyramid_level=pyramid_level,
-            pyramid_level_coord=pyramid_level_coord)
+            pyramid_level_coord=pyramid_level_coord,
+            verbose=verbose)
         
         # subset array if needed
         if upper_left_yx != (0, 0) or lower_right_yx != arr.shape[-2:]:
@@ -721,7 +779,8 @@ class Image:
                                      size_yx: Optional[tuple[int]]=None,
                                      coordinate_unit: str='micrometer',
                                      pyramid_level: Optional[str]=None,
-                                     pyramid_level_coord: Optional[str]=None) -> tuple[np.ndarray]:
+                                     pyramid_level_coord: Optional[str]=None,
+                                     verbose: bool=False) -> tuple[np.ndarray]:
         """
         Extract a matching pair of (sub)arrays (intensity and label) by coordinates.
 
@@ -758,6 +817,7 @@ class Image:
                 intensity image pyramid level to which the coordinates (if any)
                 refer to if `coordinate_unit="pixel"` (it is ignored otherwise).
                 By default, this is `None`, which will use `pyramid_level`.
+            verbose (bool): Whether to print out information messages.
         
         Returns:
             A tuple of length two, with the first element corresponding to
@@ -781,7 +841,7 @@ class Image:
         )
         pyramid_level = self._digest_pyramid_level_argument(
             pyramid_level=pyramid_level,
-            label_name=None
+            label_name=None, verbose=verbose
         )
         if pyramid_level_coord is None:
             pyramid_level_coord = pyramid_level
@@ -790,7 +850,8 @@ class Image:
         img_scale_spatial = self.get_scale(
             pyramid_level=pyramid_level,
             label_name=None,
-            spatial_axes_only=True
+            spatial_axes_only=True,
+            verbose=verbose
         )
 
         # loop over label names
@@ -799,7 +860,7 @@ class Image:
         for lname in label_name:
             # find matching label pyramid level
             lab_scale_spatial_dict = {
-                pl: self.get_scale(pyramid_level=pl, label_name=lname, spatial_axes_only=True) for pl in self.get_pyramid_levels(label_name=lname)
+                pl: self.get_scale(pyramid_level=pl, label_name=lname, spatial_axes_only=True, verbose=verbose) for pl in self.get_pyramid_levels(label_name=lname)
             }
             # ... filter out label scales with higher resolution than the intensity image
             lab_scale_spatial_dict = {pl: lab_scale_spatial for pl, lab_scale_spatial in lab_scale_spatial_dict.items() if all([lab_scale_spatial[i] >= img_scale_spatial[i] for i in range(len(lab_scale_spatial))])}
@@ -818,7 +879,8 @@ class Image:
                 coordinate_unit=coordinate_unit,
                 label_name=None,
                 pyramid_level=pyramid_level,
-                pyramid_level_coord=pyramid_level_coord
+                pyramid_level_coord=pyramid_level_coord,
+                verbose=verbose
             )
 
             # make sure that the dimensions are divisible by
@@ -835,7 +897,8 @@ class Image:
                 coordinate_unit='pixel',
                 label_name=None,
                 pyramid_level=pyramid_level, 
-                as_NumPy=False
+                as_NumPy=False,
+                verbose=verbose
             )
 
             # convert intensity coordiantes to label coordinates
@@ -857,7 +920,8 @@ class Image:
                 size_yx=None,
                 coordinate_unit='pixel',
                 label_name=lname,
-                pyramid_level=nearest_scale_pl
+                pyramid_level=nearest_scale_pl,
+                verbose=verbose
             ))
 
             # resize label if needed (correct non-matching scales or rounding errors)
@@ -867,7 +931,8 @@ class Image:
                     im=lab_arr,
                     output_shape=img_arr.shape[(img_arr.ndim-lab_arr.ndim):],
                     im_type='label',
-                    number_nonspatial_axes=sum([int(s not in ['z','y','x']) for s in self.channel_info_labels[lname]])
+                    number_nonspatial_axes=sum([int(s not in ['z','y','x']) for s in self.channel_info_labels[lname]]),
+                    verbose=verbose
                 )
             
             # store label array in dictionary
@@ -930,6 +995,8 @@ class Image:
              channels_labels: Optional[list[str]]=None,
              scalebar_micrometer: int=0,
              show_scalebar_label: bool=True,
+             time_index: int=0,
+             verbose: bool=False,
              **kwargs: Any) -> None:
         """
         Plot an image.
@@ -977,6 +1044,10 @@ class Image:
             scalebar_micrometer (int): If non-zero, add a scale bar corresponding
                 to `scalebar_micrometer` to the image.
             show_scalebar_label (bool):  If `True`, add micrometer label to scale bar.
+            time_index (int): If the image contains a time axis, this argument
+                determines which time point (provided as the index to retain
+                along the time axis) is plotted. 
+            verbose (bool): Whether to print out information messages.
             **kwargs: Additional arguments for `plotting.plot_image`, for example
                 'channels', 'channel_colors', 'channel_ranges', 'z_projection_method',
                 'show_label_values', 'label_text_colour', 'label_fontsize', etc.
@@ -1003,7 +1074,7 @@ class Image:
         )
         pyramid_level = self._digest_pyramid_level_argument(
             pyramid_level=pyramid_level,
-            label_name=None
+            label_name=None, verbose=verbose
         )
 
         # import optional modules
@@ -1030,7 +1101,8 @@ class Image:
             if upper_left_yx != None or lower_right_yx != None or size_yx != None:
                 warnings.warn("Ignoring provided coordinates since `label_value` was provided.")
             for label_pyramid_level in reversed(self.pyramid_levels_labels[label_name]):
-                curr_array = self.get_array_by_coordinate(label_name=label_name, pyramid_level=label_pyramid_level)
+                curr_array = self.get_array_by_coordinate(label_name=label_name, pyramid_level=label_pyramid_level,
+                                                          verbose=verbose)
                 if da.isin(label_value, curr_array).compute():
                     break
             upper_left_yx, lower_right_yx = self.get_bounding_box_for_label_value(
@@ -1039,7 +1111,8 @@ class Image:
                 label_pyramid_level=label_pyramid_level,
                 extend_pixels=0,
                 label_name_output=None,
-                pyramid_level_output=pyramid_level
+                pyramid_level_output=pyramid_level,
+                verbose=verbose
             )
             upper_left_yx = upper_left_yx[-2:]
             lower_right_yx = lower_right_yx[-2:]
@@ -1054,7 +1127,8 @@ class Image:
         # get image and label arrays
         scale_img_spatial = self.get_scale(
             pyramid_level=pyramid_level,
-            spatial_axes_only=True
+            spatial_axes_only=True,
+            verbose=verbose
         )
         if label_name == None:
             img = self.get_array_by_coordinate(
@@ -1065,7 +1139,8 @@ class Image:
                 coordinate_unit=coordinate_unit,
                 pyramid_level=pyramid_level,
                 pyramid_level_coord=pyramid_level_coord,
-                as_NumPy=True
+                as_NumPy=True,
+                verbose=verbose
             )
             lab = None
         else:
@@ -1076,10 +1151,32 @@ class Image:
                 size_yx=size_yx,
                 coordinate_unit=coordinate_unit,
                 pyramid_level=pyramid_level,
-                pyramid_level_coord=pyramid_level_coord
+                pyramid_level_coord=pyramid_level_coord,
+                verbose=verbose
             )
             lab = lab[label_name] # extract label array from dict
 
+        # if there is a time axis, select a single timepoint and 
+        # remove the time axis for plotting
+        time_dim = [i for i in range(len(self.channel_info_image)) if self.channel_info_image[i] == 't']
+        if len(time_dim) == 1:
+            # make sure that only one timepoint is selected
+            assert type(time_index) is int
+            # select a single timepoint and squeeze time axis
+            index = [slice(None)] * img.ndim
+            index[time_dim[0]] = time_index
+            img = img[tuple(index)]
+        # same for label image
+        if label_name != None:
+            time_dim_lab = [i for i in range(len(self.channel_info_labels[label_name])) if self.channel_info_labels[label_name][i] == 't']
+            if len(time_dim_lab) == 1:
+                # make sure that only one timepoint is selected
+                assert type(time_index) is int
+                # select a single timepoint and squeeze time axis
+                index = [slice(None)] * lab.ndim
+                index[time_dim_lab[0]] = time_index
+                lab = lab[tuple(index)]
+        
         # calculate scalebar length in pixel in x direction
         if scalebar_micrometer != 0:
             kwargs['scalebar_pixel'] = convert_coordinates(
@@ -1097,6 +1194,7 @@ class Image:
         kwargs['im'] = img
         kwargs['msk'] = lab
         kwargs['spacing_yx'] = scale_img_spatial[-2:]
+        kwargs['verbose'] = verbose
         plotting.plot_image(**kwargs)
 
 
@@ -1314,6 +1412,7 @@ class ImageList:
              fig_height_inch: Optional[float]=None,
              fig_dpi: int=200,
              fig_style: str='dark_background',
+             verbose: bool=False,
              **kwargs: Any) -> None:
         """
         Plot the images in the `ImageList`.
@@ -1337,6 +1436,7 @@ class ImageList:
                 `z_projection_method='minimum'` and `fig_style='default'`), and any
                 other styles that can be passed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
+            verbose (bool): Whether to print out information messages.
             **kwargs: Additional arguments for `Image.plot_image`, for example
                 'label_name', 'pyramid_level', 'scalebar_micrometer', 'show_scalebar_label',
                 'channels', 'channel_colors', 'channel_ranges', 'z_projection_method',
@@ -1363,13 +1463,15 @@ class ImageList:
         channel_info = [img.channel_info_image for img in self.images]
         assert all([channel_info[0] == ci for ci in channel_info]), f"Not all images have the same channel info: {', '.join(channel_info)}"
         spatial_dims = [i for i in range(len(channel_info[0])) if channel_info[0][i] in ['y', 'x']]
-        img_dims = [img.get_array_by_coordinate().shape for img in self.images]
+        img_dims = [img.get_array_by_coordinate(verbose=verbose).shape for img in self.images]
         img_dims_spatial = [[d[i] for i in spatial_dims] for d in img_dims]
         max_yx = np.max(np.stack(img_dims_spatial), axis=0)
         kwargs['pad_to_yx'] = max_yx
 
         # adjust parameters for brightfield images
         if fig_style == 'brightfield':
+            if verbose:
+                print("Adjusting parameters for brightfield image")
             kwargs['channels'] = [0]
             kwargs['channel_colors'] = ['white']
             kwargs['z_projection_method'] = 'minimum'

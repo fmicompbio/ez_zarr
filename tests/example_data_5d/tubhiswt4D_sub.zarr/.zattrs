@@ -1,0 +1,97 @@
+{
+    "multiscales": [
+        {
+            "axes": [
+                {
+                    "name": "t",
+                    "type": "time",
+                    "unit": "seconds"
+                },
+                {
+                    "name": "c",
+                    "type": "channel"
+                },
+                {
+                    "name": "z",
+                    "type": "space",
+                    "unit": "micrometer"
+                },
+                {
+                    "name": "y",
+                    "type": "space",
+                    "unit": "micrometer"
+                },
+                {
+                    "name": "x",
+                    "type": "space",
+                    "unit": "micrometer"
+                }
+            ],
+            "datasets": [
+                {
+                    "coordinateTransformations": [
+                        {
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "type": "scale"
+                        }
+                    ],
+                    "path": "0"
+                },
+                {
+                    "coordinateTransformations": [
+                        {
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                2.0,
+                                2.0
+                            ],
+                            "type": "scale"
+                        }
+                    ],
+                    "path": "1"
+                },
+                {
+                    "coordinateTransformations": [
+                        {
+                            "scale": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                4.0,
+                                4.0
+                            ],
+                            "type": "scale"
+                        }
+                    ],
+                    "path": "2"
+                }
+            ],
+            "name": "Tubhiswt-4D",
+            "version": "0.4"
+        }
+    ],
+    "omero": {
+        "channels": [
+            {
+                "active": true,
+                "color": "00FFFF",
+                "label": "channel_0",
+                "wavelength_id": "channel_0",
+                "window": {
+                    "end": 107.0,
+                    "max": 255.0,
+                    "min": 0.0,
+                    "start": 54.0
+                }
+            }
+        ]
+    }
+}

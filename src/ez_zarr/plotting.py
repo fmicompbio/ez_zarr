@@ -139,7 +139,8 @@ def pad_image(im: Union[dask.array.Array, np.ndarray],
 
 def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
                    channel_colors: list[str]=['white'],
-                   channel_ranges: list[list[float]]=[[0.01, 0.99]]) -> np.ndarray:
+                   channel_ranges: list[list[float]]=[[0.01, 0.99]],
+                   verbose: bool=False) -> np.ndarray:
     """
     Convert a (channels, y, x) array to an RGB array of shape (y, x, 3).
     
@@ -156,6 +157,7 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
             values are calculated on the channel non-zero values, otherwise they
             are directly used as intensities. Values outside of this range will
             be clipped.
+        verbose (bool): Whether to print out information messages.
 
     Returns:
         An RGB image of shape (y, x, 3), where the third axis corresponds to
@@ -193,6 +195,8 @@ def convert_to_rgb(im: Union[dask.array.Array, np.ndarray],
                 rng = np.quantile(a=im[i][nonzero], q=channel_ranges[i], overwrite_input=False)
             else:
                 rng = [0.0, 0.0]
+            if verbose:
+                print(f"Interpreting ranges for channel {i} as quantiles, corresponding to absolute intensities {rng[0]} and {rng[1]}")
         else:
             rng = channel_ranges[i]
         ranges_used.append(rng)
@@ -239,7 +243,8 @@ def plot_image(im: np.ndarray,
                fig_width_inch: float=24.0,
                fig_height_inch: float=16.0,
                fig_dpi: int=150,
-               fig_style: str='dark_background'):
+               fig_style: str='dark_background',
+               verbose: bool=False):
         """
         Plot an image array, optionally overlaid with a segmentation mask.
          
@@ -344,6 +349,7 @@ def plot_image(im: np.ndarray,
                 where `max_int` is the maximal value for the dtype of `im`,
                 and any other styles that can be passed to `matplotlib.pyplot.style.context`
                 (default: 'dark_background')
+            verbose (bool): Whether to print out information messages.
 
         Examples:
             Plot the first channel of `img` in gray-scale.
@@ -371,7 +377,7 @@ def plot_image(im: np.ndarray,
             f"but are {len(channels)} and {len(channel_colors)}"
         )
         assert axis_style != 'micrometer' or spacing_yx != None, (
-            f"For `axis_style='micrometer', the parameter `spacing_yx` needs to be provided."
+            "For `axis_style='micrometer', the parameter `spacing_yx` needs to be provided."
         )
         if isinstance(restrict_to_label_values, np.ScalarType):
             restrict_to_label_values = [restrict_to_label_values]
@@ -381,6 +387,8 @@ def plot_image(im: np.ndarray,
 
         # adjust parameters for brightfield images
         if fig_style == 'brightfield':
+            if verbose:
+                print("Adjusting parameters for brightfield image")
             channels = [0]
             channel_colors = ['white']
             pad_value = np.issubdtype(im.dtype, np.integer) and np.iinfo(im.dtype).max or np.finfo(im.dtype).max
@@ -392,6 +400,8 @@ def plot_image(im: np.ndarray,
         # combine z planes if needed
         if ndim == 4:
             # im: (ch,z,y,x) -> (ch,y,x))
+            if verbose:
+                print(f"Applying z-projection ({z_projection_method} method)")
             im = zproject(im=im, method=z_projection_method,
                           axis=1, keepdims=False)
             if not msk is None:
@@ -401,12 +411,16 @@ def plot_image(im: np.ndarray,
 
         # restrict to label values if needed
         if len(restrict_to_label_values) > 0 and not msk is None:
+            if verbose:
+                print("Restricting to provided label values")
             keep_elements = np.isin(msk, restrict_to_label_values)
             im = np.where(keep_elements, im, pad_value)
             msk = np.where(keep_elements, msk, 0)
 
         # pad if necessary
         if any([v > 0 for v in pad_to_yx]) and (im.shape[1] <= pad_to_yx[0] and im.shape[2] <= pad_to_yx[1]):
+            if verbose:
+                print("Padding to requested size")
             im = pad_image(im=im,
                            output_shape=[nch, pad_to_yx[0], pad_to_yx[1]],
                            constant_value=pad_value)
@@ -417,15 +431,21 @@ def plot_image(im: np.ndarray,
         
         # transform image
         if not image_transform is None:
+            if verbose:
+                print("Transforming image values")
             im = image_transform(im)
 
         # convert (ch,y,x) to rgb (y,x,3)
         if len(channels) == 1 and channel_colors[0] in ['viridis', 'plasma', 'inferno',
                                                         'magma', 'cividis']:
+            if verbose:
+                print(f"Using colormap {channel_colors[0]}")
             # map to colormap
             im_rgb = np.squeeze(im[channels], axis=0)
             cmap = channel_colors[0]
         else:
+            if verbose:
+                print("Mapping channel colors to rgb space")
             # map to rgb
             im_rgb = convert_to_rgb(im=im[channels],
                                     channel_colors=channel_colors,
