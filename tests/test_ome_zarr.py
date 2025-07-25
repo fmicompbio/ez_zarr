@@ -139,7 +139,7 @@ def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     assert tmpdir.join('/example_img/.zattrs').check()
     # ... copy original .zattrs
     zattr_file = str(tmpdir) + '/example_img/.zattrs'
-    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    shutil.copyfile(zattr_file, str(tmpdir) + 'zattr.orig')
     # ... remove multiscales attributes from copy
     with open(zattr_file) as f:
        zattr = json.load(f)
@@ -150,13 +150,13 @@ def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     with pytest.raises(Exception) as e_info:
         ome_zarr.Image(str(tmpdir) + '/example_img')
     # ... restore original .zattrs
-    shutil.move(zattr_file + '.orig', zattr_file)
+    shutil.move(str(tmpdir) + 'zattr.orig', zattr_file)
 
     # missing label multiscales attrs
     assert tmpdir.join('/example_img/labels/organoids/.zattrs').check()
     # ... copy original .zattrs
     zattr_file = str(tmpdir) + '/example_img/labels/organoids/.zattrs'
-    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    shutil.copyfile(zattr_file, str(tmpdir) + 'zattr.orig')
     # ... remove multiscales attributes from copy
     with open(zattr_file) as f:
        zattr = json.load(f)
@@ -167,13 +167,13 @@ def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     with pytest.raises(Exception) as e_info:
         ome_zarr.Image(str(tmpdir) + '/example_img')
     # ... restore original .zattrs
-    shutil.move(zattr_file + '.orig', zattr_file)
+    shutil.move(str(tmpdir) + 'zattr.orig', zattr_file)
 
     # multiple multiscales dictionaries
     assert tmpdir.join('/example_img/.zattrs').check()
     # ... copy original .zattrs
     zattr_file = str(tmpdir) + '/example_img/.zattrs'
-    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    shutil.copyfile(zattr_file, str(tmpdir) + 'zattr.orig')
     # ... duplicate multiscales attributes in copy
     with open(zattr_file) as f:
        zattr = json.load(f)
@@ -184,13 +184,13 @@ def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     with pytest.warns(UserWarning):
         ome_zarr.Image(str(tmpdir) + '/example_img')
     # ... restore original .zattrs
-    shutil.move(zattr_file + '.orig', zattr_file)
+    shutil.move(str(tmpdir) + 'zattr.orig', zattr_file)
 
     # missing axes in multiscales attrs
     assert tmpdir.join('/example_img/.zattrs').check()
     # ... copy original .zattrs
     zattr_file = str(tmpdir) + '/example_img/.zattrs'
-    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    shutil.copyfile(zattr_file, str(tmpdir) + 'zattr.orig')
     # ... remove axes multiscales attributes in copy
     with open(zattr_file) as f:
        zattr = json.load(f)
@@ -201,7 +201,7 @@ def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     with pytest.raises(Exception) as e_info:
         ome_zarr.Image(str(tmpdir) + '/example_img')
     # ... restore original .zattrs
-    shutil.move(zattr_file + '.orig', zattr_file)
+    shutil.move(str(tmpdir) + 'zattr.orig', zattr_file)
 
     # test loading
     # ... intensity image
@@ -450,7 +450,7 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
         ome_zarr.Image('tests/example_data/')
     # ... missing omero
     zattr_file = str(tmpdir) + '/example_img/.zattrs'
-    shutil.copyfile(zattr_file, zattr_file + '.orig')
+    shutil.copyfile(zattr_file, str(tmpdir) + 'zattr.orig')
     with open(zattr_file) as f:
        zattr = json.load(f)
     del zattr['omero']
@@ -458,7 +458,7 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, tmpdir: str):
         json.dump(zattr, jsonfile, indent=4)
     img_no_omero = ome_zarr.Image(str(tmpdir) + '/example_img')
     assert img_no_omero.channels == [{'label': 'channel-1', 'color': '00FFFF'}, {'label': 'channel-2', 'color': '00FFFF'}]
-    shutil.move(zattr_file + '.orig', zattr_file)
+    shutil.move(str(tmpdir) + 'zattr.orig', zattr_file)
     # ... clean up
     shutil.rmtree(str(tmpdir) + '/example_img')
 
