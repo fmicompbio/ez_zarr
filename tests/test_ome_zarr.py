@@ -212,7 +212,7 @@ def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     assert isinstance(out_multiscales_image['axes'], list)
     assert isinstance(out_multiscales_image['datasets'], list)
     # ... labels
-    out_multiscales_labels = {x: img2d._load_multiscale_info(img2d.zarr_group.labels[x], False) for x in img2d.label_names}
+    out_multiscales_labels = {x: img2d._load_multiscale_info(img2d.zarr_group["labels"][x], False) for x in img2d.label_names}
     assert 'organoids' in out_multiscales_labels
     assert isinstance(out_multiscales_labels['organoids'], dict)
     assert 'axes' in out_multiscales_labels['organoids']
