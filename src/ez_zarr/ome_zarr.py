@@ -177,7 +177,7 @@ class Image:
             self.name = name
         else:
             self.name = os.path.basename(self.path)
-        self.zarr_group: zarr.Group = zarr.open_group(store=self.path, mode='r')
+        self.zarr_group: zarr.Group = zarr.open(store=self.path, mode='r')
         self.label_names = []
         if 'labels' in list(self.zarr_group.group_keys()):
             self.label_names = [x for x in self.zarr_group['labels'].group_keys()]

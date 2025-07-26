@@ -23,7 +23,7 @@ def main():
             path = os.path.normpath(path)
 
             try:
-                zarr_group = zarr.open_group(store=path, mode='r')
+                zarr_group = zarr.open(store=path, mode='r')
             except Exception as e:
                 print(f"failed to find a zarr group in {path}")
                 sys.exit(1)
