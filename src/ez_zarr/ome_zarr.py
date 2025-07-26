@@ -202,7 +202,7 @@ class Image:
                 omezarr_version = self.zarr_group.attrs['multiscales'][0]['version']
             else:
                 warnings.warn("Could not determine OME-Zarr version")
-        if omezarr_version not in [None, "0.4"]:
+        if omezarr_version not in [None, "0.4", "0.5"]:
             raise ValueError(f"OME-Zarr version {omezarr_version} is not supported, should be 0.4 or 0.5")
 
         if not skip_checks:
