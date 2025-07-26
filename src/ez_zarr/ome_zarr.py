@@ -186,14 +186,24 @@ class Image:
             self.table_names = [x for x in self.zarr_group['tables'].group_keys()]
 
         # get version info and check that the version is supported
-        if 'multiscales' not in self.zarr_group.attrs:
-            raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
-        if 'version' in list(self.zarr_group.attrs['multiscales'][0].keys()):
-            omezarr_version = self.zarr_group.attrs['multiscales'][0]['version']
-            if omezarr_version != "0.4":
-                raise ValueError(f"OME-Zarr version {omezarr_version} is not supported, should be 0.4")
+        omezarr_version = None
+        if 'ome' in self.zarr_group.attrs:
+            # 'ome' was introduced with OME-Zarr v0.5
+            if 'version' in self.zarr_group.attrs['ome']:
+                omezarr_version = self.zarr_group.attrs['ome']['version']
+            else:
+                warnings.warn("Could not determine OME-Zarr version")
+            if 'multiscales' not in self.zarr_group.attrs['ome']:
+                raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
         else:
-            warnings.warn("Could not determine OME-Zarr version")
+            if 'multiscales' not in self.zarr_group.attrs:
+                raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
+            if 'version' in list(self.zarr_group.attrs['multiscales'][0].keys()):
+                omezarr_version = self.zarr_group.attrs['multiscales'][0]['version']
+            else:
+                warnings.warn("Could not determine OME-Zarr version")
+        if omezarr_version not in [None, "0.4"]:
+            raise ValueError(f"OME-Zarr version {omezarr_version} is not supported, should be 0.4 or 0.5")
 
         if not skip_checks:
             # make sure that it does not contain any further groups
@@ -231,11 +241,18 @@ class Image:
     @staticmethod
     def _load_multiscale_info(group: zarr.Group,
                               skip_checks: Optional[bool]=False) -> dict[str, Any]:
-        if 'multiscales' not in group.attrs:
-            raise ValueError(f"no multiscale info found in {group.path}")
-        if len(group.attrs['multiscales']) > 1:
-            warnings.warn(f"{group.path} contains more than one multiscale - using the first one")
-        info = group.attrs['multiscales'][0]
+        if 'ome' in group.attrs:
+            if 'multiscales' not in group.attrs['ome']:
+                raise ValueError(f"no multiscale info found in {group.path}")
+            if len(group.attrs['ome']['multiscales']) > 1:
+                warnings.warn(f"{group.path} contains more than one multiscale - using the first one")
+            info = group.attrs['ome']['multiscales'][0]
+        else:
+            if 'multiscales' not in group.attrs:
+                raise ValueError(f"no multiscale info found in {group.path}")
+            if len(group.attrs['multiscales']) > 1:
+                warnings.warn(f"{group.path} contains more than one multiscale - using the first one")
+            info = group.attrs['multiscales'][0]
         if not skip_checks:
             if 'axes' not in info:
                 raise ValueError(f"no axes info found in 'multiscales' of {group.path}")
