@@ -12,6 +12,7 @@ jobs:
     name: ${{ matrix.config.platform }} py${{ matrix.config.python-version }}
     runs-on: ${{ matrix.config.platform }}
     strategy:
+      fail-fast: false
       matrix:
         config:
         - { platform: 'ubuntu-latest', python-version: '3.11' }
