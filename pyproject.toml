@@ -38,7 +38,7 @@ dependencies = [
     "dask",
     "numpy",
     "pandas",
-    "zarr>=3.0.0",
+    "zarr>=3.0.0a0",
     "matplotlib",
     "scikit-image"
 ]
