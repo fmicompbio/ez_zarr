@@ -1186,14 +1186,23 @@ class Image:
         # same for label image
         if label_name != None:
             time_dim_lab = [i for i in range(len(self.channel_info_labels[label_name])) if self.channel_info_labels[label_name][i] == 't']
-            if len(time_dim_lab) == 1:
-                # make sure that only one timepoint is selected
-                assert type(time_index) is int
-                # select a single timepoint and squeeze time axis
+            # if there is a channel axis in the label image and it has 
+            # length 1, we will collapse it too
+            channel_dim_lab = [i for i in range(len(self.channel_info_labels[label_name])) if self.channel_info_labels[label_name][i] == 'c']
+            if len(time_dim_lab) == 1 or len(channel_dim_lab) == 1:
                 index = [slice(None)] * lab.ndim
-                index[time_dim_lab[0]] = time_index
+                if len(time_dim_lab) == 1:
+                    # make sure that only one timepoint is selected
+                    assert type(time_index) is int
+                    # select a single timepoint and squeeze time axis
+                    index[time_dim_lab[0]] = time_index
+                if len(channel_dim_lab) == 1:
+                    # make sure that there is only one channel
+                    assert lab.shape[channel_dim_lab[0]] == 1
+                    # squeeze the channel dimension
+                    index[channel_dim_lab[0]] = 0
                 lab = lab[tuple(index)]
-        
+                
         # calculate scalebar length in pixel in x direction
         if scalebar_micrometer != 0:
             kwargs['scalebar_pixel'] = convert_coordinates(
