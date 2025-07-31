@@ -33,6 +33,11 @@ def img4d():
     return ome_zarr.Image('tests/example_data_5d/tubhiswt4D_sub.zarr')
 
 @pytest.fixture
+def img3dv3():
+    """A `ome_zarr.Image` object representing a 3D Zarr v3 image"""
+    return ome_zarr.Image('tests/example_data_zarr3/6001240_labels_v0.5.zarr', name="testv3")
+
+@pytest.fixture
 def imgL():
     """A `ome_zarr.ImageList` object with one image"""
     return ome_zarr.ImageList(['tests/example_data/plate_ones_mip.zarr/B/03/0'])
@@ -134,7 +139,7 @@ def test_import_plate(tmpdir: str):
 
 # ome_zarr.Image ----------------------------------------------------
 # ... helper functions ..............................................
-def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
+def test_load_multiscale_info(img2d: ome_zarr.Image, img3dv3: ome_zarr.Image, tmpdir: str):
     """Test `Image._load_multiscale_info`."""
 
     # missing multiscales attributes
@@ -209,6 +214,44 @@ def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     # ... restore original .zattrs
     shutil.move(str(tmpdir) + 'zattr.orig', zattr_file)
 
+    # missing multiscales attributes, Zarr v3
+    # ... copy zarr fileset
+    assert tmpdir.check()
+    shutil.copytree('tests/example_data_zarr3/6001240_labels_v0.5.zarr',
+                    str(tmpdir) + '/example_img_v3')
+    assert tmpdir.join('/example_img_v3/zarr.json').check()
+    # ... copy original zarr.json
+    zjson_file = str(tmpdir) + '/example_img_v3/zarr.json'
+    shutil.copyfile(zjson_file, str(tmpdir) + 'zjson.orig')
+    # ... remove multiscales attributes from copy
+    with open(zjson_file) as f:
+       zattr = json.load(f)
+    del zattr['attributes']['ome']['multiscales']
+    with open(zjson_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    # ... test loading
+    with pytest.raises(Exception) as e_info:
+        ome_zarr.Image(str(tmpdir) + '/example_img_v3')
+    # ... restore original zarr.json
+    shutil.move(str(tmpdir) + 'zjson.orig', zjson_file)
+
+    # multiple multiscales dictionaries, Zarr v3
+    assert tmpdir.join('/example_img_v3/zarr.json').check()
+    # ... copy original zarr.json
+    zjson_file = str(tmpdir) + '/example_img_v3/zarr.json'
+    shutil.copyfile(zjson_file, str(tmpdir) + 'zjson.orig')
+    # ... duplicate multiscales attributes in copy
+    with open(zjson_file) as f:
+       zattr = json.load(f)
+    zattr['attributes']['ome']['multiscales'].append(zattr['attributes']['ome']['multiscales'][0])
+    with open(zjson_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    # ... test loading
+    with pytest.warns(UserWarning):
+        ome_zarr.Image(str(tmpdir) + '/example_img_v3')
+    # ... restore original zarr.json
+    shutil.move(str(tmpdir) + 'zjson.orig', zjson_file)
+
     # test loading
     # ... intensity image
     out_multiscales_image = img2d._load_multiscale_info(img2d.zarr_group, False)
@@ -225,6 +268,22 @@ def test_load_multiscale_info(img2d: ome_zarr.Image, tmpdir: str):
     assert 'datasets' in out_multiscales_labels['organoids']
     assert isinstance(out_multiscales_labels['organoids']['axes'], list)
     assert isinstance(out_multiscales_labels['organoids']['datasets'], list)
+    # ... Zarr v3 intensity image
+    out_multiscales_image = img3dv3._load_multiscale_info(img3dv3.zarr_group, False)
+    assert isinstance(out_multiscales_image, dict)
+    assert 'axes' in out_multiscales_image
+    assert 'datasets' in out_multiscales_image
+    assert isinstance(out_multiscales_image['axes'], list)
+    assert isinstance(out_multiscales_image['datasets'], list)
+    # ... Zarr v3 labels
+    out_multiscales_labels = {x: img3dv3._load_multiscale_info(img3dv3.zarr_group["labels"][x], False) for x in img3dv3.label_names}
+    assert '0' in out_multiscales_labels
+    assert isinstance(out_multiscales_labels['0'], dict)
+    assert 'axes' in out_multiscales_labels['0']
+    assert 'datasets' in out_multiscales_labels['0']
+    assert isinstance(out_multiscales_labels['0']['axes'], list)
+    assert isinstance(out_multiscales_labels['0']['datasets'], list)
+    
 
 def test_load_axes_unit(img2d: ome_zarr.Image):
     """Test `Image._load_axes_unit`."""
@@ -443,7 +502,7 @@ def test_image_str(img2d: ome_zarr.Image, img3d: ome_zarr.Image):
     assert str(img3d) == repr(img3d)
 
 # ... constructor ...................................................
-def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, img4d: ome_zarr.Image, tmpdir: str):
+def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, img4d: ome_zarr.Image, img3dv3: ome_zarr.Image, tmpdir: str):
     """Test `ome_zarr.Image` object constructor."""
 
     # non-conforming input
@@ -496,6 +555,22 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, img4d: ome_za
     # ... clean up
     shutil.rmtree(str(tmpdir) + '/example_img')
 
+    # ... missing version, Zarr v3
+    shutil.copytree('tests/example_data_zarr3/6001240_labels_v0.5.zarr',
+                    str(tmpdir) + '/example_img_v3')
+    zjson_file = str(tmpdir) + '/example_img_v3/zarr.json'
+    shutil.copyfile(zjson_file, str(tmpdir) + 'zjson.orig')
+    with open(zjson_file) as f:
+        zattr = json.load(f)
+    del zattr['attributes']['ome']['version']
+    with open(zjson_file, "w") as jsonfile:
+        json.dump(zattr, jsonfile, indent=4)
+    with pytest.warns(UserWarning):
+        img_no_version = ome_zarr.Image(str(tmpdir) + '/example_img_v3')
+    shutil.move(str(tmpdir) + 'zjson.orig', zjson_file)
+    shutil.rmtree(str(tmpdir) + '/example_img_v3')
+
+
     # 2D image with labels
     assert isinstance(img2d, ome_zarr.Image)
     assert img2d.path == 'tests/example_data/plate_ones_mip.zarr/B/03/0'
@@ -543,6 +618,22 @@ def test_constructor(img2d: ome_zarr.Image, img3d: ome_zarr.Image, img4d: ome_za
     assert img4d.nchannels_image == 1
     assert isinstance(img4d.channels, list)
     assert all([isinstance(img4d.channels[i], dict) for i in range(img4d.nchannels_image)])
+
+    # 3D image with labels, Zarr v3
+    assert isinstance(img3dv3, ome_zarr.Image)
+    assert img3dv3.path == 'tests/example_data_zarr3/6001240_labels_v0.5.zarr'
+    assert img3dv3.name == 'testv3'
+    assert isinstance(img3dv3.zarr_group, zarr.Group)
+    assert all([isinstance(x, zarr.Array) for x in img3dv3.array_dict.values()])
+    assert img3dv3.ndim == 4
+    assert img3dv3.label_names == ['0']
+    assert img3dv3.table_names == []
+    assert img3dv3.axes_unit_image == 'micrometer'
+    assert img3dv3.channel_info_image == 'czyx'
+    assert img3dv3.channel_info_labels == {'0': 'czyx'}
+    assert img3dv3.nchannels_image == 2
+    assert isinstance(img3dv3.channels, list)
+    assert all([isinstance(img3dv3.channels[i], dict) for i in range(img3dv3.nchannels_image)])
 
 # ... accesssors ....................................................
 def test_get_path(img2d: ome_zarr.Image):
@@ -765,7 +856,7 @@ def test_tree(img2d: ome_zarr.Image):
     #res2 = img2d.tree(expand=True, level=2)
     #assert isinstance(res2, zarr.util.TreeViewer)
 
-def test_plot(img2d: ome_zarr.Image, img4d: ome_zarr.Image, tmpdir: str):
+def test_plot(img2d: ome_zarr.Image, img4d: ome_zarr.Image, img3dv3: ome_zarr.Image, tmpdir: str):
     """Test `Image.plot()`."""
 
     matplotlib.use('Agg')  # Use the 'Agg' backend, which doesn't need a display
@@ -881,6 +972,17 @@ def test_plot(img2d: ome_zarr.Image, img4d: ome_zarr.Image, tmpdir: str):
                    time_index = 0,
                    scalebar_micrometer=50,
                    show_scalebar_label=True)
+
+        # v3 dataset
+        img3dv3.plot(label_name='0',
+                     pyramid_level=None,
+                     pyramid_level_coord=None,
+                     channels_labels=['channel-1'],
+                     channel_colors=['white'],
+                     channel_ranges=[[0.01, 0.99]],
+                     z_projection_method='maximum',
+                     scalebar_micrometer=50,
+                     show_scalebar_label=True)
 
         # ... try to select multiple timepoints (error)
         with pytest.raises(Exception) as e_info:

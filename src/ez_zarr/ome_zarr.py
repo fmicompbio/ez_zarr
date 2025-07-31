@@ -193,8 +193,6 @@ class Image:
                 omezarr_version = self.zarr_group.attrs['ome']['version']
             else:
                 warnings.warn("Could not determine OME-Zarr version")
-            if 'multiscales' not in self.zarr_group.attrs['ome']:
-                raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
         else:
             if 'multiscales' not in self.zarr_group.attrs:
                 raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
