@@ -60,7 +60,7 @@ class FractalZarr:
             self.name = name
         else:
             self.name = os.path.basename(self.path)
-        self.__top: zarr.Group = zarr.open_group(store=self.path, mode='r')
+        self.__top: zarr.Group = zarr.open(store=self.path, mode='r')
         if not 'plate' in self.__top.attrs:
             raise ValueError(f"{self.name} does not contain a zarr fileset with a 'plate'")
         self.acquisitions: list = self.__top.attrs['plate']['acquisitions']

@@ -9,7 +9,7 @@ Classes:
 
 __all__ = ['Image', 'ImageList', 'create_name_row_col', 
            'create_name_plate_A01', 'import_plate']
-__version__ = '0.3.8'
+__version__ = '0.4.0'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 
 
@@ -177,23 +177,31 @@ class Image:
             self.name = name
         else:
             self.name = os.path.basename(self.path)
-        self.zarr_group: zarr.Group = zarr.open_group(store=self.path, mode='r')
+        self.zarr_group: zarr.Group = zarr.open(store=self.path, mode='r')
         self.label_names = []
         if 'labels' in list(self.zarr_group.group_keys()):
-            self.label_names = [x for x in self.zarr_group.labels.group_keys()]
+            self.label_names = [x for x in self.zarr_group['labels'].group_keys()]
         self.table_names = []
         if 'tables' in list(self.zarr_group.group_keys()):
-            self.table_names = [x for x in self.zarr_group.tables.group_keys()]
+            self.table_names = [x for x in self.zarr_group['tables'].group_keys()]
 
         # get version info and check that the version is supported
-        if 'multiscales' not in self.zarr_group.attrs:
-            raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
-        if 'version' in list(self.zarr_group.attrs['multiscales'][0].keys()):
-            omezarr_version = self.zarr_group.attrs['multiscales'][0]['version']
-            if omezarr_version != "0.4":
-                raise ValueError(f"OME-Zarr version {omezarr_version} is not supported, should be 0.4")
+        omezarr_version = None
+        if 'ome' in self.zarr_group.attrs:
+            # 'ome' was introduced with OME-Zarr v0.5
+            if 'version' in self.zarr_group.attrs['ome']:
+                omezarr_version = self.zarr_group.attrs['ome']['version']
+            else:
+                warnings.warn("Could not determine OME-Zarr version")
         else:
-            warnings.warn("Could not determine OME-Zarr version")
+            if 'multiscales' not in self.zarr_group.attrs:
+                raise ValueError(f"{self.path} does not contain a 'multiscales' attribute")
+            if 'version' in list(self.zarr_group.attrs['multiscales'][0].keys()):
+                omezarr_version = self.zarr_group.attrs['multiscales'][0]['version']
+            else:
+                warnings.warn("Could not determine OME-Zarr version")
+        if omezarr_version not in [None, "0.4", "0.5"]:
+            raise ValueError(f"OME-Zarr version {omezarr_version} is not supported, should be 0.4 or 0.5")
 
         if not skip_checks:
             # make sure that it does not contain any further groups
@@ -206,7 +214,7 @@ class Image:
         # load info about available scales in image and labels
         # ... load multiscales dictionaries
         self.multiscales_image: dict[str, Any] = self._load_multiscale_info(self.zarr_group, skip_checks)
-        self.multiscales_labels: dict[str, dict[str, Any]] = {x: self._load_multiscale_info(self.zarr_group.labels[x], skip_checks) for x in self.label_names}
+        self.multiscales_labels: dict[str, dict[str, Any]] = {x: self._load_multiscale_info(self.zarr_group['labels'][x], skip_checks) for x in self.label_names}
         # ... extract pyramid levels by decreasing resolution
         self.pyramid_levels_image: list[str] = Image._extract_paths_by_decreasing_resolution(self.multiscales_image['datasets'])
         self.pyramid_levels_labels: dict[str, list[str]] = {x: Image._extract_paths_by_decreasing_resolution(self.multiscales_labels[x]['datasets']) for x in self.label_names}
@@ -231,11 +239,18 @@ class Image:
     @staticmethod
     def _load_multiscale_info(group: zarr.Group,
                               skip_checks: Optional[bool]=False) -> dict[str, Any]:
-        if 'multiscales' not in group.attrs:
-            raise ValueError(f"no multiscale info found in {group.path}")
-        if len(group.attrs['multiscales']) > 1:
-            warnings.warn(f"{group.path} contains more than one multiscale - using the first one")
-        info = group.attrs['multiscales'][0]
+        if 'ome' in group.attrs:
+            if 'multiscales' not in group.attrs['ome']:
+                raise ValueError(f"no multiscale info found in {group.path}")
+            if len(group.attrs['ome']['multiscales']) > 1:
+                warnings.warn(f"{group.path} contains more than one multiscale - using the first one")
+            info = group.attrs['ome']['multiscales'][0]
+        else:
+            if 'multiscales' not in group.attrs:
+                raise ValueError(f"no multiscale info found in {group.path}")
+            if len(group.attrs['multiscales']) > 1:
+                warnings.warn(f"{group.path} contains more than one multiscale - using the first one")
+            info = group.attrs['multiscales'][0]
         if not skip_checks:
             if 'axes' not in info:
                 raise ValueError(f"no axes info found in 'multiscales' of {group.path}")
@@ -1169,14 +1184,23 @@ class Image:
         # same for label image
         if label_name != None:
             time_dim_lab = [i for i in range(len(self.channel_info_labels[label_name])) if self.channel_info_labels[label_name][i] == 't']
-            if len(time_dim_lab) == 1:
-                # make sure that only one timepoint is selected
-                assert type(time_index) is int
-                # select a single timepoint and squeeze time axis
+            # if there is a channel axis in the label image and it has 
+            # length 1, we will collapse it too
+            channel_dim_lab = [i for i in range(len(self.channel_info_labels[label_name])) if self.channel_info_labels[label_name][i] == 'c']
+            if len(time_dim_lab) == 1 or len(channel_dim_lab) == 1:
                 index = [slice(None)] * lab.ndim
-                index[time_dim_lab[0]] = time_index
+                if len(time_dim_lab) == 1:
+                    # make sure that only one timepoint is selected
+                    assert type(time_index) is int
+                    # select a single timepoint and squeeze time axis
+                    index[time_dim_lab[0]] = time_index
+                if len(channel_dim_lab) == 1:
+                    # make sure that there is only one channel
+                    assert lab.shape[channel_dim_lab[0]] == 1
+                    # squeeze the channel dimension
+                    index[channel_dim_lab[0]] = 0
                 lab = lab[tuple(index)]
-        
+                
         # calculate scalebar length in pixel in x direction
         if scalebar_micrometer != 0:
             kwargs['scalebar_pixel'] = convert_coordinates(
