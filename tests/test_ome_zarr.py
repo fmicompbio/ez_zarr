@@ -1109,7 +1109,7 @@ def test_imagelist_plot(imgL2: ome_zarr.ImageList, tmpdir: str):
     """Test `ome_zarr.ImageList.plot`."""
 
     imgL3 = imgL2
-    imgL3.layout['row_index'] = [1, 1]
+    imgL3.layout.loc[:, 'row_index'] = [1, 1]
     imgL3.layout['column_index'] = [1, 1]
     with pytest.raises(Exception) as e_info:
         imgL3.plot()
