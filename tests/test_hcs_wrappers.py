@@ -238,7 +238,7 @@ def test_get_table(plate_2d: hcs_wrappers.FractalZarr):
     assert 'well' in ann.obs
     df2 = plate_2d.get_table('FOV_ROI_table', include_wells=['B03'], as_AnnData=False)
     # make windows paths normal
-    df2['well'] = df2['well'].str.replace("\\", "")
+    df2.loc[:, 'well'] = df2['well'].str.replace("\\", "")
     assert df.equals(df2)
 
 def test_get_image_ROI_3d(plate_3d: hcs_wrappers.FractalZarr):
