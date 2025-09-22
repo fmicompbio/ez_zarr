@@ -403,12 +403,34 @@ img.plot(label_value=877,
          fig_dpi=100)
 ```
 
+For performance reasons, the bounding box for an object given by `label_value`
+is calculated on the lowest-resolution label image by default. This may lead
+to imprecise results, as here where the lower part of object 877 is truncated.
+To improve the precision of the bounding box calculation, you can manually
+select the pyramid level to be used, using the argument `label_pyramid_level`:
+
+```{python}
+img.plot(label_value=877,
+         label_pyramid_level='2',
+         extend_pixels=10,
+         msk_alpha=0.15,
+         show_label_values=True,
+         label_fontsize='xx-large',
+         label_text_colour='black',
+         label_name='nuclei',
+         pyramid_level=0,
+         fig_width_inch=5,
+         fig_height_inch=5,
+         fig_dpi=100)
+```
+
 If you want to restrict the plot to the exact are within that specific
 object (or objects), you can use the `restrict_to_label_values` argument
 and provide a list of values:
 
 ```{python}
 img.plot(label_value=877,
+         label_pyramid_level='2',
          restrict_to_label_values=[877,914],
          extend_pixels=10,
          msk_alpha=0.15,
