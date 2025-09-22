@@ -1,0 +1,1284 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../getting_started_Image/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
+    
+    
+      
+        <title>Working with HCS plates (legacy classes) - ez_zarr</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#using-ez_zarr-to-explore-fractal-outputs" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ez_zarr" class="md-header__button md-logo" aria-label="ez_zarr" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ez_zarr
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Working with HCS plates (legacy classes)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ez_zarr" class="md-nav__button md-logo" aria-label="ez_zarr" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    ez_zarr
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          Documentation
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Documentation
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ome_zarr/" class="md-nav__link">
+        OME-Zarr classes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hcs_wrappers/" class="md-nav__link">
+        Legacy classes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/" class="md-nav__link">
+        Utilities
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plotting/" class="md-nav__link">
+        Plotting
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        Unit tests
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          Getting started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Getting started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting_started_Image/" class="md-nav__link">
+        Working with individual images
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Working with HCS plates (legacy classes)
+      </a>
+      
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="using-ez_zarr-to-explore-fractal-outputs">Using <code>ez_zarr</code> to explore Fractal outputs</h1>
+<p>Silvia Barbiero, Michael Stadler</p>
+<ul>
+<li><a href="#disclaimer">Disclaimer</a></li>
+<li><a href="#goal">Goal</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#quickstart">Quickstart</a><ul>
+<li><a href="#download-example-data">Download example data</a></li>
+<li><a href="#load-packages">Load packages</a></li>
+<li><a href="#open-ome-zarr-file-set">Open OME-Zarr file set</a></li>
+<li><a href="#get-information-from-plate">Get information from <code>plate</code></a></li>
+<li><a href="#extract-a-table-from-the-ome-zarr-fileset">Extract a table from the OME-Zarr
+    fileset</a></li>
+<li><a href="#get-an-overview-of-a-full-well">Get an overview of a full
+    well</a></li>
+<li><a href="#get-salient-regions-at-higher-resolution">Get salient regions at higher
+    resolution</a></li>
+<li><a href="#zoom-in">Zoom in</a></li>
+<li><a href="#coordinate-conversions">Coordinate conversions</a></li>
+<li><a href="#working-with-segmentation-masks">Working with segmentation
+    masks</a></li>
+<li><a href="#calculations-on-the-image-data">Calculations on the image
+    data</a></li>
+</ul>
+</li>
+<li><a href="#session-info">Session info</a></li>
+</ul>
+<h1 id="disclaimer">Disclaimer</h1>
+<p>The <code>hcs_wrappers</code> module described here is only provided for legacy
+reasons and not being further developed. For new projects, we recommend
+to use the <code>ome_zarr</code> module instead (see <a href="https://fmicompbio.github.io/ez_zarr/getting_started_Image/">getting started with
+individual
+images</a>).</p>
+<h1 id="goal">Goal</h1>
+<p>The aim of <code>ez_zarr</code> is to provide easy, high-level access to high
+content screening microscopy data, stored as OME-Zarr filesets according
+to the <a href="https://ngff.openmicroscopy.org/latest/">NGFF</a> specifications
+with additional metadata fields, for example the ones generated by the
+<a href="https://fractal-analytics-platform.github.io/">Fractal</a> platform.</p>
+<p>The goal is that users can write simple scripts working with plates,
+wells and fields of view, without having to understand how these are
+represented within an OME-Zarr fileset.</p>
+<h1 id="installation">Installation</h1>
+<p><code>ez_zarr</code> is hosted on GitHub at
+<a href="https://github.com/fmicompbio/ez_zarr">github.com/fmicompbio/ez_zarr</a>
+and the documentation can be found at
+<a href="https://fmicompbio.github.io/ez_zarr/">fmicompbio.github.io/ez_zarr</a>.</p>
+<p>The release version of <code>ez_zarr</code> can be installed using:</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>ez-zarr
+</code></pre></div>
+<p>The current (development) version of <code>ez_zarr</code> can be installed from
+github.com using:</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>git+ssh://git@github.com/fmicompbio/ez_zarr.git
+</code></pre></div>
+<h1 id="quickstart">Quickstart</h1>
+<p>Note: If you prefer to run these examples interactively, you can also
+download them as an <a href="https://fmicompbio.github.io/ez_zarr/getting_started_hcs_wrappers.ipynb">ipynb
+notebook</a>.</p>
+<p>Here are some examples of how you can use <code>ez_zarr</code>:</p>
+<h2 id="download-example-data">Download example data</h2>
+<p>To run the code below, you will first need to download some Fractal
+output data. You can do this for example by running the following from a
+terminal:</p>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Download small Fractal output from Zenodo</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-o<span class="w"> </span>temp.zip<span class="w"> </span>https://zenodo.org/records/10519143/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Unzip and remove the temporary zip file</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>unzip<span class="w"> </span>temp.zip
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>rm<span class="w"> </span>temp.zip
+</code></pre></div>
+<p>or directly from within a python notebook or session using:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span> <span class="nn">requests</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">import</span> <span class="nn">zipfile</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">import</span> <span class="nn">os</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># for info on data see: https://zenodo.org/records/10257149</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://zenodo.org/records/10519143/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip&#39;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># download</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;temp.zip&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">temp_zip</span><span class="p">:</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="n">temp_zip</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="c1"># unzip to current directory</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="s1">&#39;temp.zip&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zip_ref</span><span class="p">:</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="n">zip_ref</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="c1"># clean up</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;temp.zip&#39;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="load-packages">Load packages</h2>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">ListedColormap</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">color</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="kn">from</span> <span class="nn">ez_zarr</span> <span class="kn">import</span> <span class="n">hcs_wrappers</span><span class="p">,</span> <span class="n">plotting</span>
+</code></pre></div>
+<h2 id="open-ome-zarr-file-set">Open OME-Zarr file set</h2>
+<p>We open a single OME-Zarr directory, typically representing a single
+plate:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">zarr_directory</span> <span class="o">=</span> <span class="s1">&#39;20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr&#39;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">plate</span> <span class="o">=</span> <span class="n">hcs_wrappers</span><span class="o">.</span><span class="n">FractalZarr</span><span class="p">(</span><span class="n">zarr_directory</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;cardio-d14&#39;</span><span class="p">)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">plate</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>FractalZarr cardio-d14
+  path: 20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr
+  n_wells: 1
+  n_channels: 1 (DAPI)
+  n_pyramid_levels: 5
+  pyramid_zyx_scalefactor: {&#39;0&#39;: array([1., 2., 2.])}
+  full_resolution_zyx_spacing (µm): [1.0, 0.1625, 0.1625]
+  segmentations: nuclei, empty
+  tables (measurements): FOV_ROI_table, well_ROI_table, nuclei_ROI_table, nuclei, expected_table_well_ROI_table_False_0_0, expected_table_well_ROI_table_True_0_0, expected_table_FOV_ROI_table_False_0_0, expected_table_FOV_ROI_table_True_0_0, expected_table_well_ROI_table_0_True_0_0, expected_table_masked_nuclei_ROI_table_0_True_0_0, expected_table_masked_nuclei_ROI_table_1_True_0_0
+</code></pre></div>
+<p><code>plate</code> represents a maximum intensity projection of an acquisition with
+1 well and 1 channel.</p>
+<p>There are 5 <code>pyramid_levels</code> available (0 to 4), meaning that in
+addition to the full resolution data (level 0), we have four more levels
+that provide the data in 2-fold lower resolutions (see
+<code>pyramid_zyx_scalefactor</code>), for example for faster plotting.</p>
+<p>This OME-Zarr fileset also contains a segmentation (<code>nuclei</code>), for which
+measurements have been extracted and saved in the table <code>nuclei</code>. In
+addition, there are some further tables, such as <code>FOV_ROI_table</code>, which
+contains the coordinates of the fields of view, or <code>nuclei_ROI_table</code>,
+which contains the bounding box coordinates for the segmented nuclei.</p>
+<h2 id="get-information-from-plate">Get information from <code>plate</code></h2>
+<p>You can obtain information on the content available in the fileset:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># path to the OME-Zarr fileset</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">plate</span><span class="o">.</span><span class="n">get_path</span><span class="p">()</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>&#39;20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr&#39;
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># available channels</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">plate</span><span class="o">.</span><span class="n">get_channels</span><span class="p">()</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[{&#39;color&#39;: &#39;00FFFF&#39;,
+  &#39;label&#39;: &#39;DAPI&#39;,
+  &#39;wavelength_id&#39;: &#39;A01_C01&#39;,
+  &#39;window&#39;: {&#39;end&#39;: 800, &#39;max&#39;: 65535, &#39;min&#39;: 0, &#39;start&#39;: 110}}]
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># available wells</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">plate</span><span class="o">.</span><span class="n">get_wells</span><span class="p">()</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">plate</span><span class="o">.</span><span class="n">get_wells</span><span class="p">(</span><span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[&#39;B03&#39;]
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># available labels</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">plate</span><span class="o">.</span><span class="n">get_label_names</span><span class="p">()</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[&#39;nuclei&#39;, &#39;empty&#39;]
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># available tables</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">plate</span><span class="o">.</span><span class="n">get_table_names</span><span class="p">()</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[&#39;FOV_ROI_table&#39;,
+ &#39;well_ROI_table&#39;,
+ &#39;nuclei_ROI_table&#39;,
+ &#39;nuclei&#39;,
+ &#39;expected_table_well_ROI_table_False_0_0&#39;,
+ &#39;expected_table_well_ROI_table_True_0_0&#39;,
+ &#39;expected_table_FOV_ROI_table_False_0_0&#39;,
+ &#39;expected_table_FOV_ROI_table_True_0_0&#39;,
+ &#39;expected_table_well_ROI_table_0_True_0_0&#39;,
+ &#39;expected_table_masked_nuclei_ROI_table_0_True_0_0&#39;,
+ &#39;expected_table_masked_nuclei_ROI_table_1_True_0_0&#39;]
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># zyx pixel spacing in micrometers for pyramid levels</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1"># ... for images</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">plate</span><span class="o">.</span><span class="n">level_zyx_spacing_images</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>{&#39;0&#39;: [[1.0, 0.1625, 0.1625],
+  [1.0, 0.325, 0.325],
+  [1.0, 0.65, 0.65],
+  [1.0, 1.3, 1.3],
+  [1.0, 2.6, 2.6]]}
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># ... for labels</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">plate</span><span class="o">.</span><span class="n">level_zyx_spacing_labels</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>{&#39;nuclei&#39;: [[1.0, 0.65, 0.65],
+  [1.0, 1.3, 1.3],
+  [1.0, 2.6, 2.6],
+  [1.0, 5.2, 5.2],
+  [1.0, 10.4, 10.4]],
+ &#39;empty&#39;: [[1.0, 0.65, 0.65],
+  [1.0, 1.3, 1.3],
+  [1.0, 2.6, 2.6],
+  [1.0, 5.2, 5.2],
+  [1.0, 10.4, 10.4]]}
+</code></pre></div>
+<h2 id="extract-a-table-from-the-ome-zarr-fileset">Extract a table from the OME-Zarr fileset</h2>
+<p>The tables are stored within the fileset as described in the <a href="https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/">Fractal
+documentation</a>.</p>
+<p>As mentioned the goal of <code>ez_zarr</code> is to abstract the internal structure
+and make it simple to obtain these tables, if necessary accumulated over
+many wells, as a <code>pandas.DataFrame</code> :</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">df</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;FOV_ROI_table&#39;</span><span class="p">)</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">df</span>
+</code></pre></div>
+<table>
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 4%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 8%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">FieldIndex</th>
+<th style="text-align: left;">well</th>
+<th style="text-align: right;">x_micrometer</th>
+<th style="text-align: right;">y_micrometer</th>
+<th style="text-align: right;">z_micrometer</th>
+<th style="text-align: right;">len_x_micrometer</th>
+<th style="text-align: right;">len_y_micrometer</th>
+<th style="text-align: right;">len_z_micrometer</th>
+<th style="text-align: right;">x_micrometer_original</th>
+<th style="text-align: right;">y_micrometer_original</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">FOV_1</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">416</td>
+<td style="text-align: right;">351</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-1448.3</td>
+<td style="text-align: right;">-1517.7</td>
+</tr>
+<tr>
+<td style="text-align: left;">FOV_2</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">416</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">416</td>
+<td style="text-align: right;">351</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-1032.3</td>
+<td style="text-align: right;">-1517.7</td>
+</tr>
+</tbody>
+</table>
+
+<p>or <code>anndata.AnnData</code> object:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">ann</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;FOV_ROI_table&#39;</span><span class="p">,</span> <span class="n">as_AnnData</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">ann</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>AnnData object with n_obs × n_vars = 2 × 8
+    obs: &#39;well&#39;
+</code></pre></div>
+<h2 id="get-an-overview-of-a-full-well">Get an overview of a full well</h2>
+<p><code>get_image_ROI()</code> extracts a rectangular region of interest (ROI) from a
+well image by coordinates. If no coordinates or other arguments are
+given, it returns the whole well at the lowest available resolution:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">my_well</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_wells</span><span class="p">(</span><span class="n">simplify</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">my_well</span><span class="p">)</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">img</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_image_ROI</span><span class="p">()</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="c1"># (ch, z, y, x)</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>B03
+(1, 1, 135, 320)
+</code></pre></div>
+<p>Such an image array can be easily plotted using
+<code>matplotlib.pyplot.imshow</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="s1">&#39;dark_background&#39;</span><span class="p">):</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">fig</span><span class="o">.</span><span class="n">set_dpi</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">my_well</span><span class="p">)</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-16-output-1.png" /></p>
+<p>With <code>plot_well()</code>, <code>ez_zarr</code> provides a convenient function for this
+use case that automatically extracts the well image and plots it.
+Because it has access to the image metadata, it can also add for example
+a scale bar:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">plate</span><span class="o">.</span><span class="n">plot_well</span><span class="p">(</span><span class="n">well</span><span class="o">=</span><span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>                <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>                <span class="n">channel_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;white&#39;</span><span class="p">],</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>                <span class="n">channel_ranges</span><span class="o">=</span><span class="p">[[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">600</span><span class="p">]],</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>                <span class="n">title</span><span class="o">=</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>                <span class="n">scalebar_micrometer</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>                <span class="n">scalebar_color</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">,</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>                <span class="n">scalebar_position</span><span class="o">=</span><span class="s1">&#39;topleft&#39;</span><span class="p">,</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>                <span class="n">scalebar_label</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>                <span class="n">fig_width_inch</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>                <span class="n">fig_height_inch</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>                <span class="n">fig_dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-17-output-1.png" /></p>
+<p><code>plot_well()</code> and also <code>plot_plate()</code> use internally
+<code>ez_zarr.plotting.plot_image()</code> which is a convenient wrapper around
+<code>matplotlib.pyplot.imshow</code>. <code>plot_image()</code> can also be used directly if
+you want to work with image arrays (for examples, see section “Working
+with segmentation masks” below).</p>
+<h2 id="get-salient-regions-at-higher-resolution">Get salient regions at higher resolution</h2>
+<p><code>get_image_grid_ROIs()</code> allows you to split the well image into a
+rectangular grid of <code>num_x</code>-by-<code>num_y</code> regions, and automatically select
+the <code>num_select</code> top regions based on a given property
+(<code>sample_method</code>).</p>
+<p>Here, we pick three regions with the highest signal in channel zero
+(DAPI):</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">coord_list</span><span class="p">,</span> <span class="n">img_list</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_image_grid_ROIs</span><span class="p">(</span><span class="n">well</span> <span class="o">=</span> <span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>                                                 <span class="n">pyramid_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>                                                 <span class="n">num_x</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">num_y</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">num_select</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>                                                 <span class="n">sample_method</span><span class="o">=</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>                                                 <span class="n">channel</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">coord_list</span><span class="p">)</span> <span class="c1"># list of (y_start, y_end, x_start, x_end)</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">img_list</span><span class="p">))</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="s1">&#39;dark_background&#39;</span><span class="p">):</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>    <span class="n">fig</span><span class="o">.</span><span class="n">set_dpi</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">img_list</span><span class="p">)):</span>
+<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a>        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a>        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a>        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">my_well</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">coord_list</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>[(216, 432, 768, 1024), (432, 648, 2048, 2304), (432, 648, 768, 1024)]
+3
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-18-output-2.png" /></p>
+<h2 id="zoom-in">Zoom in</h2>
+<p>Alternatively, we can zoom in by coordinates:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">img</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_image_ROI</span><span class="p">(</span><span class="n">well</span><span class="o">=</span><span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>                          <span class="n">upper_left_yx</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>                          <span class="n">lower_right_yx</span><span class="o">=</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">90</span><span class="p">))</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="s1">&#39;dark_background&#39;</span><span class="p">):</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>    <span class="n">fig</span><span class="o">.</span><span class="n">set_dpi</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; B03&#39;</span><span class="p">)</span>
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>(1, 1, 71, 51)
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-19-output-2.png" /></p>
+<p>So far, we have been automatically using the lowest resolution (highest)
+pyramid level version of the data, and the pixel coordinates above refer
+to that space.</p>
+<p>If we want to get the same image region at a higher resolution (for
+example <code>pyramid_level=1</code>), we need to adjust these coordinates. For
+this, we have two options:</p>
+<ul>
+<li>Convert the coordinates manually using the
+    <code>convert_pixel_to_pixel()</code> function. We then use these new
+    coordinates with <code>get_image_ROI()</code> to extract the same region from
+    the higher resolution pyramid level:</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># convert coordinates manually from lowest-resolution (None, here: 4)</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="c1">#   to a higher resolution (1) pyramid level</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="c1"># remark: coordinates are (z,y,x)</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="n">new_upper_left</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">convert_pixel_to_pixel</span><span class="p">(</span><span class="n">zyx</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>                                              <span class="n">pyramid_level_from</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>                                              <span class="n">pyramid_level_to</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="n">new_lower_right</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">convert_pixel_to_pixel</span><span class="p">(</span><span class="n">zyx</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>                                               <span class="n">pyramid_level_from</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>                                               <span class="n">pyramid_level_to</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>
+<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="c1"># extract image</span>
+<a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="n">img</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_image_ROI</span><span class="p">(</span><span class="n">well</span><span class="o">=</span><span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>                          <span class="n">upper_left_yx</span><span class="o">=</span><span class="n">new_upper_left</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+<a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a>                          <span class="n">lower_right_yx</span><span class="o">=</span><span class="n">new_lower_right</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+<a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a>                          <span class="n">pyramid_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a>
+<a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a><span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">context</span><span class="p">(</span><span class="s1">&#39;dark_background&#39;</span><span class="p">):</span>
+<a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a>    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<a id="__codelineno-20-19" name="__codelineno-20-19" href="#__codelineno-20-19"></a>    <span class="n">fig</span><span class="o">.</span><span class="n">set_dpi</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-20-20" name="__codelineno-20-20" href="#__codelineno-20-20"></a>
+<a id="__codelineno-20-21" name="__codelineno-20-21" href="#__codelineno-20-21"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+<a id="__codelineno-20-22" name="__codelineno-20-22" href="#__codelineno-20-22"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">my_well</span><span class="p">)</span>
+<a id="__codelineno-20-23" name="__codelineno-20-23" href="#__codelineno-20-23"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<a id="__codelineno-20-24" name="__codelineno-20-24" href="#__codelineno-20-24"></a>    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-20-output-1.png" /></p>
+<ul>
+<li>Convert the coordinates automatically inside <code>plot_well()</code>. The
+    function <code>plot_well()</code> is flexible and can also plot just a
+    sub-region of a well, defined by coordinates. The parameter
+    <code>pyramid_level_coord</code> can be used to define the reference pyramid
+    level that these coordinates refer to. This can be a different
+    pyramid level than the one from which the image is extracted
+    (defined by <code>pyramid_level</code>):</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">plate</span><span class="o">.</span><span class="n">plot_well</span><span class="p">(</span><span class="n">well</span><span class="o">=</span><span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>                <span class="n">pyramid_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>       <span class="c1"># extract image from this level</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>                <span class="n">pyramid_level_coord</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="c1"># coordinates refer to this level</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>                <span class="n">upper_left_yx</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="mi">40</span><span class="p">),</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>                <span class="n">lower_right_yx</span><span class="o">=</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span><span class="mi">90</span><span class="p">),</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>                <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>                <span class="n">channel_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;white&#39;</span><span class="p">],</span>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>                <span class="n">channel_ranges</span><span class="o">=</span><span class="p">[[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">600</span><span class="p">]],</span>
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>                <span class="n">title</span><span class="o">=</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>                <span class="n">scalebar_micrometer</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>                <span class="n">scalebar_color</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">,</span>
+<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a>                <span class="n">scalebar_position</span><span class="o">=</span><span class="s1">&#39;bottomright&#39;</span><span class="p">,</span>
+<a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>                <span class="n">scalebar_label</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a>                <span class="n">fig_width_inch</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a>                <span class="n">fig_height_inch</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a>                <span class="n">fig_dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-21-output-1.png" /></p>
+<h2 id="coordinate-conversions">Coordinate conversions</h2>
+<p>As mentioned the pixel coordinates depend on the <code>pyramid_level</code>. The
+image metadata makes it easy to convert between pixel coordinates and
+micrometer coordinates, or pixel coordinates referring to different
+pyramid levels:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">zyx</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span> <span class="c1"># highest pyramid level (4)</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;starting coordinates (pyramid_level=4): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">zyx</span><span class="p">))</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># convert from pixel to micrometers</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">zyx_um</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">convert_pixel_to_micrometer</span><span class="p">(</span><span class="n">zyx</span><span class="p">,</span> <span class="n">pyramid_level</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;in micrometer: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">zyx_um</span><span class="p">))</span>
+<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>
+<a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="c1"># convert from micrometers to pixels</span>
+<a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="n">zyx_px</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">convert_micrometer_to_pixel</span><span class="p">(</span><span class="n">zyx_um</span><span class="p">,</span> <span class="n">pyramid_level</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;back in pixel: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">zyx_px</span><span class="p">))</span>
+<a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>
+<a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="c1"># convert pixels between pyramid levels</span>
+<a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a><span class="n">zyx_px_0</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">convert_pixel_to_pixel</span><span class="p">(</span><span class="n">zyx_px</span><span class="p">,</span> <span class="n">pyramid_level_from</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">pyramid_level_to</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;in pixel (pyramid_level=0): &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">zyx_px_0</span><span class="p">))</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>starting coordinates (pyramid_level=4): (1, 230, 180)
+in micrometer: (1.0, 598.0, 468.0)
+back in pixel: (1, 230, 180)
+in pixel (pyramid_level=0): (1, 3680, 2880)
+</code></pre></div>
+<p>These functions are also used by <code>plot_well()</code> internally to add a scale
+bar to the image plot, as we have seen above.</p>
+<h2 id="working-with-segmentation-masks">Working with segmentation masks</h2>
+<p>When segmentation masks (labels) are available, we can also extract
+them. For example, we can plot the labels with transparency on top of
+the image:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># select which object to plot</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;nuclei&#39;</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="n">img_pl</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># image pyramid level</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="c1"># find corresponding mask pyramid level</span>
+<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="n">img_name</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">image_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="n">pl_match</span> <span class="o">=</span> <span class="p">[</span><span class="n">plate</span><span class="o">.</span><span class="n">level_zyx_spacing_images</span><span class="p">[</span><span class="n">img_name</span><span class="p">][</span><span class="n">img_pl</span><span class="p">]</span> <span class="o">==</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">plate</span><span class="o">.</span><span class="n">level_zyx_spacing_labels</span><span class="p">[</span><span class="n">label</span><span class="p">]]</span>
+<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">pl_match</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a><span class="n">msk_pl</span> <span class="o">=</span> <span class="n">pl_match</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>
+<a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="c1"># load image and corresponding mask</span>
+<a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a><span class="n">img</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_image_ROI</span><span class="p">(</span><span class="n">well</span><span class="o">=</span><span class="n">my_well</span><span class="p">,</span> <span class="n">pyramid_level</span><span class="o">=</span><span class="n">img_pl</span><span class="p">,</span>
+<a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>                          <span class="n">upper_left_yx</span><span class="o">=</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">160</span><span class="p">),</span> <span class="n">lower_right_yx</span><span class="o">=</span><span class="p">(</span><span class="mi">480</span><span class="p">,</span> <span class="mi">360</span><span class="p">))</span>
+<a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="n">msk</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_label_ROI</span><span class="p">(</span><span class="n">label_name</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">well</span><span class="o">=</span><span class="n">my_well</span><span class="p">,</span> <span class="n">pyramid_level</span><span class="o">=</span><span class="n">msk_pl</span><span class="p">,</span>
+<a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>                          <span class="n">upper_left_yx</span><span class="o">=</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">160</span><span class="p">),</span> <span class="n">lower_right_yx</span><span class="o">=</span><span class="p">(</span><span class="mi">480</span><span class="p">,</span> <span class="mi">360</span><span class="p">))</span>
+<a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="k">assert</span> <span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">msk</span><span class="o">.</span><span class="n">shape</span>
+<a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a>
+<a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a><span class="c1"># plot image and mask</span>
+<a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a><span class="n">plotting</span><span class="o">.</span><span class="n">plot_image</span><span class="p">(</span><span class="n">im</span><span class="o">=</span><span class="n">img</span><span class="p">,</span> <span class="n">msk</span><span class="o">=</span><span class="n">msk</span><span class="p">,</span> <span class="n">msk_alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+<a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a>                    <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">channel_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;white&#39;</span><span class="p">],</span> <span class="n">channel_ranges</span><span class="o">=</span><span class="p">[[</span><span class="mi">100</span><span class="p">,</span><span class="mi">600</span><span class="p">]],</span>
+<a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a>                    <span class="n">fig_width_inch</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">fig_height_inch</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">fig_dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-23-output-1.png" /></p>
+<p>Using the tables, we can get the bounding box coordinates in micrometers
+from <code>nuclei_ROI_table</code> (here just showing the rows 100 to 110):</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">nucl</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="s1">&#39;nuclei_ROI_table&#39;</span><span class="p">)</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">nucl</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">100</span><span class="p">:</span><span class="mi">111</span><span class="p">]</span>
+</code></pre></div>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 3%" />
+<col style="width: 6%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: right;"></th>
+<th style="text-align: left;">well</th>
+<th style="text-align: right;">x_micrometer</th>
+<th style="text-align: right;">y_micrometer</th>
+<th style="text-align: right;">z_micrometer</th>
+<th style="text-align: right;">len_x_micrometer</th>
+<th style="text-align: right;">len_y_micrometer</th>
+<th style="text-align: right;">len_z_micrometer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">105.95</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">8.45</td>
+<td style="text-align: right;">5.2</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">121.55</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">11.05</td>
+<td style="text-align: right;">7.15</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">141.7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">13.65</td>
+<td style="text-align: right;">5.2</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">180.7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">196.95</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">7.15</td>
+<td style="text-align: right;">1.3</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">209.3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">9.75</td>
+<td style="text-align: right;">3.9</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">230.75</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">11.7</td>
+<td style="text-align: right;">11.7</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">242.45</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">9.75</td>
+<td style="text-align: right;">15.6</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">276.25</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">16.9</td>
+<td style="text-align: right;">9.1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: left;">B03</td>
+<td style="text-align: right;">300.95</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">12.35</td>
+<td style="text-align: right;">4.55</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+
+<p>We can plot the image region corresponding to a single segmented object,
+for example the nucleus at index 106:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># select which object to plot</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="n">idx</span> <span class="o">=</span> <span class="mi">106</span> <span class="c1"># index of the object in `nucl`</span>
+<a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
+<a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="n">img_nucl</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_image_table_idx</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;nuclei_ROI_table&#39;</span><span class="p">,</span>
+<a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>                                     <span class="n">table_idx</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span>
+<a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>                                     <span class="n">well</span><span class="o">=</span><span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a>                                     <span class="n">pyramid_level</span><span class="o">=</span><span class="n">img_pl</span><span class="p">,</span>
+<a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>                                     <span class="n">as_NumPy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="n">msk_nucl</span> <span class="o">=</span> <span class="n">plate</span><span class="o">.</span><span class="n">get_label_table_idx</span><span class="p">(</span><span class="n">label_name</span><span class="o">=</span><span class="s1">&#39;nuclei&#39;</span><span class="p">,</span>
+<a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a>                                     <span class="n">table_name</span><span class="o">=</span><span class="s1">&#39;nuclei_ROI_table&#39;</span><span class="p">,</span>
+<a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a>                                     <span class="n">table_idx</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span>
+<a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a>                                     <span class="n">well</span><span class="o">=</span><span class="n">my_well</span><span class="p">,</span>
+<a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a>                                     <span class="n">pyramid_level</span><span class="o">=</span><span class="n">msk_pl</span><span class="p">,</span>
+<a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a>                                     <span class="n">as_NumPy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a><span class="k">assert</span> <span class="n">img_nucl</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="n">msk_nucl</span><span class="o">.</span><span class="n">shape</span>
+<a id="__codelineno-25-16" name="__codelineno-25-16" href="#__codelineno-25-16"></a>
+<a id="__codelineno-25-17" name="__codelineno-25-17" href="#__codelineno-25-17"></a><span class="c1"># plot </span>
+<a id="__codelineno-25-18" name="__codelineno-25-18" href="#__codelineno-25-18"></a><span class="n">plotting</span><span class="o">.</span><span class="n">plot_image</span><span class="p">(</span><span class="n">im</span><span class="o">=</span><span class="n">img_nucl</span><span class="p">,</span> <span class="n">msk</span><span class="o">=</span><span class="n">msk_nucl</span><span class="p">,</span> <span class="n">msk_alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+<a id="__codelineno-25-19" name="__codelineno-25-19" href="#__codelineno-25-19"></a>                    <span class="n">channels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">channel_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;white&#39;</span><span class="p">],</span> <span class="n">channel_ranges</span><span class="o">=</span><span class="p">[[</span><span class="mi">100</span><span class="p">,</span><span class="mi">600</span><span class="p">]],</span>
+<a id="__codelineno-25-20" name="__codelineno-25-20" href="#__codelineno-25-20"></a>                    <span class="n">fig_width_inch</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">fig_height_inch</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">fig_dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-26-output-1.png" /></p>
+<h2 id="calculations-on-the-image-data">Calculations on the image data</h2>
+<p>To save memory, images are stored on disk and only loaded when needed
+(for implementation details see the <a href="https://docs.dask.org/en/stable/array.html"><code>dask</code> Array
+documentation</a>).</p>
+<p>This can be demonstrated by <code>type(img)</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="nb">type</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="c1"># note that the image is an &#39;on-disk&#39; array</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>dask.array.core.Array
+</code></pre></div>
+<p>To force loading of the data into memory, you can call <code>.compute()</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="nb">type</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span> <span class="c1"># .compute() triggers loading it into memory</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>numpy.ndarray
+</code></pre></div>
+<p>In general, you can use <code>dask</code> arrays like <code>numpy</code> arrays. For example,
+we can threshold the image:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># threshold</span>
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="n">img_mask</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">300</span>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="c1"># ... and compute to numpy array</span>
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="n">img_mask</span> <span class="o">=</span> <span class="n">img_mask</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>
+<a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="c1"># plot </span>
+<a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="n">plotting</span><span class="o">.</span><span class="n">plot_image</span><span class="p">(</span><span class="n">im</span><span class="o">=</span><span class="n">img</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">msk</span><span class="o">=</span><span class="n">img_mask</span><span class="p">,</span> <span class="n">msk_alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>                    <span class="n">fig_width_inch</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">fig_height_inch</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">fig_dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="" src="../getting_started_hcs_wrappers_files/figure-markdown_strict/cell-29-output-1.png" /></p>
+<p>This is of course not a recommended way to segment this image, but
+rather meant to demonstrate that the <code>dask</code> arrays can be used just like
+<code>numpy</code> arrays.</p>
+<h1 id="session-info">Session info</h1>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="kn">import</span> <span class="nn">session_info</span>
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="n">session_info</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code>/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/session_info/main.py:213: UserWarning: The &#39;__version__&#39; attribute is deprecated and will be removed in MarkupSafe 3.1. Use feature detection, or `importlib.metadata.version(&quot;markupsafe&quot;)`, instead.
+  mod_version = _find_version(mod.__version__)
+</code></pre></div>
+<details>
+<summary>Click to view session information</summary>
+<pre>
+-----
+anndata             0.12.2
+dask                2025.9.1
+ez_zarr             0.4.2
+matplotlib          3.8.2
+numpy               1.26.4
+pandas              2.3.2
+requests            2.32.5
+session_info        1.0.0
+skimage             0.22.0
+-----
+</pre>
+<details>
+<summary>Click to view modules imported as dependencies</summary>
+<pre>
+PIL                         11.3.0
+anyio                       NA
+arrow                       1.3.0
+asttokens                   NA
+attr                        25.3.0
+attrs                       25.3.0
+babel                       2.17.0
+certifi                     2025.08.03
+charset_normalizer          3.4.3
+cloudpickle                 3.1.1
+comm                        0.2.3
+crc32c                      NA
+cycler                      0.12.1
+cython_runtime              NA
+dateutil                    2.9.0.post0
+debugpy                     1.8.17
+decorator                   5.2.1
+defusedxml                  0.7.1
+donfig                      0.8.1.post1
+executing                   2.2.1
+fastjsonschema              NA
+fqdn                        NA
+fsspec                      2025.9.0
+h5py                        3.14.0
+idna                        3.10
+importlib_metadata          NA
+ipykernel                   6.30.1
+isoduration                 NA
+jedi                        0.19.2
+jinja2                      3.1.6
+json5                       0.12.1
+jsonpointer                 3.0.0
+jsonschema                  4.25.1
+jsonschema_specifications   NA
+jupyter_events              0.12.0
+jupyter_server              2.17.0
+jupyterlab_server           2.27.3
+kiwisolver                  1.4.9
+lark                        1.2.2
+lazy_loader                 0.4
+legacy_api_wrap             NA
+markupsafe                  3.0.2
+matplotlib_inline           0.1.7
+mpl_toolkits                NA
+natsort                     8.4.0
+nbformat                    5.10.4
+numcodecs                   0.16.3
+overrides                   NA
+packaging                   25.0
+parso                       0.8.5
+platformdirs                4.4.0
+prometheus_client           NA
+prompt_toolkit              3.0.52
+psutil                      7.1.0
+pure_eval                   0.2.3
+pydev_ipython               NA
+pydevconsole                NA
+pydevd                      3.2.3
+pydevd_file_utils           NA
+pydevd_plugins              NA
+pydevd_tracing              NA
+pygments                    2.19.2
+pyparsing                   3.2.5
+pythonjsonlogger            NA
+pytz                        2025.2
+referencing                 NA
+rfc3339_validator           0.1.4
+rfc3986_validator           0.1.1
+rfc3987_syntax              NA
+rpds                        NA
+scipy                       1.16.2
+send2trash                  NA
+six                         1.17.0
+sniffio                     1.3.1
+stack_data                  0.6.3
+tabulate                    0.9.0
+testing                     NA
+tlz                         1.0.0
+toolz                       1.0.0
+tornado                     6.5.2
+traitlets                   5.14.3
+typing_extensions           NA
+uri_template                NA
+urllib3                     2.5.0
+wcwidth                     0.2.13
+webcolors                   NA
+websocket                   1.8.0
+yaml                        6.0.2
+zarr                        3.1.3
+zipp                        NA
+zmq                         27.1.0
+zoneinfo                    NA
+</pre>
+</details> <!-- seems like this ends pre, so might as well be explicit -->
+<pre>
+-----
+IPython             9.5.0
+jupyter_client      8.6.3
+jupyter_core        5.8.1
+jupyterlab          4.4.7
+notebook            7.4.5
+-----
+Python 3.11.13 (main, Jun  4 2025, 04:12:12) [GCC 13.3.0]
+Linux-6.11.0-1018-azure-x86_64-with-glibc2.39
+-----
+Session information updated at 2025-09-22 12:39
+</pre>
+</details>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+      
+    
+  </body>
+</html>
