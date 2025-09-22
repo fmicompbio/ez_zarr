@@ -911,6 +911,17 @@ def test_plot(img2d: ome_zarr.Image, img4d: ome_zarr.Image, img3dv3: ome_zarr.Im
                        label_value=3,
                        extend_pixels=8)
         
+        # ... select label_pyramid_level
+        img2d.plot(label_name='organoids',
+                   label_value=3,
+                   label_pyramid_level='0',
+                   restrict_to_label_values=[3])
+        with pytest.raises(Exception) as e_info:
+            img2d.plot(upper_left_yx=(0, 0),
+                       label_value=3,
+                       label_pyramid_level='does-not-exist',
+                       restrict_to_label_values=[3])
+        
         # ... restrict plotting to label_value
         img2d.plot(label_name='organoids',
                    label_value=3,
