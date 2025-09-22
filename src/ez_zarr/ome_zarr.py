@@ -9,7 +9,7 @@ Classes:
 
 __all__ = ['Image', 'ImageList', 'create_name_row_col', 
            'create_name_plate_A01', 'import_plate']
-__version__ = '0.4.1'
+__version__ = '0.4.2'
 __author__ = 'Silvia Barbiero, Michael Stadler, Charlotte Soneson'
 
 
@@ -1004,6 +1004,7 @@ class Image:
              coordinate_unit: str='micrometer',
              label_name: Optional[Union[list[str], str]]=None,
              label_value: Optional[Union[int, float, str]]=None,
+             label_pyramid_level: Optional[str]=None,
              extend_pixels: int=0,
              pyramid_level: Optional[str]=None,
              pyramid_level_coord: Optional[str]=None,
@@ -1042,6 +1043,10 @@ class Image:
                 not `None`, `label_value` will automatically determine `upper_left_yx`,
                 `lower_right_yx` and `size_yx`. Any values given to those or
                 to `coordinate_unit` and `pyramid_level_coord` will be ignored.
+            label_pyramid_level (str, optional): The pyramid level (resolution level),
+                from which the label image should be extracted if `label_value` is
+                not `None`. If `None`, the lowest-resolution (highest) pyramid level
+                containing the `label_value` will be selected.
             extend_pixels (int): The number of pixels to add to the final
                 image region coordinates on both sides of each axis. Only used
                 if `label_value` is not `None`.
@@ -1115,11 +1120,12 @@ class Image:
         if label_value != None:
             if upper_left_yx != None or lower_right_yx != None or size_yx != None:
                 warnings.warn("Ignoring provided coordinates since `label_value` was provided.")
-            for label_pyramid_level in reversed(self.pyramid_levels_labels[label_name]):
-                curr_array = self.get_array_by_coordinate(label_name=label_name, pyramid_level=label_pyramid_level,
-                                                          verbose=verbose)
-                if da.isin(label_value, curr_array).compute():
-                    break
+            if label_pyramid_level == None:
+                for label_pyramid_level in reversed(self.pyramid_levels_labels[label_name]):
+                    curr_array = self.get_array_by_coordinate(label_name=label_name, pyramid_level=label_pyramid_level,
+                                                            verbose=verbose)
+                    if da.isin(label_value, curr_array).compute():
+                        break
             upper_left_yx, lower_right_yx = self.get_bounding_box_for_label_value(
                 label_name=label_name,
                 label_value=label_value,
